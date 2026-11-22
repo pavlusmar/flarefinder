@@ -231,6 +231,8 @@ async function detail(id, silent = false) {
     $("overlay").classList.remove("hidden");
 
     const sources = list(c.sources);
+    const perspective = sources[0]?.customer_perspective || {};
+    const priorities = Array.isArray(perspective.priorities) ? perspective.priorities : [];
     const opportunities = list(c.cloudflare_opportunities);
     const aiSignals = list(c.ai_signals);
     const hiring = sources.flatMap(source => Array.isArray(source.hiring_signals) ? source.hiring_signals : [])
@@ -295,6 +297,18 @@ async function detail(id, silent = false) {
 
       <h3>Company overview</h3>
       <p>${esc(c.summary || "No research available yet.")}</p>
+      <h3>Customer perspective &amp; strategic priorities</h3>
+      <p class="meta">An outside-in interpretation of the company's business goals, not a direct customer statement. Stated priorities are distinguished from inferred ones.</p>
+      ${perspective.mission ? `<p><strong>What they're working toward:</strong> ${esc(perspective.mission)}</p>` : ''}
+      ${priorities.length ? priorities.map((p, i) => `
+        <div class="opportunity">
+          <strong>${i + 1}. ${esc(p.priority)}</strong>
+          <div class="meta">${esc(p.basis === 'stated' ? 'Company-stated' : 'Inferred from public evidence')} · Evidence: ${esc(p.evidence)}</div>
+          ${p.why_it_matters ? `<p>Why it matters: ${esc(p.why_it_matters)}</p>` : ''}
+        </div>
+      `).join('') : '<p class="meta">No sufficiently sourced strategic priorities identified yet. Refresh research to populate this section.</p>'}
+      ${perspective.business_tension ? `<p><strong>Potential business tradeoff to explore:</strong> ${esc(perspective.business_tension)}</p>` : ''}
+
 
       <p class="meta">Evidence references [S1], [S2], etc. correspond to numbered research sources below.</p>
       <h3>Growth signals</h3>
