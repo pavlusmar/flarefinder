@@ -577,7 +577,7 @@ ${JSON.stringify(sources.map((source, i) => ({ id: `S${i+1}`, ...source })))}
             { role: "user", content: prompt }
           ],
           chat_template_kwargs: { enable_thinking: false },
-          max_completion_tokens: 3500,
+          max_completion_tokens: 4200,
           temperature: 0.1
         } as never
       ) as unknown;
