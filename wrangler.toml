@@ -18,7 +18,7 @@ migrations_dir = "migrations"
 binding = "AI"
 
 [triggers]
-crons = []
+crons = ["*/5 * * * *"]
 
 [vars]
 SEARCH_PROVIDER = "tavily"
