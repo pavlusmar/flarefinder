@@ -346,7 +346,9 @@ async function detail(id, silent = false) {
         <p><strong>Not evaluated</strong></p>
         <p class="meta">${esc(pursuit?.caveat || 'Refresh research to evaluate.')}</p>
       `}
-      </details>\n      <details class="brief-details"><summary>Additional company research and technical context</summary>\n      <h3>Digital-native qualification</h3>
+      </details>
+      <details class="brief-details"><summary>Additional company research and technical context</summary>
+      <h3>Digital-native qualification</h3>
       ${pill(c.digital_native || "unresearched")}
       <p>
         ${esc(c.digital_native_reason ||
@@ -387,7 +389,9 @@ async function detail(id, silent = false) {
         </div>
       `).join('') : '<p class="meta">No verified employer-specific hiring signals found in the research sources.</p>'}
 
-      </details>\n\n      <h3 id="research-sources">Sources and excerpts (${sources.length})</h3>\n      <p class="meta">Numbered citations link to the corresponding source excerpt. Open the original page to verify context.</p>
+      </details>
+\n      <h3 id="research-sources">Sources and excerpts (${sources.length})</h3>
+      <p class="meta">Numbered citations link to the corresponding source excerpt. Open the original page to verify context.</p>
       ${sources.map((s, i) => {
         const u = validLink(s.url);
         return `
