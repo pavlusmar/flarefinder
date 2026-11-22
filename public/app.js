@@ -147,6 +147,19 @@ const CASE_STUDIES = [
   { name: "Applied Systems", url: "https://www.cloudflare.com/en-gb/case-studies/applied-systems/", pillar: "Protect", themes: ["Secure AI Applications & Agents"], products: "Zero Trust, WAF", outcome: "Unified security controls and improved granular access to internal applications." }
 ];
 
+function accountPriority(company, opportunities, signals) {
+  if (company.status !== "complete") return { tier: "Not assessed", reason: "Research pending or unavailable" };
+  const digital = company.digital_native === "yes";
+  const high = opportunities.filter(o => o.confidence === "high").length;
+  const medium = opportunities.filter(o => o.confidence === "medium").length;
+  const strongAi = signals.some(s => s.signal === "strong");
+  const evidence = high * 3 + medium * 2 + (strongAi ? 2 : 0);
+  if (digital && evidence >= 5) return { tier: "T1 · Prioritize", reason: "Digital-native fit and multiple evidence-backed product opportunities" };
+  if (digital && evidence >= 2) return { tier: "T2 · Qualify", reason: "Digital-native fit with at least one plausible evidence-backed opportunity" };
+  if (digital) return { tier: "T3 · Investigate", reason: "Digital-native fit, but limited validated technical opportunity evidence" };
+  return { tier: "T4 · Validate fit", reason: "Digital-native qualification is negative or uncertain" };
+}
+
 function relevantCaseStudies(opportunities, signals) {
   const pillars = new Set(opportunities.filter(o => o.hypothesis && o.evidence && o.evidence !== "No specific evidence identified.").map(o => o.pillar));
   const themes = new Set(signals.filter(s => ["strong", "possible"].includes(s.signal)).map(s => s.theme));
@@ -218,6 +231,7 @@ async function detail(id, silent = false) {
     const sources = list(c.sources);
     const opportunities = list(c.cloudflare_opportunities);
     const aiSignals = list(c.ai_signals);
+    const priority = accountPriority(c, opportunities, aiSignals);
     const pillars = ["Connect", "Protect", "Build"];
     const aiThemes = ["Build & Scale AI Applications", "Secure AI Applications & Agents", "Optimise AI Inference & Delivery"];
     const link = validLink(c.crunchbase_url);
@@ -264,6 +278,10 @@ async function detail(id, silent = false) {
         ${researchButtonText(c.status)}
       </button>
 
+      <h3>Account priority</h3>
+      <p><strong>${esc(priority.tier)}</strong> · ${esc(priority.reason)}</p>
+      <p class="meta">Provisional research-based tier, not an estimate of deal size or buying intent.</p>
+
       <h3>Digital-native qualification</h3>
       ${pill(c.digital_native || "unresearched")}
       <p>
@@ -274,6 +292,7 @@ async function detail(id, silent = false) {
       <h3>Company overview</h3>
       <p>${esc(c.summary || "No research available yet.")}</p>
 
+      <p class="meta">Evidence references [S1], [S2], etc. correspond to numbered research sources below.</p>
       <h3>Growth signals</h3>
       ${listHtml(c.growth_signals)}
 
@@ -315,7 +334,7 @@ async function detail(id, silent = false) {
       ${listHtml(c.questions)}
 
       <h3>Research sources (${sources.length})</h3>
-      ${sources.map(s => {
+      ${sources.map((s, i) => {
         const u = validLink(s.url);
         return `
           <div class="source">
@@ -323,9 +342,9 @@ async function detail(id, silent = false) {
               ? `<a href="${esc(u)}"
                     target="_blank"
                     rel="noopener noreferrer">
-                   ${esc(s.title || u)} ↗
+                   [S${i + 1}] ${esc(s.title || u)} ↗
                  </a>`
-              : esc(s.title)}
+              : `[S${i + 1}] ${esc(s.title)}`}
             <p>${esc(s.snippet)}</p>
           </div>
         `;
