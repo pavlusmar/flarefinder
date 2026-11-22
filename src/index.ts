@@ -458,12 +458,14 @@ async function classifyDigitalNative(env: Env, company: Company, sources: Source
 }
 
 
+// Calibration v2: specific, verifiable workloads matter more than generic AI labels.
+// Five-level Clef answers remain ordinal; do not imply false precision.
 const ATTRACTIVENESS_DIMENSIONS = [
-  { key:"digital_native_fit", label:"Digital-native and strategic fit", weight:25, instructions:"Score evidence that the business primarily creates digital products or platforms and fits a digital-native territory. A verified AI-native, developer, fintech or security software product is strong evidence of fit even if its cloud stack is unknown. Do not require an identified Cloudflare need." },
-  { key:"commercial_scale", label:"Commercial scale and growth potential", weight:25, instructions:"Consider verified customers, funding, employee scale, market reach and digital product adoption. Funding alone does not establish budget or spend." },
-  { key:"momentum", label:"Growth momentum and triggers", weight:25, instructions:"Consider dated funding, new products, expansion, partnerships and company-specific hiring. These indicate reasons to start discovery, not buying intent." },
-  { key:"product_relevance", label:"Product and workload relevance", weight:15, instructions:"Consider the relevance of the company's real digital product and business model to Connect, Protect, Build and AI themes. This is potential strategic relevance, NOT proof of pain or a deployable Cloudflare opportunity." },
-  { key:"research_quality", label:"Research evidence quality", weight:10, instructions:"Assess quality and specificity of corroborating employer-specific sources. Discount generic job aggregators and unsourced claims." }
+  { key:"digital_native_fit", label:"Digital-native and strategic fit", weight:15, instructions:"0=not digital-native or no evidence; 1=digital tools are ancillary; 2=sells a meaningful digital product but business model unclear; 3=verified software/platform-first company; 4=verified software/platform-first with a distinct developer, AI-native, fintech, security or internet-scale product. Do not award 4 solely because the company mentions AI." },
+  { key:"commercial_scale", label:"Commercial scale and growth potential", weight:20, instructions:"0=no company-specific scale evidence; 1=early or unverified scale; 2=credible customer reach OR investment OR commercial traction; 3=multiple independent indicators of customer adoption, commercial reach or capacity; 4=exceptional corroborated adoption, international reach and commercial traction. Funding alone max 2; Crunchbase growth predictions are not proof of revenue." },
+  { key:"momentum", label:"Growth momentum and triggers", weight:20, instructions:"0=no dated trigger; 1=weak or stale announcement; 2=one credible recent product launch, funding, expansion or hiring trigger; 3=two distinct recent triggers linked to a concrete company initiative; 4=multiple corroborated dated triggers and a clearly time-bound company initiative. Funding alone max 2. Do not treat a future product launch as proof of infrastructure purchasing." },
+  { key:"product_relevance", label:"Cloudflare workload relevance", weight:30, instructions:"Score identifiable workload relevance, NOT inferred pain. 0=no identifiable internet/software workload; 1=generic SaaS or AI description with no specific use case; 2=specific publicly documented application/API/customer-facing workflow that plausibly maps to Connect, Protect or Build; 3=multiple documented workflows or a documented demanding workload (e.g. high-volume processing, global delivery, API integration, security-sensitive app), with clear possible Cloudflare discussion; 4=directly documented architecture/operational requirement or multiple concrete high-relevance workloads, with independently sourced technical context. NEVER award 3-4 solely because it is AI-native, funded or growing. Never assume Cloudflare need or deployed stack." },
+  { key:"research_quality", label:"Research evidence quality", weight:15, instructions:"0=no trustworthy company-specific sources; 1=mostly generic aggregators; 2=one specific credible source; 3=multiple company-specific credible sources with identifiable facts; 4=multiple independent corroborating sources including primary/official evidence, with precise dates and direct support for key workload and growth claims. Repeated syndicated copies count as one source." }
 ] as const;
 const READINESS_DIMENSIONS = [
   { key:"validated_need", label:"Verified customer need", weight:35, instructions:"Only reward directly evidenced unmet customer problems, initiatives or stated technical requirements. A plausible hypothesis alone is 0 or 1." },
@@ -492,7 +494,7 @@ async function scorePursuitWithClef(env: Env, company: Company, report: Report, 
   try {
     const questions = Object.fromEntries(allDimensions.map(d => [d.key, {
       type:"choice",
-      instructions:d.instructions + " Use only supplied company-specific evidence. Unknown is not negative for account attractiveness, but cannot count as a verified opportunity. Do not infer budget, technical stack or buying intent.",
+      instructions:d.instructions + " Follow the dimension-specific 0-4 anchors strictly. Use only supplied company-specific evidence. Do not award generic middle scores by default. Unknown cannot count as verified opportunity. Do not infer budget, technical stack or buying intent.",
       criteria:{
         "0":"No relevant evidence for this dimension",
         "1":"Weak or indirect evidence",
