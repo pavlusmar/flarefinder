@@ -218,7 +218,7 @@ function researchButtonText(status) {
     case "running":
       return "⏳ Research running";
     case "pending":
-      return "⏳ Research queued";
+      return "▶ Prioritize research";
     case "failed":
       return "↻ Retry research";
     default:
