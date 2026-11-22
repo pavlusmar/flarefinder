@@ -873,6 +873,18 @@ $("batchBtn").onclick = async () => {
   }
 };
 
+$("cleanupExcludedBtn").onclick = async () => {
+  try {
+    const preview = await api("/api/cleanup-excluded", {method:"POST",body:JSON.stringify({confirm:false})});
+    if (!preview.count) { notice("No excluded accounts found in D1."); return; }
+    if (!confirm("Remove " + preview.count + " excluded companies and their saved research from FlareFinder? Active jobs will be skipped. This cannot be undone.")) return;
+    const result = await api("/api/cleanup-excluded", {method:"POST",body:JSON.stringify({confirm:true})});
+    selectedCompanies.clear();
+    notice("Removed " + result.deleted + " excluded companies. Skipped " + result.skipped + " active research jobs.");
+    await load();
+  } catch (e) { notice(e.message); }
+};
+
 $("clearQueueBtn").onclick = async () => {
   if (!confirm("Clear ALL pending research requests? Running and completed research will be preserved.")) return;
   try {
