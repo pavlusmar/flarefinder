@@ -40,6 +40,13 @@ type Opportunity = {
   hypothesis: string;
   evidence: string;
   confidence: "low" | "medium" | "high";
+  signal?: string;
+  implication?: string;
+  product_fit?: string;
+  limitations?: string;
+  stakeholder?: string;
+  discovery_question?: string;
+  outreach?: string;
 };
 
 type AiSignal = { theme: "Build & Scale AI Applications" | "Secure AI Applications & Agents" | "Optimise AI Inference & Delivery" | "AI Cost & Inference Economics" | "Multi-Model Operations"; signal: "strong" | "possible" | "insufficient"; evidence: string; hypothesis: string; confidence: "low" | "medium" | "high"; };
@@ -178,19 +185,24 @@ async function searchWeb(
       seen.add(canonical);
       const pricingOnly = /\b(pricing|cost of|how much does|reviews?|alternatives?|competitors?|coupon)\b/i.test(title) && !official;
       const core = /\b(about|platform|product|solutions|customers|company|funding|launch|engineering|blog|news|careers)\b/i.test(title);
-      return [{ title, url, snippet, searchIndex: r.searchIndex, official, pricingOnly, core, host }];
+      const lowQuality = /(^|\.)(instagram\.com|facebook\.com|tiktok\.com|pinterest\.com|cbinsights\.com|tracxn\.com)$/.test(host) || /\b(list of .* customers|stock price|interview questions)\b/i.test(title);
+      const technicalPrimary = official && /\b(docs?|documentation|architecture|developer|engineering|api|release|security|platform)\b/i.test(title + " " + parsed.pathname);
+      const concreteEvent = /\b(announc|launch|release|partnership|integrat|funding|raised|expan|appoint|hire|selected|deploy)\b/i.test(title);
+      return [{ title, url, snippet, searchIndex: r.searchIndex, official, pricingOnly, core, host, lowQuality, technicalPrimary, concreteEvent }];
     });
     // Select source diversity: official and company-specific primary evidence first,
     // and avoid filling the context with duplicate third-party pricing sites.
-    candidates.sort((a,b) => Number(b.official)-Number(a.official) ||
-      Number(b.core)-Number(a.core) || Number(a.pricingOnly)-Number(b.pricingOnly) ||
-      a.searchIndex-b.searchIndex);
+    candidates.sort((a,b) => Number(b.technicalPrimary)-Number(a.technicalPrimary) ||
+      Number(b.official)-Number(a.official) || Number(b.concreteEvent)-Number(a.concreteEvent) ||
+      Number(a.lowQuality)-Number(b.lowQuality) || Number(b.core)-Number(a.core) ||
+      Number(a.pricingOnly)-Number(b.pricingOnly) || a.searchIndex-b.searchIndex);
     const chosen: typeof candidates = [];
     const byHost = new Map<string,number>();
     for (const hit of candidates) {
       const count = byHost.get(hit.host) || 0;
       if (count >= (hit.official ? 6 : 2)) continue;
       if (hit.pricingOnly && chosen.some(s => s.pricingOnly)) continue;
+      if (hit.lowQuality && chosen.some(s => s.lowQuality)) continue;
       chosen.push(hit);
       byHost.set(hit.host,count+1);
       if (chosen.length >= 16) break;
@@ -353,11 +365,14 @@ function normalizeReport(
       hypothesis,
       evidence: safe(o.evidence) ||
         "No specific evidence identified.",
-      confidence: choice(
-        o.confidence,
-        ["low", "medium", "high"] as const,
-        "low"
-      )
+      confidence: choice(o.confidence, ["low", "medium", "high"] as const, "low"),
+      signal: safe(o.signal).slice(0,320),
+      implication: safe(o.implication).slice(0,320),
+      product_fit: safe(o.product_fit).slice(0,280),
+      limitations: safe(o.limitations).slice(0,280),
+      stakeholder: safe(o.stakeholder).slice(0,120),
+      discovery_question: safe(o.discovery_question).slice(0,280),
+      outreach: safe(o.outreach).slice(0,550)
     });
   }
 
@@ -664,6 +679,11 @@ Do not invent source identifiers. State unknowns explicitly and distinguish
 verified facts from discovery hypotheses. An AI product does not imply it uses
 Workers AI, AI Gateway, particular model hosts, or has an inference bottleneck.
 Rank opportunities in descending order of evidence-backed commercial relevance.
+Never output generic "may be interested in CDN/DNS/security/Workers" recommendations.
+Never assume a proprietary model should move to Workers AI, or that an established API vendor should be replaced.
+Prioritize company-specific product launches, integrations, model choices, architecture documentation and hiring over mission statements.
+For EACH opportunity provide signal (specific event with [S#]), implication (conditional business significance), hypothesis (falsifiable question), product_fit (specific Cloudflare service and narrow workload), limitations (existing vendor/capability or unknown), stakeholder (role only), discovery_question (precise), outreach (1-2 sentences mentioning the actual event, no invented pain).
+Explicitly acknowledge any documented latency, uptime, security certifications and incumbent API partners. If a recommendation is only generic, omit it.
 Avoid generic workforce geography as a Connect opportunity unless there is
 specific network, delivery, access or performance evidence.
 
@@ -712,7 +732,14 @@ Return ONLY one valid JSON object with exactly these keys:
      "pillar": "Build",
      "hypothesis": "",
      "evidence": "",
-     "confidence": "low"
+     "confidence": "low",
+     "signal": "Specific fact [S1]",
+     "implication": "Conditional business significance",
+     "product_fit": "Specific product and workload",
+     "limitations": "Known existing capability or unknown",
+     "stakeholder": "Relevant role",
+     "discovery_question": "Specific question?",
+     "outreach": "Two-sentence specific outreach."
    }
  ],
  "ai_signals": [
