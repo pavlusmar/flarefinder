@@ -115,7 +115,7 @@ async function searchWeb(
   }
 
   // Search for company-specific evidence; avoid broad generic job listings.
-  const domain = (() => { try { return new URL(company.website || "").hostname.replace(/^www\\./, ""); } catch { return ""; } })();
+  const domain = (() => { try { return new URL(company.website || "").hostname.replace(/^www\./, ""); } catch { return ""; } })();
   const query = [`"${company.name}"`, domain, "product launch funding engineering API security cloud AI 2026"].filter(Boolean).join(" ");
   console.log("Tavily search started:", company.id);
 
@@ -138,14 +138,14 @@ async function searchWeb(
   const sources = (data.results || []).flatMap(r => {
     const url = validUrl(r.url);
     if (!url) return [];
-    const host = new URL(url).hostname.toLowerCase().replace(/^www\\./, "");
+    const host = new URL(url).hostname.toLowerCase().replace(/^www\./, "");
     const official = !!domain && (host === domain || host.endsWith("." + domain));
     const title = safe(r.title).slice(0, 200);
     const snippet = safe(r.content).slice(0, 650);
     const text = (title + " " + snippet + " " + host).toLowerCase();
     // Company mention is a necessary relevance check, not proof that every claim is about it.
     const relevant = official || companyTokens.every(t => text.includes(t));
-    const excluded = /(^|\\.)(indeed\\.com|glassdoor\\.com|ziprecruiter\\.com)$/.test(host) && !official;
+    const excluded = /(^|\.)(indeed\.com|glassdoor\.com|ziprecruiter\.com)$/.test(host) && !official;
     if (!relevant || excluded || snippet.length < 60) return [];
     return [{ title, url, snippet }];
   }).filter((r, i, all) => all.findIndex(x => x.url === r.url) === i).slice(0, 6);
@@ -296,8 +296,8 @@ function normalizeReport(
 
   // Require a real source marker for each asserted technical fact.
   // Unsupported statements are discarded rather than presented as evidence.
-  const cited = (value: unknown) => stringList(value).filter(x => /\\[S\\d+\\]/.test(x));
-  const scored = opportunities.filter(o => /\\[S\\d+\\]/.test(o.evidence) && o.evidence !== "No specific evidence identified.");
+  const cited = (value: unknown) => stringList(value).filter(x => /\[S\d+\]/.test(x));
+  const scored = opportunities.filter(o => /\[S\d+\]/.test(o.evidence) && o.evidence !== "No specific evidence identified.");
   const weight = { high: 3, medium: 2, low: 1 };
   scored.sort((a, b) => weight[b.confidence] - weight[a.confidence]);
   return {
@@ -542,7 +542,7 @@ ${JSON.stringify(sources.map((source, i) => ({ id: `S${i+1}`, ...source })))}
       }
       const report = normalizeReport(parsed);
       // Drop citations to non-existent snippets (the model can invent indices).
-      const validCitations = (v: string) => [...v.matchAll(/\\[S(\\d+)\\]/g)].every(m => Number(m[1]) >= 1 && Number(m[1]) <= sources.length);
+      const validCitations = (v: string) => [...v.matchAll(/\[S(\d+)\]/g)].every(m => Number(m[1]) >= 1 && Number(m[1]) <= sources.length);
       report.growth_signals = report.growth_signals.filter(validCitations);
       report.technical_signals = report.technical_signals.filter(validCitations);
       report.cloudflare_opportunities = report.cloudflare_opportunities.filter(o => validCitations(o.evidence));
