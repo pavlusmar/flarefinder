@@ -41,7 +41,7 @@ type Opportunity = {
   confidence: "low" | "medium" | "high";
 };
 
-type AiSignal = { theme: "Build & Scale AI Applications" | "Secure AI Applications & Agents" | "Optimise AI Inference & Delivery"; signal: "strong" | "possible" | "insufficient"; evidence: string; hypothesis: string; confidence: "low" | "medium" | "high"; };
+type AiSignal = { theme: "Build & Scale AI Applications" | "Secure AI Applications & Agents" | "Optimise AI Inference & Delivery" | "AI Cost & Inference Economics" | "Multi-Model Operations"; signal: "strong" | "possible" | "insufficient"; evidence: string; hypothesis: string; confidence: "low" | "medium" | "high"; };
 
 type CustomerPriority = { priority: string; basis: "stated" | "inferred"; evidence: string; why_it_matters: string };
 type CustomerPerspective = { mission: string; priorities: CustomerPriority[]; business_tension: string };
@@ -130,8 +130,8 @@ async function searchWeb(
   const domain = (() => { try { return new URL(company.website || "").hostname.replace(/^www\./, ""); } catch { return ""; } })();
   const tokens = company.name.toLowerCase().split(/[^a-z0-9]+/).filter(t => t.length >= 4);
   const queries = [
-    '"' + company.name + '" ' + domain + ' product launch funding engineering security AI 2026',
-    '"' + company.name + '" careers hiring platform engineer security AI cloud 2026'
+    '"' + company.name + '" ' + domain + ' product launch funding AI inference cost optimization model provider 2026',
+    '"' + company.name + '" careers hiring platform engineer security LLM OpenAI Anthropic Gemini 2026'
   ];
   console.log("Tavily searches started:", company.id);
   const searches = await Promise.all(queries.map(async query => {
@@ -403,19 +403,22 @@ function normalizeCustomerPerspective(value: unknown): CustomerPerspective {
   };
 }
 
-const AI_THEMES = ["Build & Scale AI Applications", "Secure AI Applications & Agents", "Optimise AI Inference & Delivery"] as const;
+const AI_THEMES = ["Build & Scale AI Applications", "Secure AI Applications & Agents", "Optimise AI Inference & Delivery", "AI Cost & Inference Economics", "Multi-Model Operations"] as const;
 function normalizeAiSignals(value: unknown): AiSignal[] {
   const raw = Array.isArray(value) ? value : [];
   return AI_THEMES.map(theme => {
     const obj = raw.find(v => v && typeof v === "object" && v.theme === theme) as Record<string, unknown> | undefined;
     const evidence = safe(obj?.evidence);
     const signal = choice(obj?.signal, ["strong", "possible", "insufficient"] as const, "insufficient");
+    // New economics/model-operation themes require an actual cited company fact.
+    const cited = /\[S\d+\]/.test(evidence);
+    const supported = cited && evidence !== "No specific public evidence identified.";
     return {
       theme,
-      signal: evidence && signal !== "insufficient" ? signal : "insufficient",
+      signal: supported && signal !== "insufficient" ? signal : "insufficient",
       evidence: evidence || "No specific public evidence identified.",
-      hypothesis: evidence && signal !== "insufficient" ? safe(obj?.hypothesis) : "",
-      confidence: evidence && signal !== "insufficient" ? choice(obj?.confidence, ["low", "medium", "high"] as const, "low") : "low"
+      hypothesis: supported && signal !== "insufficient" ? safe(obj?.hypothesis) : "",
+      confidence: supported && signal !== "insufficient" ? choice(obj?.confidence, ["low", "medium", "high"] as const, "low") : "low"
     };
   });
 }
@@ -624,11 +627,16 @@ For every Cloudflare opportunity distinguish: (1) verified customer fact [S#], (
 Only suggest opportunities supported by the evidence.
 Use empty arrays where evidence is insufficient.
 Assess all three Cloudflare pillars as core research; do not force a hypothesis for every pillar.
-Separately assess three AI-specific commercial themes, even when the company is not AI-native:
+Separately assess five AI-specific commercial themes, even when the company is not AI-native:
 - Build & Scale AI Applications (Workers, Durable Objects, Workflows, Workers AI)
 - Secure AI Applications & Agents (WAF, API Shield, Zero Trust)
 - Optimise AI Inference & Delivery (AI Gateway, Workers AI, CDN)
-Only use strong when concrete evidence shows directly relevant AI product activity; possible for credible but indirect evidence; otherwise insufficient.
+- AI Cost & Inference Economics (explicit inference cost reduction initiatives, documented token/compute optimization, public usage-based AI product economics)
+- Multi-Model Operations (company-specific documentation or announcements naming multiple model providers, model routing, fallback or governance)
+For AI Cost & Inference Economics, strong requires an explicit cited company statement about inference/model cost reduction or optimization. Usage-based AI pricing alone may be possible, never strong. Do not infer actual spend, financial pressure or savings.
+For Multi-Model Operations, strong requires cited evidence that this company integrates or offers at least two distinct named model providers or model families. A generic integration marketplace or one model does not qualify. Possible may indicate credible but indirect company-specific evidence. Do not infer shadow AI or tool proliferation from generic AI hiring.
+Every non-insufficient AI signal must cite [S#] and describe an observed company fact. Never invent model names, providers, deployment or expenditure.
+Only use strong when concrete evidence shows directly relevant activity; possible for credible but indirect evidence; otherwise insufficient.
 AI marketing language alone is not evidence of AI infrastructure needs.
 Do not assert a customer problem or buying intent. AI evidence must be traceable to the supplied sources.
 
@@ -652,7 +660,9 @@ Return ONLY one valid JSON object with exactly these keys:
  "ai_signals": [
    {"theme":"Build & Scale AI Applications","signal":"insufficient","evidence":"","hypothesis":"","confidence":"low"},
    {"theme":"Secure AI Applications & Agents","signal":"insufficient","evidence":"","hypothesis":"","confidence":"low"},
-   {"theme":"Optimise AI Inference & Delivery","signal":"insufficient","evidence":"","hypothesis":"","confidence":"low"}
+   {"theme":"Optimise AI Inference & Delivery","signal":"insufficient","evidence":"","hypothesis":"","confidence":"low"},
+   {"theme":"AI Cost & Inference Economics","signal":"insufficient","evidence":"","hypothesis":"","confidence":"low"},
+   {"theme":"Multi-Model Operations","signal":"insufficient","evidence":"","hypothesis":"","confidence":"low"}
  ],
  "questions": [],
  "confidence": "low"
@@ -665,7 +675,7 @@ Include 0-3 concise customer priorities, 0-4 opportunities, 0-3 company-specific
 For hiring_signals, role is the actual job title, posted_date is YYYY-MM-DD only when explicitly stated otherwise empty,
 technologies contains only named requirements, evidence includes [S#], relevance is a cautious Cloudflare discovery angle.
 Return [] if no verified company-specific job posting is present.
-Include all three AI themes, with signal strong, possible, or insufficient. Keep evidence and hypotheses concise.
+Include all five AI themes, with signal strong, possible, or insufficient. Keep evidence and hypotheses concise.
 Keep the JSON concise. No Markdown or explanations.
 
 Company:
