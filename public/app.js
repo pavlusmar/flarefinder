@@ -212,13 +212,7 @@ function tasIndustryBaseline(sector) {
   if (/consult|it service/.test(s)) return {pct:10.5, label:"IT services"};
   return {pct:8.6, label:"Software / technology proxy"};
 }
-function form3TasAssumptions(c) {
-  if (!/^form3$/i.test(c.name || "")) return null;
-  return {millions:34.71, note:"FY2026 reported revenue £26.7m (Form3 Group annual accounts) × illustrative 1.30 USD/GBP = $34.71m. This is a scenario, not an observed Cloudflare budget. Source: https://find-and-update.company-information.service.gov.uk/company/09438578/filing-history", kind:"Reported revenue converted using illustrative FX", technologyPct:5.5, aiShare:15};
-}
 function tasRevenueScenario(c) {
-  const form3 = form3TasAssumptions(c);
-  if (form3) return form3;
   if (/^polyai$/i.test(c.name || "")) return {millions:23.27, note:"PolyAI provisional turnover scenario: £17.9M × illustrative 1.30 USD/GBP. Verify Companies House filing and FX.", kind:"Provisional reported-turnover input"};
   const raw = String(c.employees || "").replace(/,/g, "").trim();
   const match = raw.match(/(\d+)\s*[-–]\s*(\d+)/);
@@ -877,16 +871,6 @@ $("batchBtn").onclick = async () => {
     button.disabled = false;
     updateSelectionLabel();
   }
-};
-
-$("form3ExampleBtn").onclick = async () => {
-  if (!confirm("Replace any existing Form3 research with the sourced analyst-curated example? This preserves all other companies and does not run paid AI research.")) return;
-  try {
-    await api("/api/examples/form3", {method:"POST",body:JSON.stringify({confirm:true})});
-    notice("Form3 example installed. Open Form3 to view sourced research, pursuit score, and editable overall / AI TAS.");
-    await load();
-    await detail("form3");
-  } catch(e) { notice("Form3 example failed: "+e.message); }
 };
 
 $("syncCuratedBtn").onclick = async () => {
