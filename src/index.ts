@@ -36,7 +36,10 @@ type Opportunity = {
   confidence: "low" | "medium" | "high";
 };
 
+type AiSignal = { theme: "Build & Scale AI Applications" | "Secure AI Applications & Agents" | "Optimise AI Inference & Delivery"; signal: "strong" | "possible" | "insufficient"; evidence: string; hypothesis: string; confidence: "low" | "medium" | "high"; };
+
 type Report = {
+  ai_signals: AiSignal[];
   digital_native: "yes" | "no" | "uncertain";
   digital_native_reason: string;
   summary: string;
@@ -317,6 +320,7 @@ function normalizeReport(
     growth_signals: stringList(obj.growth_signals),
     technical_signals: stringList(obj.technical_signals),
     cloudflare_opportunities: opportunities.slice(0, 5),
+    ai_signals: normalizeAiSignals(obj.ai_signals),
     questions: stringList(obj.questions),
     confidence: choice(
       obj.confidence,
@@ -326,6 +330,23 @@ function normalizeReport(
   };
 }
 
+
+const AI_THEMES = ["Build & Scale AI Applications", "Secure AI Applications & Agents", "Optimise AI Inference & Delivery"] as const;
+function normalizeAiSignals(value: unknown): AiSignal[] {
+  const raw = Array.isArray(value) ? value : [];
+  return AI_THEMES.map(theme => {
+    const obj = raw.find(v => v && typeof v === "object" && v.theme === theme) as Record<string, unknown> | undefined;
+    const evidence = safe(obj?.evidence);
+    const signal = choice(obj?.signal, ["strong", "possible", "insufficient"] as const, "insufficient");
+    return {
+      theme,
+      signal: evidence && signal !== "insufficient" ? signal : "insufficient",
+      evidence: evidence || "No specific public evidence identified.",
+      hypothesis: evidence && signal !== "insufficient" ? safe(obj?.hypothesis) : "",
+      confidence: evidence && signal !== "insufficient" ? choice(obj?.confidence, ["low", "medium", "high"] as const, "low") : "low"
+    };
+  });
+}
 
 const DECISION_MODEL = "@cf/cloudflare/clef-flash";
 
@@ -406,6 +427,14 @@ Build: Workers, R2, D1, AI Gateway, Workers AI.
 
 Only suggest opportunities supported by the evidence.
 Use empty arrays where evidence is insufficient.
+Assess all three Cloudflare pillars as core research; do not force a hypothesis for every pillar.
+Separately assess three AI-specific commercial themes, even when the company is not AI-native:
+- Build & Scale AI Applications (Workers, Durable Objects, Workflows, Workers AI)
+- Secure AI Applications & Agents (WAF, API Shield, Zero Trust)
+- Optimise AI Inference & Delivery (AI Gateway, Workers AI, CDN)
+Only use strong when concrete evidence shows directly relevant AI product activity; possible for credible but indirect evidence; otherwise insufficient.
+AI marketing language alone is not evidence of AI infrastructure needs.
+Do not assert a customer problem or buying intent. AI evidence must be traceable to the supplied sources.
 
 Return ONLY one valid JSON object with exactly these keys:
 {
@@ -422,6 +451,11 @@ Return ONLY one valid JSON object with exactly these keys:
      "confidence": "low"
    }
  ],
+ "ai_signals": [
+   {"theme":"Build & Scale AI Applications","signal":"insufficient","evidence":"","hypothesis":"","confidence":"low"},
+   {"theme":"Secure AI Applications & Agents","signal":"insufficient","evidence":"","hypothesis":"","confidence":"low"},
+   {"theme":"Optimise AI Inference & Delivery","signal":"insufficient","evidence":"","hypothesis":"","confidence":"low"}
+ ],
  "questions": [],
  "confidence": "low"
 }
@@ -430,6 +464,7 @@ digital_native: yes, no, or uncertain.
 pillar: Connect, Protect, or Build.
 confidence: low, medium, or high.
 Include 0-4 opportunities and 3-5 discovery questions.
+Include all three AI themes, with signal strong, possible, or insufficient. Keep evidence and hypotheses concise.
 Keep the JSON concise. No Markdown or explanations.
 
 Company:
@@ -576,7 +611,8 @@ async function researchCompany(env: Env, id: string) {
           growth_signals=?,
           technical_signals=?,
           cloudflare_opportunities=?,
-          questions=?,
+          ai_signals=?,
+          questions=?
           confidence=?,
           sources=?,
           error=NULL,
@@ -590,6 +626,7 @@ async function researchCompany(env: Env, id: string) {
       JSON.stringify(report.growth_signals),
       JSON.stringify(report.technical_signals),
       JSON.stringify(report.cloudflare_opportunities),
+      JSON.stringify(report.ai_signals),
       JSON.stringify(report.questions),
       report.confidence,
       JSON.stringify(sources),
@@ -703,7 +740,7 @@ async function route(
       request.method === "GET") {
     const rows = await env.DB.prepare(`
       SELECT c.*, r.status, r.digital_native,
-             r.confidence, r.researched_at, r.error
+             r.confidence, r.researched_at, r.error, r.ai_signals
       FROM companies c
       LEFT JOIN research r ON r.company_id=c.id
       ORDER BY c.growth_score DESC, c.name ASC
