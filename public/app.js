@@ -92,7 +92,7 @@ function priorityFor(c) {
   const score = c.status === "complete" && p?.status === "scored" ? (p.account?.total ?? p.total) : null;
   const opportunities = list(c.cloudflare_opportunities);
   const ai = list(c.ai_signals);
-  const strong = ai.filter(x => x.signal === "strong" && /\[S\d+\]/.test(x.evidence || ""));
+  const strong = ai.filter(x => x.signal === "strong" && /\[S\d+\]/.test(x.evidence || "") && !["AI Cost & Inference Economics", "Multi-Model Operations"].includes(x.theme));
   const sourced = opportunities.filter(x => /\[S\d+\]/.test(x.evidence || ""));
   const qualified = c.digital_native === "yes";
   const quality = c.confidence === "low" ? "Low confidence" : c.confidence === "high" ? "High confidence" : "Medium confidence";
@@ -247,7 +247,7 @@ async function detail(id, silent = false) {
       .filter((h, i, all) => all.findIndex(x => x.role === h.role && x.evidence === h.evidence) === i);
     const priority = accountPriority(c, opportunities, aiSignals, hiring);
     const pillars = ["Connect", "Protect", "Build"];
-    const aiThemes = ["Build & Scale AI Applications", "Secure AI Applications & Agents", "Optimise AI Inference & Delivery"];
+    const aiThemes = ["Build & Scale AI Applications", "Secure AI Applications & Agents", "Optimise AI Inference & Delivery", "AI Cost & Inference Economics", "Multi-Model Operations"];
     const link = validLink(c.crunchbase_url);
 
     const statusMessage =
@@ -371,12 +371,13 @@ async function detail(id, silent = false) {
       }).join("")}
 
       <h3>AI opportunity signals</h3>
-      <p class="meta">Additional AI-specific commercial themes, assessed separately from digital-native fit.</p>
+      <p class="meta">Company-specific signals, not confirmed needs. AI economics and multi-model operations are exploratory and do not increase the attractiveness score or priority tier.</p>
       ${aiThemes.map(theme => {
         const s = aiSignals.find(x => x.theme === theme);
         const level = s?.signal || "insufficient";
         return `<div class="opportunity">
           <div class="signal-head"><strong>${esc(theme)}</strong>${pill(level)}</div>
+          ${["AI Cost & Inference Economics", "Multi-Model Operations"].includes(theme) ? '<div class="meta">Exploratory · not included in ranking score</div>' : ""}
           <p class="meta">Evidence: ${esc(s?.evidence || "No specific public evidence identified.")}</p>
           ${s?.hypothesis && level !== "insufficient" ? `<p>Potential discovery angle: ${esc(s.hypothesis)}</p><div class="meta">Confidence: ${esc(s.confidence || "low")}</div>` : ""}
         </div>`;
