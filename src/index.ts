@@ -1,6 +1,7 @@
 
 interface Env {
   DB: D1Database;
+  RESEARCH_QUEUE: Queue<{ id: string }>;
   AI: Ai;
   ASSETS: Fetcher;
   ADMIN_TOKEN?: string;
@@ -857,7 +858,7 @@ async function researchCompany(env: Env, id: string) {
         error=NULL,
         updated_at=datetime('now')
     WHERE company_id=?
-      AND status='pending'
+      AND status IN ('queued','pending')
   `).bind(id).run();
 
   if (!claim.meta.changes) {
@@ -969,56 +970,51 @@ async function researchCompany(env: Env, id: string) {
 // BACKGROUND BATCH PROCESSING
 // --------------------------------------------------
 
-async function processBatch(env: Env, limit = 3) {
-  // Recover interrupted jobs, but mark them failed
-  // instead of repeatedly retrying indefinitely.
-  await env.DB.prepare(`
-    UPDATE research
-    SET status='failed',
-        error='Research execution was interrupted. Retry manually.',
-        updated_at=datetime('now')
-    WHERE status='running'
-      AND updated_at < datetime('now', '-10 minutes')
-  `).run();
-
+// Publish pending records to durable queue messages. The status transition
+// prevents scheduled dispatchers from repeatedly publishing the same account.
+async function dispatchPending(env: Env, limit = 50) {
   const rows = await env.DB.prepare(`
-    SELECT c.id
-    FROM companies c
-    JOIN research r ON r.company_id=c.id
-    WHERE r.status='pending'
-    ORDER BY r.updated_at DESC, c.growth_score DESC
-    LIMIT ?
-  `).bind(limit).all<{ id: string }>();
-
-  let completed = 0;
-  let failed = 0;
-
-  await Promise.all(rows.results.map(async row => {
+    SELECT company_id AS id FROM research WHERE status='pending'
+    ORDER BY updated_at ASC LIMIT ?
+  `).bind(limit).all<{id:string}>();
+  for (const row of rows.results) {
+    const claimed = await env.DB.prepare(`
+      UPDATE research SET status='queued', updated_at=datetime('now')
+      WHERE company_id=? AND status='pending'
+    `).bind(row.id).run();
+    if (!claimed.meta.changes) continue;
     try {
-      const result = await researchCompany(env, row.id);
-      if (result) completed++;
-    } catch {
-      failed++;
+      await env.RESEARCH_QUEUE.send({ id: row.id });
+    } catch (e) {
+      await env.DB.prepare(`
+        UPDATE research SET status='pending' WHERE company_id=? AND status='queued'
+      `).bind(row.id).run();
+      console.error("Queue publish failed:", row.id, e);
     }
-  }));
+  }
+}
 
-  const remaining = await env.DB.prepare(`
-    SELECT count(*) AS n
-    FROM research
-    WHERE status='pending'
-  `).first<{ n: number }>();
-
-  console.log("Batch finished:", {
-    completed,
-    failed,
-    remaining: remaining?.n || 0
-  });
-
-  return {
-    completed,
-    failed,
-    remaining: remaining?.n || 0
-  };
+async function queueResearch(env: Env, id: string) {
+  // Preserve active work: do not reset a running job on a repeated click.
+  const current = await env.DB.prepare(
+    "SELECT status FROM research WHERE company_id=?"
+  ).bind(id).first<{status:string}>();
+  if (current?.status === "running" || current?.status === "queued") return false;
+  await env.DB.prepare(`
+    INSERT INTO research(company_id,status,updated_at)
+    VALUES (?,'queued',datetime('now'))
+    ON CONFLICT(company_id) DO UPDATE SET
+      status='queued', error=NULL, updated_at=datetime('now')
+  `).bind(id).run();
+  try {
+    await env.RESEARCH_QUEUE.send({ id });
+  } catch (e) {
+    await env.DB.prepare(`
+      UPDATE research SET status='pending' WHERE company_id=? AND status='queued'
+    `).bind(id).run();
+    throw e;
+  }
+  return true;
 }
 
 // --------------------------------------------------
@@ -1188,18 +1184,11 @@ async function route(
       `SELECT id FROM companies WHERE id IN (${unique.map(() => "?").join(",")})`
     ).bind(...unique).all<{id:string}>();
     if (found.results.length !== unique.length) return error("Unknown company in selection", 404);
+    let queued = 0;
     for (const id of unique) {
-      await env.DB.prepare(`
-        INSERT INTO research(company_id,status,updated_at)
-        VALUES (?,'pending',datetime('now'))
-        ON CONFLICT(company_id) DO UPDATE SET
-          status=CASE WHEN research.status='running' THEN 'running' ELSE 'pending' END,
-          error=CASE WHEN research.status='running' THEN research.error ELSE NULL END,
-          updated_at=datetime('now')
-      `).bind(id).run();
+      if (await queueResearch(env, id)) queued++;
     }
-    ctx.waitUntil(processBatch(env, 3));
-    return json({queued: unique.length, message:"Selected research started in the background."}, 202);
+    return json({queued, message:"Research submitted to Cloudflare Queues."}, 202);
   }
 
   // Queue individual research.
@@ -1218,23 +1207,13 @@ async function route(
       return error("Company not found", 404);
     }
 
-    await env.DB.prepare(`
-      INSERT INTO research(company_id,status,updated_at)
-      VALUES (?,'pending',datetime('now'))
-      ON CONFLICT(company_id)
-      DO UPDATE SET
-        status='pending',
-        error=NULL,
-        updated_at=datetime('now')
-    `).bind(id).run();
-
-    ctx.waitUntil(processBatch(env, 3));
-    console.log("Research queued:", id);
+    const queued = await queueResearch(env, id);
+    console.log("Research queue request:", id, queued);
 
     return json({
       ok: true,
-      status: "pending",
-      message: "Research queued for background processing."
+      status: queued ? "queued" : "already_queued",
+      message: "Research submitted to Cloudflare Queues."
     }, 202);
   }
 
@@ -1265,11 +1244,34 @@ export default {
     }
   },
 
-  async scheduled(
-    _event: ScheduledEvent,
-    env: Env,
-    ctx: ExecutionContext
-  ) {
-    ctx.waitUntil(processBatch(env, 3));
+  async queue(batch: MessageBatch<{ id: string }>, env: Env) {
+    // A single message per invocation permits horizontal consumer scaling.
+    for (const message of batch.messages) {
+      const id = message.body?.id;
+      if (typeof id !== "string" || !id) {
+        message.ack();
+        continue;
+      }
+      try {
+        await researchCompany(env, id);
+        message.ack();
+      } catch (e) {
+        console.error("Queue research attempt failed:", id, message.attempts, e);
+        if (message.attempts >= 4) {
+          // researchCompany already stores the underlying failure message.
+          message.ack();
+        } else {
+          await env.DB.prepare(`
+            UPDATE research SET status='queued', updated_at=datetime('now')
+            WHERE company_id=? AND status='failed'
+          `).bind(id).run();
+          message.retry({ delaySeconds: Math.min(30 * message.attempts, 120) });
+        }
+      }
+    }
+  },
+
+  async scheduled(_event: ScheduledEvent, env: Env) {
+    await dispatchPending(env, 50);
   }
 } satisfies ExportedHandler<Env>;
