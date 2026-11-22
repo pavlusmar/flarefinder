@@ -1089,7 +1089,7 @@ async function route(
 
       await env.DB.prepare(`
         INSERT OR IGNORE INTO research(company_id,status)
-        VALUES(?,'pending')
+        VALUES(?,'unresearched')
       `).bind(id).run();
 
       imported++;
