@@ -147,13 +147,15 @@ const CASE_STUDIES = [
   { name: "Applied Systems", url: "https://www.cloudflare.com/en-gb/case-studies/applied-systems/", pillar: "Protect", themes: ["Secure AI Applications & Agents"], products: "Zero Trust, WAF", outcome: "Unified security controls and improved granular access to internal applications." }
 ];
 
-function accountPriority(company, opportunities, signals) {
+function accountPriority(company, opportunities, signals, hiring = []) {
   if (company.status !== "complete") return { tier: "Not assessed", reason: "Research pending or unavailable" };
   const digital = company.digital_native === "yes";
   const high = opportunities.filter(o => o.confidence === "high").length;
   const medium = opportunities.filter(o => o.confidence === "medium").length;
   const strongAi = signals.some(s => s.signal === "strong");
-  const evidence = high * 3 + medium * 2 + (strongAi ? 2 : 0);
+  // Hiring is a modest prioritization boost, never proof of an active buying cycle.
+  const hiringBoost = hiring.some(h => h.confidence === 'high' || h.confidence === 'medium') ? 1 : 0;
+  const evidence = high * 3 + medium * 2 + (strongAi ? 2 : 0) + hiringBoost;
   if (digital && evidence >= 5) return { tier: "T1 · Prioritize", reason: "Digital-native fit and multiple evidence-backed product opportunities" };
   if (digital && evidence >= 2) return { tier: "T2 · Qualify", reason: "Digital-native fit with at least one plausible evidence-backed opportunity" };
   if (digital) return { tier: "T3 · Investigate", reason: "Digital-native fit, but limited validated technical opportunity evidence" };
@@ -231,7 +233,9 @@ async function detail(id, silent = false) {
     const sources = list(c.sources);
     const opportunities = list(c.cloudflare_opportunities);
     const aiSignals = list(c.ai_signals);
-    const priority = accountPriority(c, opportunities, aiSignals);
+    const hiring = sources.flatMap(source => Array.isArray(source.hiring_signals) ? source.hiring_signals : [])
+      .filter((h, i, all) => all.findIndex(x => x.role === h.role && x.evidence === h.evidence) === i);
+    const priority = accountPriority(c, opportunities, aiSignals, hiring);
     const pillars = ["Connect", "Protect", "Build"];
     const aiThemes = ["Build & Scale AI Applications", "Secure AI Applications & Agents", "Optimise AI Inference & Delivery"];
     const link = validLink(c.crunchbase_url);
@@ -298,6 +302,18 @@ async function detail(id, silent = false) {
 
       <h3>Technical signals</h3>
       ${listHtml(c.technical_signals)}
+
+      <h3>Hiring &amp; technology signals</h3>
+      <p class="meta">Employer-specific job postings are hiring indicators, not proof that listed technologies are deployed. Dates are shown only when stated in the source.</p>
+      ${hiring.length ? hiring.map(h => `
+        <div class="opportunity">
+          <strong>${esc(h.role)}</strong>
+          <p class="meta">Posted: ${esc(h.posted_date || 'Not verified')} · Source confidence: ${esc(h.confidence)}</p>
+          <p>Technologies mentioned: ${esc((h.technologies || []).join(', ') || 'None specified')}</p>
+          <p class="meta">Evidence: ${esc(h.evidence)}</p>
+          <p>Discovery angle: ${esc(h.relevance || 'Qualify the purpose of this hiring initiative.')}</p>
+        </div>
+      `).join('') : '<p class="meta">No verified employer-specific hiring signals found in the research sources.</p>'}
 
       <h3>Cloudflare opportunities · Connect / Protect / Build</h3>
       <p class="meta">Core pillar research for every company. Hypotheses are not verified customer problems.</p>
