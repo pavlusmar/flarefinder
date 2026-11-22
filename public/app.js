@@ -427,7 +427,6 @@ async function detail(id, silent = false) {
         <p><strong>Why this account:</strong> ${cite(reason)}</p>
         <p class="meta">Territory rank: ${rankedTerritory().find(x => x.id === c.id)?.rank ?? "Unranked"} · ${esc(priority.quality)} · Absolute score determines priority; rank compares researched accounts.</p>
       </div>
-      ${tasSection(c)}
       <div class="brief-stats"><span>Research: <strong>${esc(c.confidence || "unknown")} confidence</strong></span><span>Readiness: <strong>${esc(pursuit?.readiness?.tier || "unknown")}</strong></span></div>
       <section class="brief-priorities">
         <h3>Company priorities &amp; strategic direction</h3>
@@ -467,6 +466,9 @@ async function detail(id, silent = false) {
       }).join("")}
       <h3>Discovery questions</h3>
       ${listHtml(c.questions)}
+      <details class="brief-details"><summary>Commercial potential · TAS scenario (optional planning assumptions)</summary>
+        ${tasSection(c)}
+      </details>
       <details class="brief-details"><summary>Detailed Clef scoring and readiness</summary>
       <h3>Account attractiveness · Clef Flash</h3>
       ${pursuit?.status === 'scored' && pursuit.account ? `
