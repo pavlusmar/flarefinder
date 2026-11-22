@@ -297,12 +297,12 @@ async function detail(id, silent = false) {
       const src = list(c.sources);
       const findRef = (pattern, officialOnly = false) => {
         const i = src.findIndex(x => pattern.test((x.title || "") + " " + (x.snippet || "")) &&
-          (!officialOnly || /(?:^|\\.)poly\\.ai$|prnewswire\\.com/i.test((() => { try { return new URL(x.url).hostname; } catch { return ""; } })())));
+          (!officialOnly || /(?:^|\.)poly\.ai$|prnewswire\.com/i.test((() => { try { return new URL(x.url).hostname; } catch { return ""; } })())));
         return i >= 0 ? "[S" + (i + 1) + "]" : "";
       };
-      const round = findRef(/raised \\$86 million in Series D|raised \\$86 million in a Series D|raised \\$86 million in Series D funding|raises \\$86M/i, true);
+      const round = findRef(/raised \$86 million in Series D|raised \$86 million in a Series D|raised \$86 million in Series D funding|raises \$86M/i, true);
       const expansion = findRef(/Toronto technology hub|Toronto tech hub/i);
-      const customers = findRef(/200 enterprise customers|200\\+ enterprise customers|2,000 live deployments|thousands of live deployments/i);
+      const customers = findRef(/200 enterprise customers|200\+ enterprise customers|2,000 live deployments|thousands of live deployments/i);
       const platform = findRef(/agent development kit|open APIs|developer|public enterprise dialog platform/i, true);
       const engineering = findRef(/grow PolyAI.s engineering organisation|engineering organisation from tens to hundreds/i);
       const runtime = findRef(/runtime, inference, and data platforms|runtime, inference or data platforms/i);
