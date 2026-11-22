@@ -306,8 +306,20 @@ async function detail(id, silent = false) {
         <p class="meta">Territory rank: ${rankedTerritory().find(x => x.id === c.id)?.rank ?? "Unranked"} · ${esc(priority.quality)} · Absolute score determines priority; rank compares researched accounts.</p>
       </div>
       <div class="brief-stats"><span>Research: <strong>${esc(c.confidence || "unknown")} confidence</strong></span><span>Readiness: <strong>${esc(pursuit?.readiness?.tier || "unknown")}</strong></span></div>
-      <h3>Key business signals</h3>
-      ${businessHighlights.length ? businessHighlights.map(p => '<div class="brief-signal"><strong>' + esc(p.priority) + '</strong><p>' + cite(p.why_it_matters) + '</p><div class="meta">' + cite(p.evidence) + '</div></div>').join("") : '<p class="meta">No verified structured strategic priorities. See the source excerpts for company announcements.</p>'}
+      <section class="brief-priorities">
+        <h3>Company priorities &amp; strategic direction</h3>
+        <p class="meta">Company-stated priorities are distinguished from inferred ones. These are outside-in findings, not confirmed customer conversations.</p>
+        ${perspective.mission ? '<p><strong>What they are working toward:</strong> ' + cite(perspective.mission) + '</p>' : ''}
+        ${priorities.length ? priorities.map((p, i) => `
+          <div class="brief-signal">
+            <div class="signal-head"><strong>${i + 1}. ${esc(p.priority)}</strong><span class="mini-status">${esc(p.basis === "stated" ? "Company-stated" : "Inferred")}</span></div>
+            ${p.why_it_matters ? '<p>' + cite(p.why_it_matters) + '</p>' : ''}
+            <div class="meta">Evidence: ${cite(p.evidence || "Not established")}</div>
+          </div>`).join("") : '<p class="meta">No sufficiently evidenced strategic priorities identified yet.</p>'}
+        ${perspective.business_tension ? '<p class="meta"><strong>Potential business tradeoff:</strong> ' + cite(perspective.business_tension) + '</p>' : ''}
+      </section>
+      <h3>Other business signals</h3>
+      ${list(c.growth_signals).length ? listHtml(c.growth_signals) : '<p class="meta">No additional structured growth signals found. Review the cited company announcements below.</p>'}
       <h3>Cloudflare opportunities</h3>
       <p class="meta">Outside-in hypotheses, not verified customer problems.</p>
       ${pillars.map(p => {
@@ -357,20 +369,6 @@ async function detail(id, silent = false) {
 
       <h3>Company overview</h3>
       <p>${esc(c.summary || "No research available yet.")}</p>
-      <h3>Customer perspective &amp; strategic priorities</h3>
-      <p class="meta">An outside-in interpretation of the company's business goals, not a direct customer statement. Stated priorities are distinguished from inferred ones.</p>
-      ${perspective.mission ? `<p><strong>What they're working toward:</strong> ${esc(perspective.mission)}</p>` : ''}
-      ${priorities.length ? priorities.map((p, i) => `
-        <div class="opportunity">
-          <strong>${i + 1}. ${esc(p.priority)}</strong>
-          <div class="meta">${esc(p.basis === 'stated' ? 'Company-stated' : 'Inferred from public evidence')} · Evidence: ${esc(p.evidence)}</div>
-          ${p.why_it_matters ? `<p>Why it matters: ${esc(p.why_it_matters)}</p>` : ''}
-        </div>
-      `).join('') : '<p class="meta">No sufficiently sourced strategic priorities identified yet. Refresh research to populate this section.</p>'}
-      ${perspective.business_tension ? `<p><strong>Potential business tradeoff to explore:</strong> ${esc(perspective.business_tension)}</p>` : ''}
-
-
-      <p class="meta">Evidence references [S1], [S2], etc. correspond to numbered research sources below.</p>
       <h3>Growth signals</h3>
       ${listHtml(c.growth_signals)}
 
