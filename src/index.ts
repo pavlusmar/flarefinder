@@ -499,7 +499,11 @@ function sourceGroundedOpportunities(sources: Source[]): Opportunity[] {
     title: source.title,
     source
   }));
-  const find = (re: RegExp) => hits.find(h => re.test(h.text));
+  // Prefer a source whose title is specifically about the capability, not a
+  // broad news aggregator that happens to mention it in a sidebar.
+  const find = (re: RegExp) => hits.filter(h => re.test(h.text)).sort((a,b) =>
+    Number(/\\b(docs?|documentation|platform|architecture|engineering|developer|model|AI)\\b/i.test(b.title)) -
+    Number(/\\b(docs?|documentation|platform|architecture|engineering|developer|model|AI)\\b/i.test(a.title)))[0];
   const result: Opportunity[] = [];
   const model = find(/\b(?:GPT[- ]?\d|Claude|Gemini|OpenAI|Anthropic)\b/i);
   const multiple = model && /\b(?:GPT[- ]?\d|Claude|Gemini|OpenAI|Anthropic)\b/i.test(model.text) &&
@@ -559,6 +563,14 @@ function evidenceGrounded(report: Report, sources: Source[]): Report {
       report.cloudflare_opportunities.push(candidate);
     }
   }
+  // Prefer actionable source-grounded findings over plausible but generic
+  // model output. Do not silently let weaker hypotheses fill the four slots.
+  report.cloudflare_opportunities.sort((a,b) => {
+    const quality = (o: Opportunity) => Number(/\\[S\\d+\\]/.test(o.signal || "")) +
+      Number(/\\b(AI Gateway|API Shield|Workers|Zero Trust|R2|D1|CDN|WAF)\\b/i.test(o.product_fit || "")) +
+      Number(/\\b(existing|unknown|already|incumbent|not established|not assumed)\\b/i.test(o.limitations || ""));
+    return quality(b)-quality(a);
+  });
   report.cloudflare_opportunities = report.cloudflare_opportunities.slice(0, 4);
   report.customer_perspective.priorities = report.customer_perspective.priorities.filter(p => valid(p.evidence));
   report.growth_signals = report.growth_signals.filter(valid);
