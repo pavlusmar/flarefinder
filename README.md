@@ -1,33 +1,13 @@
-# FlareFinder — updated Crunchbase dataset edition
+# FlareFinder — 131-company Crunchbase research universe
 
-**This package contains the existing Cloudflare Workers / D1 / Workers AI application plus a bundled 62-company Crunchbase dataset.**
+**Current bundled dataset: 131 UK companies** selected using two size-based cohorts: 51–500 employees with High or Medium Crunchbase Growth Score (73), and 501–1,000 employees without a Growth Score restriction (58). Both cohorts require a Likely or Very Likely growth prediction, active for-profit UK headquarters, no recorded exit, at least $5 million total funding, and last funding between 2024-01-01 and 2026-11-22. These are unqualified research prospects, not validated digital natives.
 
-## What's new
-- `data/original-crunchbase-export.csv`: original 62-company CSV supplied in the conversation.
-- `data/crunchbase-companies.csv`: normalized import-ready dataset.
-- `public/crunchbase-companies.csv`: dataset served to the browser for the **Load 62 Crunchbase companies** button.
-- Browser import accepts both the original Crunchbase headers (`Company Name`, `Employee Range`, `Total Funding USD`, etc.) and normalized headers.
-- D1 migration `0002_crunchbase_metadata.sql` adds latest funding date, Growth Score Tier and Growth Prediction.
-- Company detail panel displays Growth Prediction and latest funding date.
+The `data/crunchbase-companies.csv` and `public/crunchbase-companies.csv` files now contain the 131-account normalized import dataset. The original 62-company export remains in `data/original-crunchbase-export.csv`; the full 131-company source export is `data/crunchbase-tiered-growth-51-1000-2026-11-22.csv`.
 
-**Data caveat:** The connected Crunchbase query yielded 62 records; the browser showed 63. This package contains 62 verified retrieved records, not an exact export of the saved search. These are a research universe, **not 62 validated digital natives**. IPO status is not a digital-native qualification criterion. The dataset was sourced from a search with a private-company filter; broaden it later if you want public companies too.
-
-## Quick start
-1. Create a new GitHub repository and upload the **contents** of this ZIP.
-2. Install Node.js 20+ and run `npm install`.
-3. Run `npx wrangler login` and `npx wrangler d1 create flarefinder-db`.
-4. Paste the database UUID into `wrangler.toml`.
-5. Run `npm run db:remote` (or `npm run db:local` for local development). **Both migrations must run.**
-6. Set secrets with `npx wrangler secret put ADMIN_TOKEN` and `npx wrangler secret put SEARCH_API_KEY` (Tavily).
-7. Run `npm run deploy`, or `npm run dev` locally with `.dev.vars`.
-8. Open the dashboard, click **Admin token**, enter your token, then click **Load 62 Crunchbase companies**.
-
-**Important:** The app does not automatically populate the database on deployment. Use the button once to import. Re-importing updates the company metadata without resetting existing research.
-
-## Research
-Research requires Tavily and Workers AI; without configured credentials, the company list and filtering still work. AI output is hypothesis-led and should be checked against sources. Batch research may incur third-party search and Workers AI charges.
+**To update an already deployed D1 database:** deploy the latest GitHub commit, open FlareFinder, enter the existing Admin token and click **Load 131 Crunchbase companies**. Import upserts company metadata and preserves existing research. It does **not** delete accounts from the previous dataset, so the total can exceed 131 if the old database has accounts absent from the new cohort. Do not click Research all pending unless you want to incur research costs.
 
 ---
+
 
 # FlareFinder
 
@@ -108,7 +88,7 @@ Example Ltd,https://example.com,API-first SaaS platform,,51-100,10000000,85,SaaS
 
 Only the six sample rows are included. **The complete list of 62 Crunchbase matches has not been exported or retrieved**, and is not represented as available here. Use a dataset you have permission to use. Crunchbase subscription/API terms may limit exporting, storing or republishing company data.
 
-Click **Research company** on a brief, or **Research all pending** to process one immediately and continue in scheduled batches. Scheduled research runs every five minutes; 62 companies will take several hours at the default rate. You can adjust the cron frequency or batch size, but higher concurrency and AI/search usage may increase costs and hit provider limits.
+Click **Research company** on a brief, or **Research all pending** to process one immediately and continue in scheduled batches. Scheduled research runs every five minutes; 131 companies will take several hours at the default rate. You can adjust the cron frequency or batch size, but higher concurrency and AI/search usage may increase costs and hit provider limits.
 
 ## Research methodology
 
@@ -124,7 +104,7 @@ The search provider may surface irrelevant or stale results. The AI sees search 
 
 This is an **interview demo**. It uses a shared bearer admin token for write endpoints; read endpoints are public. Do not import confidential customer information, sensitive personal data, internal account plans, or proprietary information into a public deployment. Before wider use, add Cloudflare Access, per-user authorization, rate limiting, usage budgets, and audit logging. Consider adding source-domain validation, explicit citations per finding, stronger schema validation, retry/backoff, and Cloudflare Workflows/Queues for production-grade orchestration.
 
-A Cron Trigger is asynchronous and may take time to activate after deployment. The app does not guarantee research completion or avoid all third-party rate limits. Researching all 62 incurs external API and Workers AI usage. The sample company metrics are a starting snapshot and should be verified against your licensed source.
+A Cron Trigger is asynchronous and may take time to activate after deployment. The app does not guarantee research completion or avoid all third-party rate limits. Researching all 131 incurs external API and Workers AI usage. The sample company metrics are a starting snapshot and should be verified against your licensed source.
 
 ## Troubleshooting
 
