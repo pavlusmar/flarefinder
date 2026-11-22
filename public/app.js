@@ -873,6 +873,26 @@ $("batchBtn").onclick = async () => {
   }
 };
 
+$("syncCuratedBtn").onclick = async () => {
+  try {
+    const response = await fetch("/crunchbase-companies.csv", {cache:"no-store"});
+    if (!response.ok) throw Error("Curated shortlist CSV unavailable");
+    const raw = await response.text();
+    const parsed = parseCSV(raw);
+    if (parsed.length !== 106) throw Error("Expected exactly 106 curated companies; found "+parsed.length);
+    // Ensure every canonical account is present before attempting removal.
+    await importData(raw);
+    const preview = await api("/api/sync-curated", {method:"POST",body:JSON.stringify({confirm:false})});
+    if (preview.missing) throw Error(preview.missing+" curated accounts are missing; no deletions made.");
+    if (!preview.remove) { notice("Already synchronized: 106 companies."); await load(); return; }
+    if (!confirm("Remove "+preview.remove+" companies outside the 106-company shortlist, including their saved research? This cannot be undone. Retained research will be preserved.")) return;
+    const result = await api("/api/sync-curated", {method:"POST",body:JSON.stringify({confirm:true,expected_ids:preview.ids})});
+    selectedCompanies.clear();
+    notice("Synchronization complete: removed "+result.deleted+" companies; "+result.remaining+" remain.");
+    await load();
+  } catch(e) { notice("Synchronization failed: "+e.message); }
+};
+
 $("cleanupExcludedBtn").onclick = async () => {
   try {
     const preview = await api("/api/cleanup-excluded", {method:"POST",body:JSON.stringify({confirm:false})});
