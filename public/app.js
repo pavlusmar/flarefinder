@@ -33,6 +33,14 @@ const money = n =>
   n >= 1e6 ? "$" + (n / 1e6).toFixed(1) + "M" :
   "$" + Math.round(n).toLocaleString();
 
+const aiSignal = value => {
+  const signals = list(value);
+  if (!signals.length) return "unresearched";
+  if (signals.some(s => s.signal === "strong")) return "strong";
+  if (signals.some(s => s.signal === "possible")) return "possible";
+  return "insufficient";
+};
+
 const pill = s =>
   `<span class="pill ${esc(s || "pending")}">${esc(s || "pending")}</span>`;
 
@@ -111,6 +119,7 @@ function render() {
         <td>${money(c.funding_usd)}</td>
         <td class="score">${c.growth_score ?? "—"}</td>
         <td>${pill(c.digital_native || "unresearched")}</td>
+        <td>${pill(c.status === "complete" ? aiSignal(c.ai_signals) : "unresearched")}</td>
         <td>${pill(c.status || "pending")}</td>
         <td>
           <button class="link-btn" data-id="${esc(c.id)}">
@@ -120,7 +129,7 @@ function render() {
       </tr>
     `).join("")
     : `<tr>
-         <td class="empty" colspan="7">
+         <td class="empty" colspan="8">
            No companies found.
          </td>
        </tr>`;
@@ -189,6 +198,9 @@ async function detail(id, silent = false) {
 
     const sources = list(c.sources);
     const opportunities = list(c.cloudflare_opportunities);
+    const aiSignals = list(c.ai_signals);
+    const pillars = ["Connect", "Protect", "Build"];
+    const aiThemes = ["Build & Scale AI Applications", "Secure AI Applications & Agents", "Optimise AI Inference & Delivery"];
     const link = validLink(c.crunchbase_url);
 
     const statusMessage =
@@ -249,19 +261,26 @@ async function detail(id, silent = false) {
       <h3>Technical signals</h3>
       ${listHtml(c.technical_signals)}
 
-      <h3>Cloudflare opportunity hypotheses</h3>
-      ${opportunities.length
-        ? opportunities.map(o => `
-          <div class="opportunity">
-            <strong>${esc(o.pillar || "Unknown pillar")}</strong>
-            <p>${esc(o.hypothesis || "")}</p>
-            <div class="meta">
-              Evidence: ${esc(o.evidence || "Not established")}
-              · Confidence: ${esc(o.confidence || "low")}
-            </div>
-          </div>
-        `).join("")
-        : "<p>No hypotheses yet.</p>"}
+      <h3>Cloudflare opportunities · Connect / Protect / Build</h3>
+      <p class="meta">Core pillar research for every company. Hypotheses are not verified customer problems.</p>
+      ${pillars.map(p => {
+        const matches = opportunities.filter(o => o.pillar === p);
+        return `<div class="opportunity"><strong>${p}</strong>${matches.length
+          ? matches.map(o => `<p>${esc(o.hypothesis || "")}</p><div class="meta">Evidence: ${esc(o.evidence || "Not established")} · Confidence: ${esc(o.confidence || "low")}</div>`).join("")
+          : '<p class="meta">Insufficient evidence for a specific opportunity.</p>'}</div>`;
+      }).join("")}
+
+      <h3>AI opportunity signals</h3>
+      <p class="meta">Additional AI-specific commercial themes, assessed separately from digital-native fit.</p>
+      ${aiThemes.map(theme => {
+        const s = aiSignals.find(x => x.theme === theme);
+        const level = s?.signal || "insufficient";
+        return `<div class="opportunity">
+          <div class="signal-head"><strong>${esc(theme)}</strong>${pill(level)}</div>
+          <p class="meta">Evidence: ${esc(s?.evidence || "No specific public evidence identified.")}</p>
+          ${s?.hypothesis && level !== "insufficient" ? `<p>Potential discovery angle: ${esc(s.hypothesis)}</p><div class="meta">Confidence: ${esc(s.confidence || "low")}</div>` : ""}
+        </div>`;
+      }).join("")}
 
       <h3>Discovery questions</h3>
       ${listHtml(c.questions)}
