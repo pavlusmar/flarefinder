@@ -83,60 +83,67 @@ async function load() {
   }
 }
 
+function pursuitFor(c) {
+  try { return typeof c.pursuit_score === "string" ? JSON.parse(c.pursuit_score) : c.pursuit_score; }
+  catch { return null; }
+}
+function priorityFor(c) {
+  const p = pursuitFor(c);
+  const score = c.status === "complete" && p?.status === "scored" ? (p.account?.total ?? p.total) : null;
+  const opportunities = list(c.cloudflare_opportunities);
+  const ai = list(c.ai_signals);
+  const strong = ai.filter(x => x.signal === "strong" && /\[S\d+\]/.test(x.evidence || ""));
+  const sourced = opportunities.filter(x => /\[S\d+\]/.test(x.evidence || ""));
+  const qualified = c.digital_native === "yes";
+  const quality = c.confidence === "low" ? "Low confidence" : c.confidence === "high" ? "High confidence" : "Medium confidence";
+  let tier = "Unassessed";
+  if (score !== null) {
+    tier = !qualified ? "T4 · Validate fit" : score >= 75 && c.confidence !== "low" && (sourced.length || strong.length) ? "T1 · Prioritize" : score >= 55 ? "T2 · Qualify" : "T3 · Investigate";
+  }
+  const datedFunding = c.last_funding_date && /^20\d\d/.test(c.last_funding_date) ? "Funding " + c.last_funding_date : "";
+  const leading = sourced.sort((a,b) => ({high:3,medium:2,low:1}[b.confidence]||0)-({high:3,medium:2,low:1}[a.confidence]||0))[0];
+  const signal = strong[0];
+  const reason = score === null ? "Research required before prioritization" :
+    [datedFunding, leading ? leading.pillar + ": " + leading.hypothesis : "", signal ? signal.theme + ": " + signal.hypothesis : ""].filter(Boolean).join(" · ").slice(0, 190) ||
+    "No sufficiently sourced workload trigger; validate fit";
+  return {score,tier,reason,quality,pillar:leading?.pillar || "Unverified",ai:signal?.theme || "Not established"};
+}
+function rankedTerritory() {
+  const result = companies.map(c => ({...c, priority:priorityFor(c)}));
+  result.sort((a,b) => (b.priority.score ?? -1)-(a.priority.score ?? -1) || a.name.localeCompare(b.name));
+  let rank=0;
+  for (const c of result) if(c.priority.score !== null) c.rank=++rank;
+  return result;
+}
+
 function render() {
   const q = $("search").value.toLowerCase();
   const native = $("nativeFilter").value;
   const status = $("statusFilter").value;
-
-  const items = companies.filter(c =>
-    (
-      c.name + " " +
-      (c.sector || "") + " " +
-      (c.description || "")
-    ).toLowerCase().includes(q) &&
+  const tier = $("tierFilter")?.value || "";
+  const ranked = rankedTerritory();
+  const items = ranked.filter(c =>
+    (c.name + " " + (c.sector || "") + " " + (c.description || "")).toLowerCase().includes(q) &&
     (!native || c.digital_native === native) &&
-    (!status || (c.status || "pending") === status)
+    (!status || (c.status || "pending") === status) &&
+    (!tier || c.priority.tier.startsWith(tier))
   );
-
   $("total").textContent = companies.length;
-  $("done").textContent =
-    companies.filter(c => c.status === "complete").length;
-  $("native").textContent =
-    companies.filter(c => c.digital_native === "yes").length;
-  $("pending").textContent =
-    companies.filter(c => c.status !== "complete").length;
-
-  $("rows").innerHTML = items.length
-    ? items.map(c => `
-      <tr>
-        <td>
-          <div class="company-name">${esc(c.name)}</div>
-          <div class="description">
-            ${esc(c.sector || c.description || "No description")}
-          </div>
-        </td>
-        <td>${esc(c.employees || "—")}</td>
-        <td>${money(c.funding_usd)}</td>
-        <td class="score">${c.growth_score ?? "—"}</td>
-        <td>${pill(c.digital_native || "unresearched")}</td>
-        <td>${pill(c.status === "complete" ? aiSignal(c.ai_signals) : "unresearched")}</td>
-        <td>${pill(c.status || "pending")}</td>
-        <td>
-          <button class="link-btn" data-id="${esc(c.id)}">
-            View brief →
-          </button>
-        </td>
-      </tr>
-    `).join("")
-    : `<tr>
-         <td class="empty" colspan="8">
-           No companies found.
-         </td>
-       </tr>`;
-
-  document.querySelectorAll("[data-id]").forEach(b => {
-    b.onclick = () => detail(b.dataset.id);
-  });
+  $("done").textContent = companies.filter(c => c.status === "complete").length;
+  $("native").textContent = companies.filter(c => c.digital_native === "yes").length;
+  $("pending").textContent = companies.filter(c => c.status !== "complete").length;
+  $("rows").innerHTML = items.length ? items.map(c => `
+    <tr>
+      <td class="score">${c.rank ?? "—"}</td>
+      <td><div class="company-name">${esc(c.name)}</div><div class="description">${esc(c.sector || c.description || "No description")}</div></td>
+      <td><strong>${esc(c.priority.tier)}</strong><div class="description" title="${esc(c.priority.reason)}">${esc(c.priority.reason)}</div><div class="meta">${esc(c.priority.quality)}</div></td>
+      <td class="score">${c.priority.score ?? "—"}</td>
+      <td>${esc(c.priority.pillar)}</td>
+      <td>${esc(c.priority.ai)}</td>
+      <td>${pill(c.status || "pending")}</td>
+      <td><button class="link-btn" data-id="${esc(c.id)}">View signals →</button></td>
+    </tr>`).join("") : '<tr><td class="empty" colspan="8">No matching companies.</td></tr>';
+  document.querySelectorAll("[data-id]").forEach(b => b.onclick = () => detail(b.dataset.id));
 }
 
 // Curated, verified Cloudflare customer stories. These are peer proof points,
@@ -285,6 +292,11 @@ async function detail(id, silent = false) {
         ${researchButtonText(c.status)}
       </button>
 
+      <div class="priority-summary">
+        <div class="priority-head"><strong>${esc(priorityFor(c).tier)}</strong><strong>${esc(priorityFor(c).score ?? "—")}/100</strong></div>
+        <p><strong>Why this tier:</strong> ${esc(priorityFor(c).reason)}</p>
+        <p class="meta">Territory rank: ${rankedTerritory().find(x => x.id === c.id)?.rank ?? "Unranked"} · ${esc(priorityFor(c).quality)} · Absolute score determines priority; rank compares researched accounts.</p>
+      </div>
       <h3>Account attractiveness · Clef Flash</h3>
       ${pursuit?.status === 'scored' && pursuit.account ? `
         <p><strong>${esc(pursuit.account.total)}/100 · ${esc(pursuit.tier)}</strong></p>
@@ -369,16 +381,6 @@ async function detail(id, silent = false) {
           ${s?.hypothesis && level !== "insufficient" ? `<p>Potential discovery angle: ${esc(s.hypothesis)}</p><div class="meta">Confidence: ${esc(s.confidence || "low")}</div>` : ""}
         </div>`;
       }).join("")}
-
-      <h3>Relevant Cloudflare customer stories</h3>
-      <p class="meta">Published Cloudflare examples matched to this account's research themes. They are not proof of this prospect's needs.</p>
-      ${relevantCaseStudies(opportunities, aiSignals).map(story => `
-        <div class="opportunity">
-          <strong><a href="${esc(story.url)}" target="_blank" rel="noopener noreferrer">${esc(story.name)} ↗</a></strong>
-          <p>${esc(story.outcome)}</p>
-          <div class="meta">Cloudflare products: ${esc(story.products)} · Matched on: ${esc(story.reasons.join(", "))}</div>
-        </div>
-      `).join("") || '<p>No closely matched case studies yet. <a href="https://www.cloudflare.com/case-studies/" target="_blank" rel="noopener noreferrer">Browse Cloudflare customer stories ↗</a></p>'}
 
       <h3>Discovery questions</h3>
       ${listHtml(c.questions)}
@@ -668,7 +670,7 @@ $("overlay").onclick = e => {
   }
 };
 
-["search", "nativeFilter", "statusFilter"].forEach(id => {
+["search", "nativeFilter", "statusFilter", "tierFilter"].forEach(id => {
   $(id).addEventListener(
     id === "search" ? "input" : "change",
     render
