@@ -624,12 +624,12 @@ function evidenceGrounded(report: Report, sources: Source[]): Report {
   // when the report model emits no opportunities. This is a discovery hypothesis,
   // NOT evidence of a security problem or buying intent.
   const apiEvidence = sources.map((source,i)=>({source,ref:"[S"+(i+1)+"]",text:source.title+" "+source.snippet}))
-    .find(x => /\\b(?:single API|customer-facing API|public API|API-first|API platform|API-based|API endpoint|API integrations?)\\b/i.test(x.text) &&
-      /\\b(?:customers?|payments?|transactions?|developers?|financial institutions|integrations?|platform)\\b/i.test(x.text) &&
-      !/\\b(?:job board|competitor comparison|pricing comparison)\\b/i.test(x.source.title));
+    .find(x => /\b(?:single API|customer-facing API|public API|API-first|API platform|API-based|API endpoint|API integrations?)\b/i.test(x.text) &&
+      /\b(?:customers?|payments?|transactions?|developers?|financial institutions|integrations?|platform)\b/i.test(x.text) &&
+      !/\b(?:job board|competitor comparison|pricing comparison)\b/i.test(x.source.title));
   if (apiEvidence) {
     const fact = "Documented customer-facing API workload "+apiEvidence.ref;
-    if (!report.technical_signals.some(x=>x.includes(apiEvidence.ref)&&/\\bAPI\\b/i.test(x)))
+    if (!report.technical_signals.some(x=>x.includes(apiEvidence.ref)&&/\bAPI\b/i.test(x)))
       report.technical_signals.push(fact);
     if (!report.cloudflare_opportunities.some(o=>/API Shield/i.test(o.product_fit||""))) {
       report.cloudflare_opportunities.push({pillar:"Protect",evidence:apiEvidence.ref,signal:fact,
@@ -643,8 +643,8 @@ function evidenceGrounded(report: Report, sources: Source[]): Report {
     }
   }
   const namedAi = sources.map((source,i)=>({text:source.title+" "+source.snippet,ref:"[S"+(i+1)+"]"}))
-    .find(x=>/\\b(?:AI-assisted operations|AI-assisted engineering|AI-enabled engineering|agentic AI infrastructure|AI agents?)\\b/i.test(x.text));
-  if (namedAi && !report.technical_signals.some(x=>x.includes(namedAi.ref)&&/\\bAI\\b/i.test(x)))
+    .find(x=>/\b(?:AI-assisted operations|AI-assisted engineering|AI-enabled engineering|agentic AI infrastructure|AI agents?)\b/i.test(x.text));
+  if (namedAi && !report.technical_signals.some(x=>x.includes(namedAi.ref)&&/\bAI\b/i.test(x)))
     report.technical_signals.push("Documented AI-related engineering or product activity (not evidence of model inference spend) "+namedAi.ref);
   // Add conservative, source-specific opportunities when the LLM missed
   // concrete model-provider or engineering signals. Never replace a better
