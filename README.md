@@ -1,5 +1,10 @@
 # FlareFinder — 131-company Crunchbase research universe
 
+## Combined discovery universe (22 November 2026)
+
+The bundled import CSV now contains **278 unique companies**: 131 from the original Crunchbase cohort, 150 names extracted from the user's Dealroom Early Stage + Breakout interactive map (4 overlaps; 146 additions), and ElevenLabs as a separately labelled strategic AI-native watchlist company. The Dealroom extraction preserved company names, UUIDs and the map's **hot / still early-stage** indicator, but did **not** establish a separate Early Stage versus Breakout classification for every company. Do not infer that a company is digital-native merely from its appearance on the map. Dealroom-only entries have blank funding, website and employee fields until enriched; they are **unqualified discovery candidates**, not verified prospects. The combined CSV includes source, Dealroom UUID, map cohort, hot flag and account segment columns. Existing Crunchbase enrichment is preserved. Importing upserts records and does not delete prior D1 research; the deployed database must be imported separately using the dashboard and admin token. Research is not automatically triggered by this commit.
+
+
 **Current bundled dataset: 131 UK companies** selected using two size-based cohorts: 51–500 employees with High or Medium Crunchbase Growth Score (73), and 501–1,000 employees without a Growth Score restriction (58). Both cohorts require a Likely or Very Likely growth prediction, active for-profit UK headquarters, no recorded exit, at least $5 million total funding, and last funding between 2024-01-01 and 2026-11-22. These are unqualified research prospects, not validated digital natives.
 
 The `data/crunchbase-companies.csv` and `public/crunchbase-companies.csv` files now contain the 131-account normalized import dataset. The original 62-company export remains in `data/original-crunchbase-export.csv`; the full 131-company source export is `data/crunchbase-tiered-growth-51-1000-2026-11-22.csv`.
