@@ -213,14 +213,31 @@ function tasIndustryBaseline(sector) {
   return {pct:8.6, label:"Software / technology proxy"};
 }
 function tasRevenueScenario(c) {
-  if (/^polyai$/i.test(c.name || "")) return {millions:23.27, note:"PolyAI provisional turnover scenario: £17.9M × illustrative 1.30 USD/GBP. Verify Companies House filing and FX.", kind:"Provisional reported-turnover input"};
-  const raw = String(c.employees || "").replace(/,/g, "").trim();
-  const match = raw.match(/(\d+)\s*[-–]\s*(\d+)/);
-  const plus = raw.match(/^(\d+)\s*\+/);
-  const headcount = match ? (Number(match[1]) + Number(match[2])) / 2 : plus ? Number(plus[1]) : null;
-  if (!headcount || headcount <= 0) return {millions:null, note:"No reliable annual revenue or employee range available. Enter a sourced revenue figure to calculate.", kind:"Insufficient data"};
-  const millions = headcount * 0.2;
-  return {millions, note:"Illustrative headcount proxy: midpoint of "+raw+" employees × $200,000 annual revenue per employee. This is NOT reported revenue; highly uncertain for startups and not suitable as a forecast.", kind:"Headcount-based scenario (unverified)"};
+  // Prefer an explicitly labelled, company-specific annual revenue figure in
+  // retrieved sources. Never mistake funding, valuation or transaction volume for revenue.
+  const sources = list(c.sources);
+  const candidates = [];
+  for (let i=0;i<sources.length;i++) {
+    const source = sources[i];
+    const snippet = String(source.snippet || "");
+    const title = String(source.title || "");
+    const lines = (title+" "+snippet).split(/(?<=[.!?])\\s+|\\n/);
+    for (const line of lines) {
+      const matches = [...line.matchAll(/(?:annual revenue|annual turnover|revenue (?:was|of|reached|is)|turnover (?:was|of|reached|is))[^$£€\\d]{0,35}([$£€])\\s*([\\d,.]+)\\s*(billion|million|bn|m)\\b/gi)];
+      for (const match of matches) {
+        const amount = Number(match[2].replace(/,/g,"")) * (/billion|bn/i.test(match[3])?1000:1);
+        if (!(amount>0 && amount<100000)) continue;
+        const currency = match[1];
+        if (currency !== "$") continue; // no silent FX assumptions
+        candidates.push({millions:amount,ref:"[S"+(i+1)+"]",title,url:source.url||""});
+      }
+    }
+  }
+  if (candidates.length) {
+    const x = candidates[0];
+    return {millions:x.millions,note:"Source-reported annual revenue "+x.ref+" ("+x.title+"). Verify original financial statements and reporting period before using for forecasts.",kind:"Source-reported revenue (unverified)"};
+  }
+  return {millions:null,note:"No sufficiently explicit USD annual revenue found in research sources. Enter a verified annual revenue figure manually; no headcount or funding proxy is automatically applied.",kind:"Revenue not verified"};
 }
 function tasSection(c) {
   const baseline = tasIndustryBaseline(c.sector);
@@ -231,7 +248,7 @@ function tasSection(c) {
     <div class="brief-signal">
       <div id="tasResult" class="info">Calculating overall and AI TAS…</div>
       <p class="meta"><strong>${esc(scenario.kind)}</strong> · ${esc(scenario.note)}</p>
-      <label>Annual revenue / proxy (USD millions)
+      <label>Annual revenue (USD millions)
         <input id="tasRevenue" type="number" min="0" step="0.01" placeholder="Unknown — enter sourced revenue" style="width:100%;margin-top:5px" ${scenario.millions != null ? 'value="'+scenario.millions.toFixed(2)+'"' : ''}>
       </label>
       <label>Technology spend % <input id="tasIT" type="number" min="0" max="100" step="0.1" value="${baseline.pct}" style="width:85px"></label>
@@ -241,7 +258,7 @@ function tasSection(c) {
       <label>AI Cloudflare-addressable low % <input id="tasAILow" type="number" min="0" max="100" step="0.1" value="2" style="width:75px"></label>
       <label>AI Cloudflare-addressable high % <input id="tasAIHigh" type="number" min="0" max="100" step="0.1" value="10" style="width:75px"></label>
       <details><summary class="meta">Method, assumptions and limitations</summary>
-        <p class="meta">Technology budget = annual revenue × technology spend %. Overall TAS = technology budget × 1–5% addressable share. AI budget = technology budget × 15% AI allocation. AI TAS = AI budget × 2–10% addressable share. Displayed central estimates are arithmetic midpoints of each range, not forecasts. AI TAS is already part of overall TAS and must not be added to it. All percentages are editable, illustrative planning assumptions; no validated AI budget, pricing, spend or official Cloudflare sizing methodology is implied. Funding is never treated as revenue. For headcount-based proxies, annual revenue is estimated at $200k per employee, which can be materially inaccurate.</p>
+        <p class="meta">Technology budget = annual revenue × technology spend %. Overall TAS = technology budget × 1–5% addressable share. AI budget = technology budget × 15% AI allocation. AI TAS = AI budget × 2–10% addressable share. Displayed central estimates are arithmetic midpoints of each range, not forecasts. AI TAS is already part of overall TAS and must not be added to it. All percentages are editable, illustrative planning assumptions; no validated AI budget, pricing, spend or official Cloudflare sizing methodology is implied. Funding is never treated as revenue. Revenue is only prefilled when an explicit USD annual-revenue statement is found in the research sources; otherwise enter a verified value.</p>
       </details>
     </div>
   </section>`;
