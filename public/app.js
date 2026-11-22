@@ -317,9 +317,14 @@ async function detail(id, silent = false) {
     const headcountFact = sourceFacts.find(x => /\b(?:employees|total employees|headcount)\b/i.test(x.text) &&
       /\b(?:employees|total employees|headcount)\b/i.test(x.text) && /\b\d{2,5}\s+(?:total\s+)?employees\b/i.test(x.text));
     const headcountMatch = headcountFact?.text.match(/\b(\d{2,5})\s+(?:total\s+)?employees\b/i);
-    const fundingFact = sourceFacts.find(x => /\b(?:series [a-f]|funding round)\b/i.test(x.text) &&
+    const fundingCandidates = sourceFacts.filter(x => /\b(?:series [a-f]|funding round)\b/i.test(x.text) &&
       /\$\s?(\d+(?:\.\d+)?)\s?(?:million|m)\b/i.test(x.text));
-    const fundingMatch = fundingFact?.text.match(/\$\s?(\d+(?:\.\d+)?)\s?(?:million|m)\b/i);
+    const fundingFact = fundingCandidates.sort((a,b) => {
+      const official = x => /(?:poly\.ai|prnewswire\.com)/i.test(x.url) ? 1 : 0;
+      return official(b) - official(a);
+    })[0];
+    const fundingMatch = fundingFact?.text.match(/(?:raised|raise|funding|round)[^$]{0,90}\$\s?(\d+(?:\.\d+)?)\s?(?:million|m)\b/i) ||
+      fundingFact?.text.match(/\$\s?(\d+(?:\.\d+)?)\s?(?:million|m)\b/i);
     const headcountDisplay = c.employees ? esc(c.employees) : headcountMatch
       ? esc(headcountMatch[1]) + " (reported " + cite(headcountFact.ref) + ")" : "Unknown size";
     const fundingDisplay = c.funding_usd != null ? money(c.funding_usd) : fundingMatch
