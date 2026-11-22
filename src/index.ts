@@ -973,6 +973,14 @@ async function researchCompany(env: Env, id: string) {
 // Publish pending records to durable queue messages. The status transition
 // prevents scheduled dispatchers from repeatedly publishing the same account.
 async function dispatchPending(env: Env, limit = 50) {
+  // Recover abandoned jobs from the previous waitUntil implementation or
+  // terminated consumer invocations. Normal queue retries happen much sooner.
+  await env.DB.prepare(`
+    UPDATE research SET status='pending', updated_at=datetime('now'),
+      error='Recovered stalled research; resubmitting to queue.'
+    WHERE status='running'
+      AND updated_at < datetime('now', '-30 minutes')
+  `).run();
   const rows = await env.DB.prepare(`
     SELECT company_id AS id FROM research WHERE status='pending'
     ORDER BY updated_at ASC LIMIT ?
