@@ -92,15 +92,15 @@ function priorityFor(c) {
   const score = c.status === "complete" && p?.status === "scored" ? (p.account?.total ?? p.total) : null;
   const opportunities = list(c.cloudflare_opportunities);
   const ai = list(c.ai_signals);
-  const strong = ai.filter(x => x.signal === "strong" && /\\[S\\d+\\]/.test(x.evidence || ""));
-  const sourced = opportunities.filter(x => /\\[S\\d+\\]/.test(x.evidence || ""));
+  const strong = ai.filter(x => x.signal === "strong" && /\[S\d+\]/.test(x.evidence || ""));
+  const sourced = opportunities.filter(x => /\[S\d+\]/.test(x.evidence || ""));
   const qualified = c.digital_native === "yes";
   const quality = c.confidence === "low" ? "Low confidence" : c.confidence === "high" ? "High confidence" : "Medium confidence";
   let tier = "Unassessed";
   if (score !== null) {
     tier = !qualified ? "T4 · Validate fit" : score >= 75 && c.confidence !== "low" && (sourced.length || strong.length) ? "T1 · Prioritize" : score >= 55 ? "T2 · Qualify" : "T3 · Investigate";
   }
-  const datedFunding = c.last_funding_date && /^20\\d\\d/.test(c.last_funding_date) ? "Funding " + c.last_funding_date : "";
+  const datedFunding = c.last_funding_date && /^20\d\d/.test(c.last_funding_date) ? "Funding " + c.last_funding_date : "";
   const leading = sourced.sort((a,b) => ({high:3,medium:2,low:1}[b.confidence]||0)-({high:3,medium:2,low:1}[a.confidence]||0))[0];
   const signal = strong[0];
   const reason = score === null ? "Research required before prioritization" :
@@ -670,7 +670,7 @@ $("overlay").onclick = e => {
   }
 };
 
-["search", "nativeFilter", "statusFilter"].forEach(id => {
+["search", "nativeFilter", "statusFilter", "tierFilter"].forEach(id => {
   $(id).addEventListener(
     id === "search" ? "input" : "change",
     render
