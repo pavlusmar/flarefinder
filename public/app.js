@@ -84,7 +84,10 @@ async function load() {
 }
 
 function pursuitFor(c) {
-  try { return typeof c.pursuit_score === "string" ? JSON.parse(c.pursuit_score) : c.pursuit_score; }
+  try {
+    const raw = c.pursuit_score ?? list(c.sources)[0]?.pursuit_score;
+    return typeof raw === "string" ? JSON.parse(raw) : raw;
+  }
   catch { return null; }
 }
 function priorityFor(c) {
@@ -291,6 +294,7 @@ async function detail(id, silent = false) {
           : ""}>
         ${researchButtonText(c.status)}
       </button>
+      <p class="info" id="researchFeedback" role="status" aria-live="polite"></p>
 
       <div class="priority-summary">
         <div class="priority-head"><strong>${esc(priorityFor(c).tier)}</strong><strong>${esc(priorityFor(c).score ?? "—")}/100</strong></div>
@@ -422,11 +426,13 @@ async function detail(id, silent = false) {
     `;
 
     const button = $("researchOne");
+    const feedback = message => { const el = $("researchFeedback"); if (el) el.textContent = message; };
 
     if (button && !button.disabled) {
       button.onclick = async () => {
         button.disabled = true;
         button.textContent = "Queuing research…";
+        feedback("Sending refresh request…");
 
         try {
           await api(
@@ -434,15 +440,18 @@ async function detail(id, silent = false) {
             { method: "POST" }
           );
 
-          notice(
-            "Research queued for " + c.name +
-            ". Background processing runs every 5 minutes."
-          );
+          const message = "Research queued for " + c.name + ". Background processing runs every 5 minutes.";
+          feedback(message);
+          notice(message);
 
           await load();
           await detail(id, true);
         } catch (e) {
-          notice(e.message);
+          const message = /Unauthorized/i.test(e.message)
+            ? "Refresh requires an admin token. Close this brief, select Set admin token, enter the configured ADMIN_TOKEN, then try again."
+            : "Could not queue research: " + e.message;
+          feedback(message);
+          notice(message);
           button.disabled = false;
           button.textContent = researchButtonText(c.status);
         }
