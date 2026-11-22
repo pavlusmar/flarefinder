@@ -878,7 +878,7 @@ $("syncCuratedBtn").onclick = async () => {
     const response = await fetch("/crunchbase-companies.csv", {cache:"no-store"});
     if (!response.ok) throw Error("Curated shortlist CSV unavailable");
     const raw = await response.text();
-    const parsed = parseCSV(raw);
+    const parsed = parseCsv(raw);
     if (parsed.length !== 106) throw Error("Expected exactly 106 curated companies; found "+parsed.length);
     // Ensure every canonical account is present before attempting removal.
     await importData(raw);
