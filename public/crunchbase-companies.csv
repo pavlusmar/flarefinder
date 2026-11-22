@@ -1,132 +1,279 @@
-name,website,description,crunchbase_url,employees,funding_usd,growth_score,growth_score_tier,growth_prediction,last_funding_date,sector
-Universal Quantum,https://universalquantum.com,,https://www.crunchbase.com/organization/universal-quantum,101-250,115185514,95,High,Likely,2026-10-08,
-CloudNC,http://cloudnc.com,,https://www.crunchbase.com/organization/cloudnc,101-250,97635447,95,High,Very Likely,2026-09-08,
-Lovey,https://www.lovey.com,,https://www.crunchbase.com/organization/lovey,51-100,333278676,94,High,Very Likely,2026-10-27,
-PubX,https://www.pubx.ai/,,https://www.crunchbase.com/organization/pubx,51-100,7111352,94,High,Very Likely,2026-10-06,
-Braid,https://www.nextcommunications.io/,,https://www.crunchbase.com/organization/braid-fd80,101-250,38000000,94,High,Very Likely,2026-10-28,
-CDN77,https://www.cdn77.com,,https://www.crunchbase.com/organization/cdn77-com,101-250,570000000,94,High,Likely,2026-09-23,
-Connexin,http://www.connexin.co.uk,,https://www.crunchbase.com/organization/connexin,101-250,148912996,94,High,Likely,2026-10-15,
-Twenty7Tec,https://www.twenty7tec.com/,,https://www.crunchbase.com/organization/twenty7tec,51-100,21566908,94,High,Likely,2024-09-09,
-Advantage Finance,https://www.advantage-finance.co.uk,,https://www.crunchbase.com/organization/advantage-finance,101-250,466590146,94,High,Very Likely,2026-10-27,
-Celtic Freeport,https://www.celticfreeport.wales,,https://www.crunchbase.com/organization/celtic-freeport,101-250,24364826,94,High,Very Likely,2026-10-15,
-Delin Property,https://www.delinproperty.com/,,https://www.crunchbase.com/organization/delin-property,51-100,257120656,94,High,Likely,2026-09-30,
-Ambrey Baker,https://ambreybaker.co.uk,,https://www.crunchbase.com/organization/ambrey-baker,51-100,6631423,94,High,Very Likely,2026-09-30,
-ditto.id,https://ditto.id,,https://www.crunchbase.com/organization/ditto-81d6,51-100,15112642,94,High,Likely,2026-04-15,
-Pasture Restaurant Group,https://pasturerestaurant.com,,https://www.crunchbase.com/organization/pasture-restaurant-group,101-250,6008620,94,High,Likely,2026-07-08,
-ESG Drysdale,https://www.esgdrysdale.co.uk/,,https://www.crunchbase.com/organization/esg-drysdale,101-250,13199351,94,High,Likely,2026-06-23,
-VKE Group,http://vkegroup.com,,https://www.crunchbase.com/organization/vke-group,101-250,58734015,93,High,Very Likely,2026-10-26,
-ApprovalMax,https://www.approvalmax.com/,,https://www.crunchbase.com/organization/approvalmax,101-250,12873492,93,High,Likely,2024-11-11,
-S&U,http://suplc.co.uk,,https://www.crunchbase.com/organization/s-u-3d53,101-250,807714209,93,High,Likely,2026-11-04,
-Aphex,https://www.aphex.co/,,https://www.crunchbase.com/organization/aphex,51-100,16095641,93,High,Very Likely,2026-07-29,
-Kurtosys,https://www.kurtosys.com,,https://www.crunchbase.com/organization/kurtosys,101-250,38329173,93,High,Very Likely,2026-09-09,
-Cross Keys Homes,https://www.crosskeyshomes.co.uk/,,https://www.crunchbase.com/organization/cross-keys-homes,101-250,66900014,93,High,Likely,2026-07-21,
-Magic Bean,https://magicbeancompany.co.uk/,,https://www.crunchbase.com/organization/magic-bean-23f1,101-250,28454282,93,High,Likely,2026-09-09,
-Haydock Finance,https://haydockfinance.co.uk/,,https://www.crunchbase.com/organization/haydock-finance,101-250,485121393,93,High,Likely,2026-07-27,
-TP Group,https://thetpgroup.co.uk/,,https://www.crunchbase.com/organization/tp-group-eaf7,51-100,8814962,93,High,Very Likely,2026-07-03,
-Scarlet,https://www.scarlet.cc,,https://www.crunchbase.com/organization/scarlet-9756,51-100,76550891,92,High,Very Likely,2026-10-12,
-Volta,https://volta.com,,https://www.crunchbase.com/organization/volta-ce2c,51-100,5300000000,92,High,Likely,2026-10-09,
-Xapien,https://www.xapien.com,,https://www.crunchbase.com/organization/xapien,51-100,73829440,92,High,Very Likely,2026-09-10,
-Prevalent AI,https://prevalent.ai/,,https://www.crunchbase.com/organization/prevalent-ai,101-250,22000000,92,High,Very Likely,2026-08-19,
-Science in Sport,https://www.scienceinsport.com,,https://www.crunchbase.com/organization/science-in-sport-aabd,251-500,40364084,92,High,Very Likely,2026-05-26,
-RoslinCT,https://www.roslinct.com,,https://www.crunchbase.com/organization/roslinct,101-250,10741569,92,High,Likely,2026-10-06,
-THEA-AI,https://thea.ai/,,https://www.crunchbase.com/organization/thea-ai-ltd,51-100,8000000,92,High,Very Likely,2026-07-02,
-Y TREE,https://y-tree.com,,https://www.crunchbase.com/organization/y-tree,101-250,13342994,92,High,Very Likely,2026-06-06,
-Revive,https://revive-uk.com/,,https://www.crunchbase.com/organization/revive-742d,101-250,21741972,92,High,Likely,2026-07-02,
-PortSwigger,https://portswigger.net/,,https://www.crunchbase.com/organization/portswigger,51-100,112108584,91,High,Likely,2024-06-27,
-Zeal,https://www.getzeal.io,,https://www.crunchbase.com/organization/get-zeal,51-100,14000000,91,High,Very Likely,2026-09-09,
-Advanced Electric Machines,https://advancedelectricmachines.com/,,https://www.crunchbase.com/organization/advanced-electric-machines,51-100,80008212,91,High,Likely,2026-08-04,
-Thursday,https://www.getthursday.com/mission,,https://www.crunchbase.com/organization/thursday,101-250,5122657,91,High,Very Likely,2026-09-11,
-Danesmoor Group,https://www.danesmoorgroup.co.uk,,https://www.crunchbase.com/organization/danesmoor-group,101-250,19441204,91,High,Likely,2026-04-07,
-Red Rock Renewables,https://www.redrockpower.co.uk/,,https://www.crunchbase.com/organization/red-rock-power-limited,51-100,82456567,91,High,Likely,2026-03-09,
-Cloud Nine Hair,http://www.cloudninehair.com,,https://www.crunchbase.com/organization/cloud-nine-hair,101-250,25754261,91,High,Very Likely,2026-04-15,
-FintechOS,https://www.fintechos.com,,https://www.crunchbase.com/organization/fintechos,101-250,178915181,90,High,Likely,2026-09-21,
-Ooni,http://ooni.com/,,https://www.crunchbase.com/organization/uuni,251-500,14976328,90,High,Very Likely,2026-11-12,
-Vamstar,https://www.vamstar.io/,,https://www.crunchbase.com/organization/vamstar,101-250,10954879,90,High,Very Likely,2026-10-04,
-Scan.com,https://scan.com/,,https://www.crunchbase.com/organization/scan-3,101-250,286979377,90,High,Very Likely,2026-08-31,
-Kubus,https://www.kubus.com,,https://www.crunchbase.com/organization/kubus-45d4,51-100,11816451,90,High,Likely,2024-10-03,
-NCMT,https://www.ncmt.co.uk,,https://www.crunchbase.com/organization/ncmt,101-250,18267905,90,High,Likely,2026-08-18,
-Interbridge Mortgages,https://interbridgemortgages.com,,https://www.crunchbase.com/organization/interbridge-mortgages,51-100,403770136,90,High,Very Likely,2026-01-13,
-Qureight,https://qureight.com/,,https://www.crunchbase.com/organization/qureight,51-100,28367213,89,High,Very Likely,2026-07-29,
-Gozney,https://www.gozney.com/uk/,,https://www.crunchbase.com/organization/gozney,101-250,6951500,89,High,Likely,2025-07-15,
-Mimica Automation,https://mimica.ai/,,https://www.crunchbase.com/organization/mimica-ai,251-500,32237286,89,High,Likely,2025-09-24,
-Mindsite,https://www.themindsite.com/,,https://www.crunchbase.com/organization/mindsite-a79f,51-100,5777577,89,High,Very Likely,2026-01-14,
-Protium Green Solutions,https://protium.green,,https://www.crunchbase.com/organization/protium-green-solutions,51-100,89495528,89,High,Likely,2025-01-10,
-Bath City Football Club,https://www.bathcityfc.com/,,https://www.crunchbase.com/organization/bath-city-football-club,51-100,8095200,89,High,Likely,2026-08-07,
-Pelican Engineering Group,https://pelican-eng.co.uk,,https://www.crunchbase.com/organization/pelican-engineering-company-sales-limited,51-100,120592101,89,High,Likely,2024-10-31,
-Kingsland Drinks,https://www.kingsland-drinks.com/,,https://www.crunchbase.com/organization/kingsland-drinks,101-250,87995397,89,High,Likely,2026-04-27,
-Zap Map,https://www.zap-map.com/,,https://www.crunchbase.com/organization/zap-map,51-100,13052042,89,High,Likely,2024-06-12,
-Fractile,https://fractile.ai,,https://www.crunchbase.com/organization/fractile-dd0e,101-250,989532889,88,Medium,Likely,2026-10-29,
-Nourished,https://get-nourished.com/,,https://www.crunchbase.com/organization/nourish3d,51-100,33716222,88,Medium,Very Likely,2026-11-11,
-Cyted,https://cyted.ai,,https://www.crunchbase.com/organization/cyted,51-100,83394746,88,Medium,Very Likely,2025-08-30,
-Street Group,https://www.streetgroup.co.uk,,https://www.crunchbase.com/organization/street-group,101-250,13543886,88,Medium,Likely,2026-07-22,
-social.plus,https://www.social.plus/,,https://www.crunchbase.com/organization/social-53d2,51-100,15000000,88,Medium,Likely,2024-06-26,
-Battersea Power Station,https://batterseapowerstation.co.uk/,,https://www.crunchbase.com/organization/battersea-power-station,101-250,1121163994,88,Medium,Likely,2026-10-12,
-Kaizen Reporting,https://www.kaizenreporting.com/,,https://www.crunchbase.com/organization/kaizen-reporting,51-100,54106071,88,Medium,Likely,2024-11-06,
-Novatus,https://www.novatus.com/,,https://www.crunchbase.com/organization/novatus-global,101-250,40000000,88,Medium,Likely,2024-09-12,
-Arkk Solutions,http://www.arkksolutions.com,,https://www.crunchbase.com/organization/arkk-solutions,101-250,12623438,88,Medium,Likely,2026-01-14,
-Absolute Financial Management,https://afmanagement.co.uk,,https://www.crunchbase.com/organization/absolute-financial-management,51-100,135049908,88,Medium,Likely,2025-08-12,
-MagicOrange,https://www.magicorange.com/,,https://www.crunchbase.com/organization/magic-orange,101-250,16414381,87,Medium,Likely,2025-04-07,
-Budibase,https://www.budibase.com,,https://www.crunchbase.com/organization/budibase,51-100,9690660,87,Medium,Likely,2025-09-15,
-Osprey Flight Solutions,https://www.ospreyflightsolutions.com/,,https://www.crunchbase.com/organization/osprey-f2db,51-100,58037966,87,Medium,Likely,2025-09-02,
-Reactive Technologies,https://www.reactive-technologies.com/,,https://www.crunchbase.com/organization/reactive-technologies,101-250,70573765,86,Medium,Likely,2026-09-23,
-Definely,https://www.definely.com,,https://www.crunchbase.com/organization/definely,101-250,42511832,86,Medium,Very Likely,2025-06-09,
-Agrovista,https://www.agrovista.co.uk/,,https://www.crunchbase.com/organization/agrovista,251-500,15000000,86,Medium,Likely,2025-05-02,
-Leanpay,https://www.leanpay.com/,,https://www.crunchbase.com/organization/leanpay,101-250,17174562,86,Medium,Likely,2024-07-30,
-Port,https://port.app/,,https://www.crunchbase.com/organization/port-af52,501-1000,16185619,94,High,Very Likely,2026-11-10,
-Tideway,https://www.tideway.london/,,https://www.crunchbase.com/organization/tideway-3b1b,501-1000,331768712,94,High,Very Likely,2026-10-15,
-Ascenti,https://www.ascenti.co.uk/,,https://www.crunchbase.com/organization/ascenti,501-1000,26178116,94,High,Very Likely,2026-05-22,
-Donnelly Group,https://www.donnellygroup.co.uk/,,https://www.crunchbase.com/organization/donnelly-group-f919,501-1000,10751749,93,High,Very Likely,2026-07-21,
-Amity Corporation,https://www.amitycorp.com/,,https://www.crunchbase.com/organization/amity-78ac,501-1000,188700000,91,High,Likely,2026-11-02,
-Nadara,https://nadara.com,,https://www.crunchbase.com/organization/nadara,501-1000,1366319318,90,High,Very Likely,2026-07-28,
-Cruden Group,https://www.crudengroup.co.uk/,,https://www.crunchbase.com/organization/cruden-group,501-1000,19658518,89,High,Likely,2025-11-24,
-GSMA,https://www.gsma.com,,https://www.crunchbase.com/organization/gsma,501-1000,46944553,88,Medium,Likely,2026-10-28,
-Monty Mobile,http://www.montymobile.com,,https://www.crunchbase.com/organization/monty-mobile,501-1000,12000000,88,Medium,Likely,2026-08-11,
-CVH Spirits,https://cvhspirits.com,,https://www.crunchbase.com/organization/cvh-spirits,501-1000,91644063,88,Medium,Likely,2024-09-17,
-LNT Care Developments,https://lntcaredevelopments.co.uk,,https://www.crunchbase.com/organization/lnt-care-developments,501-1000,133737577,87,Medium,Very Likely,2026-06-09,
-Mileway,https://www.mileway.com,,https://www.crunchbase.com/organization/mileway,501-1000,1714971703,85,Low,Very Likely,2026-07-09,
-AmberStudent,https://amberstudent.com,,https://www.crunchbase.com/organization/amberstudent,501-1000,21000000,85,Low,Likely,2024-02-12,
-Payhawk,https://payhawk.com,,https://www.crunchbase.com/organization/payhawk,501-1000,516090120,83,Low,Likely,2026-11-18,
-Brompton Bicycle,http://www.brompton.com,,https://www.crunchbase.com/organization/brompton-bicycle,501-1000,48263723,83,Low,Very Likely,2026-06-30,
-Kaluza,https://www.kaluza.com/,,https://www.crunchbase.com/organization/kaluza,501-1000,99112808,82,Low,Very Likely,2024-06-10,
-Huboo,https://www.huboo.com,,https://www.crunchbase.com/organization/huboo,501-1000,195707593,82,Low,Likely,2024-11-04,
-Hill Group UK,https://www.hill.co.uk/,,https://www.crunchbase.com/organization/hill-group-uk,501-1000,689616038,82,Low,Very Likely,2026-01-27,
-MIND,http://www.mind.org.uk/,,https://www.crunchbase.com/organization/mind,501-1000,30000000,81,Low,Likely,2025-06-06,
-TerraPay,https://terrapay.com,,https://www.crunchbase.com/organization/terrapay,501-1000,259117310,80,Low,Likely,2024-07-10,
-Flo Health,https://flo.health,,https://www.crunchbase.com/organization/flohealth,501-1000,275500000,78,Low,Likely,2026-10-12,
-Canary Wharf Group,http://canarywharf.com,,https://www.crunchbase.com/organization/canary-wharf-group,501-1000,561095057,77,Low,Likely,2024-12-10,
-McGoff Group,https://www.mcgoffgroup.com/,,https://www.crunchbase.com/organization/mcgoff-group,501-1000,100266719,77,Low,Likely,2026-07-09,
-9fin,https://9fin.com,,https://www.crunchbase.com/organization/9fin,501-1000,257164459,76,Low,Very Likely,2026-03-31,
-Allica Bank,https://www.allica.bank,,https://www.crunchbase.com/organization/allica-bank,501-1000,543412086,75,Low,Very Likely,2026-06-09,
-Rolls-Royce SMR,https://rolls-royce-smr.com,,https://www.crunchbase.com/organization/rolls-royce-smr,501-1000,804766799,73,Low,Likely,2026-04-13,
-JIGSAW,http://www.jigsaw-online.com,,https://www.crunchbase.com/organization/jigsaw-e122,501-1000,20468410,72,Low,Likely,2025-04-04,
-Epos Now,https://www.eposnow.com,,https://www.crunchbase.com/organization/epos-now,501-1000,137280811,71,Low,Likely,2026-06-10,
-Form3,https://form3.tech,,https://www.crunchbase.com/organization/form3-financial-cloud,501-1000,300236620,70,Low,Very Likely,2025-09-23,
-PPRO,https://www.ppro.com,,https://www.crunchbase.com/organization/ppro-group,501-1000,463099366,69,Low,Very Likely,2024-03-13,
-Ascona Group Holdings,https://www.asconagroup.co.uk,,https://www.crunchbase.com/organization/ascona-group-holdings,501-1000,266059342,69,Low,Likely,2025-12-09,
-Tottenham Hotspur,http://www.tottenhamhotspur.com,,https://www.crunchbase.com/organization/tottenham-hotspur,501-1000,1068385375,66,Low,Very Likely,2026-09-01,
-Zopa,http://www.zopa.com,,https://www.crunchbase.com/organization/zopa,501-1000,1173693692,66,Low,Likely,2025-05-14,
-Smart Pension,https://www.smartpension.co.uk,,https://www.crunchbase.com/organization/smart-pension,501-1000,81283959,66,Low,Likely,2025-08-13,
-Panattoni,https://www.panattoni.co.uk,,https://www.crunchbase.com/organization/panattoni-7e9d,501-1000,830081627,66,Low,Very Likely,2024-09-19,
-Ballymore Group,http://www.ballymoregroup.com,,https://www.crunchbase.com/organization/ballymore-group,501-1000,149764927,66,Low,Likely,2025-11-24,
-Fuse Energy,https://www.fuseenergy.com,,https://www.crunchbase.com/organization/fuse-energy,501-1000,199856982,65,Low,Likely,2026-06-04,
-Surface Technology International,https://www.sti-limited.com,,https://www.crunchbase.com/organization/surface-technology-international,501-1000,14404612,65,Low,Likely,2024-07-03,
-Lighthouse,https://www.mylighthouse.com,,https://www.crunchbase.com/organization/lighthouse-ltd,501-1000,470000000,64,Low,Likely,2024-11-21,
-Marshmallow,https://www.marshmallow.com,,https://www.crunchbase.com/organization/marshmallow,501-1000,224824402,64,Low,Likely,2025-04-14,
-Voy,https://joinvoy.in/,,https://www.crunchbase.com/organization/manual-b7ab,501-1000,195125629,63,Low,Very Likely,2026-01-26,
-Butternut Box,https://butternutbox.com,,https://www.crunchbase.com/organization/butternut-box,501-1000,551420498,63,Low,Likely,2025-05-20,
-South East Water,https://www.southeastwater.co.uk/,,https://www.crunchbase.com/organization/south-east-water-1d6a,501-1000,361323010,63,Low,Likely,2025-05-15,
-TradingView,https://www.tradingview.com,,https://www.crunchbase.com/organization/tradingview,501-1000,389252500,61,Low,Likely,2024-01-01,
-Synthesia,http://www.synthesia.io,,https://www.crunchbase.com/organization/synthesia,501-1000,536600000,61,Low,Likely,2025-10-29,
-Boldyn Networks,https://www.boldyn.com,,https://www.crunchbase.com/organization/boldyn-networks,501-1000,1200000000,60,Low,Likely,2025-01-30,
-Hamberley Care Homes,https://www.hamberleycarehomes.co.uk,,https://www.crunchbase.com/organization/hamberley-care-homes,501-1000,281010514,60,Low,Likely,2026-01-15,
-Yorkshire Housing,https://www.yorkshirehousing.co.uk/,,https://www.crunchbase.com/organization/yorkshire-housing,501-1000,94474501,60,Low,Likely,2025-02-27,
-HF,https://www.h-f.co.uk,,https://www.crunchbase.com/organization/horwich-farrelly,501-1000,15205194,59,Low,Likely,2024-05-16,
-Incommunities Group,http://www.incommunities.co.uk/,,https://www.crunchbase.com/organization/incommunities-group,501-1000,130858879,57,Low,Likely,2024-10-23,
-Cassava Technologies,https://www.cassavatechnologies.com/,,https://www.crunchbase.com/organization/cassava-technologies,501-1000,140000000,55,Low,Likely,2025-10-23,
-Quantexa,http://www.quantexa.com,,https://www.crunchbase.com/organization/quantexa,501-1000,545000000,53,Low,Very Likely,2025-03-05,
-Vital Energi,http://www.vitalenergi.co.uk,,https://www.crunchbase.com/organization/vital-energi,501-1000,243400035,53,Low,Likely,2025-11-20,
-Huma,https://huma.com,,https://www.crunchbase.com/organization/medopad,501-1000,322619465,52,Low,Likely,2024-07-16,
-Ultimate Performance,https://ultimateperformance.com,,https://www.crunchbase.com/organization/ultimate-performance,501-1000,11251099,51,Low,Likely,2025-01-06,
-LEOS Developments,https://leosdevelopments.com/,,https://www.crunchbase.com/organization/leos-developments,501-1000,56909462,48,Low,Likely,2025-10-09,
-Venterra,https://www.venterra-group.com/,,https://www.crunchbase.com/organization/venterra,501-1000,285336027,46,Low,Likely,2025-12-21,
-Capital on Tap,https://www.capitalontap.com,,https://www.crunchbase.com/organization/capital-on-tap,501-1000,4940810182,44,Low,Likely,2026-11-09,
+name,website,description,crunchbase_url,employees,funding_usd,growth_score,growth_score_tier,growth_prediction,last_funding_date,sector,source,dealroom_uuid,dealroom_map_cohort,dealroom_hot,account_segment
+Universal Quantum,https://universalquantum.com,,https://www.crunchbase.com/organization/universal-quantum,101-250,115185514,95,High,Likely,2026-10-08,,Crunchbase,,,,Core discovery
+CloudNC,http://cloudnc.com,,https://www.crunchbase.com/organization/cloudnc,101-250,97635447,95,High,Very Likely,2026-09-08,,Crunchbase,,,,Core discovery
+Lovey,https://www.lovey.com,,https://www.crunchbase.com/organization/lovey,51-100,333278676,94,High,Very Likely,2026-10-27,,Crunchbase;Dealroom,d9dded21-bbf9-4918-b73d-7b2275d23e34,Early Stage + Breakout map (individual stage unverified),false,Core discovery
+PubX,https://www.pubx.ai/,,https://www.crunchbase.com/organization/pubx,51-100,7111352,94,High,Very Likely,2026-10-06,,Crunchbase,,,,Core discovery
+Braid,https://www.nextcommunications.io/,,https://www.crunchbase.com/organization/braid-fd80,101-250,38000000,94,High,Very Likely,2026-10-28,,Crunchbase,,,,Core discovery
+CDN77,https://www.cdn77.com,,https://www.crunchbase.com/organization/cdn77-com,101-250,570000000,94,High,Likely,2026-09-23,,Crunchbase,,,,Core discovery
+Connexin,http://www.connexin.co.uk,,https://www.crunchbase.com/organization/connexin,101-250,148912996,94,High,Likely,2026-10-15,,Crunchbase,,,,Core discovery
+Twenty7Tec,https://www.twenty7tec.com/,,https://www.crunchbase.com/organization/twenty7tec,51-100,21566908,94,High,Likely,2024-09-09,,Crunchbase,,,,Core discovery
+Advantage Finance,https://www.advantage-finance.co.uk,,https://www.crunchbase.com/organization/advantage-finance,101-250,466590146,94,High,Very Likely,2026-10-27,,Crunchbase,,,,Core discovery
+Celtic Freeport,https://www.celticfreeport.wales,,https://www.crunchbase.com/organization/celtic-freeport,101-250,24364826,94,High,Very Likely,2026-10-15,,Crunchbase,,,,Core discovery
+Delin Property,https://www.delinproperty.com/,,https://www.crunchbase.com/organization/delin-property,51-100,257120656,94,High,Likely,2026-09-30,,Crunchbase,,,,Core discovery
+Ambrey Baker,https://ambreybaker.co.uk,,https://www.crunchbase.com/organization/ambrey-baker,51-100,6631423,94,High,Very Likely,2026-09-30,,Crunchbase,,,,Core discovery
+ditto.id,https://ditto.id,,https://www.crunchbase.com/organization/ditto-81d6,51-100,15112642,94,High,Likely,2026-04-15,,Crunchbase,,,,Core discovery
+Pasture Restaurant Group,https://pasturerestaurant.com,,https://www.crunchbase.com/organization/pasture-restaurant-group,101-250,6008620,94,High,Likely,2026-07-08,,Crunchbase,,,,Core discovery
+ESG Drysdale,https://www.esgdrysdale.co.uk/,,https://www.crunchbase.com/organization/esg-drysdale,101-250,13199351,94,High,Likely,2026-06-23,,Crunchbase,,,,Core discovery
+VKE Group,http://vkegroup.com,,https://www.crunchbase.com/organization/vke-group,101-250,58734015,93,High,Very Likely,2026-10-26,,Crunchbase,,,,Core discovery
+ApprovalMax,https://www.approvalmax.com/,,https://www.crunchbase.com/organization/approvalmax,101-250,12873492,93,High,Likely,2024-11-11,,Crunchbase,,,,Core discovery
+S&U,http://suplc.co.uk,,https://www.crunchbase.com/organization/s-u-3d53,101-250,807714209,93,High,Likely,2026-11-04,,Crunchbase,,,,Core discovery
+Aphex,https://www.aphex.co/,,https://www.crunchbase.com/organization/aphex,51-100,16095641,93,High,Very Likely,2026-07-29,,Crunchbase,,,,Core discovery
+Kurtosys,https://www.kurtosys.com,,https://www.crunchbase.com/organization/kurtosys,101-250,38329173,93,High,Very Likely,2026-09-09,,Crunchbase,,,,Core discovery
+Cross Keys Homes,https://www.crosskeyshomes.co.uk/,,https://www.crunchbase.com/organization/cross-keys-homes,101-250,66900014,93,High,Likely,2026-07-21,,Crunchbase,,,,Core discovery
+Magic Bean,https://magicbeancompany.co.uk/,,https://www.crunchbase.com/organization/magic-bean-23f1,101-250,28454282,93,High,Likely,2026-09-09,,Crunchbase,,,,Core discovery
+Haydock Finance,https://haydockfinance.co.uk/,,https://www.crunchbase.com/organization/haydock-finance,101-250,485121393,93,High,Likely,2026-07-27,,Crunchbase,,,,Core discovery
+TP Group,https://thetpgroup.co.uk/,,https://www.crunchbase.com/organization/tp-group-eaf7,51-100,8814962,93,High,Very Likely,2026-07-03,,Crunchbase,,,,Core discovery
+Scarlet,https://www.scarlet.cc,,https://www.crunchbase.com/organization/scarlet-9756,51-100,76550891,92,High,Very Likely,2026-10-12,,Crunchbase,,,,Core discovery
+Volta,https://volta.com,,https://www.crunchbase.com/organization/volta-ce2c,51-100,5300000000,92,High,Likely,2026-10-09,,Crunchbase,,,,Core discovery
+Xapien,https://www.xapien.com,,https://www.crunchbase.com/organization/xapien,51-100,73829440,92,High,Very Likely,2026-09-10,,Crunchbase,,,,Core discovery
+Prevalent AI,https://prevalent.ai/,,https://www.crunchbase.com/organization/prevalent-ai,101-250,22000000,92,High,Very Likely,2026-08-19,,Crunchbase,,,,Core discovery
+Science in Sport,https://www.scienceinsport.com,,https://www.crunchbase.com/organization/science-in-sport-aabd,251-500,40364084,92,High,Very Likely,2026-05-26,,Crunchbase,,,,Core discovery
+RoslinCT,https://www.roslinct.com,,https://www.crunchbase.com/organization/roslinct,101-250,10741569,92,High,Likely,2026-10-06,,Crunchbase,,,,Core discovery
+THEA-AI,https://thea.ai/,,https://www.crunchbase.com/organization/thea-ai-ltd,51-100,8000000,92,High,Very Likely,2026-07-02,,Crunchbase,,,,Core discovery
+Y TREE,https://y-tree.com,,https://www.crunchbase.com/organization/y-tree,101-250,13342994,92,High,Very Likely,2026-06-06,,Crunchbase,,,,Core discovery
+Revive,https://revive-uk.com/,,https://www.crunchbase.com/organization/revive-742d,101-250,21741972,92,High,Likely,2026-07-02,,Crunchbase,,,,Core discovery
+PortSwigger,https://portswigger.net/,,https://www.crunchbase.com/organization/portswigger,51-100,112108584,91,High,Likely,2024-06-27,,Crunchbase,,,,Core discovery
+Zeal,https://www.getzeal.io,,https://www.crunchbase.com/organization/get-zeal,51-100,14000000,91,High,Very Likely,2026-09-09,,Crunchbase,,,,Core discovery
+Advanced Electric Machines,https://advancedelectricmachines.com/,,https://www.crunchbase.com/organization/advanced-electric-machines,51-100,80008212,91,High,Likely,2026-08-04,,Crunchbase,,,,Core discovery
+Thursday,https://www.getthursday.com/mission,,https://www.crunchbase.com/organization/thursday,101-250,5122657,91,High,Very Likely,2026-09-11,,Crunchbase,,,,Core discovery
+Danesmoor Group,https://www.danesmoorgroup.co.uk,,https://www.crunchbase.com/organization/danesmoor-group,101-250,19441204,91,High,Likely,2026-04-07,,Crunchbase,,,,Core discovery
+Red Rock Renewables,https://www.redrockpower.co.uk/,,https://www.crunchbase.com/organization/red-rock-power-limited,51-100,82456567,91,High,Likely,2026-03-09,,Crunchbase,,,,Core discovery
+Cloud Nine Hair,http://www.cloudninehair.com,,https://www.crunchbase.com/organization/cloud-nine-hair,101-250,25754261,91,High,Very Likely,2026-04-15,,Crunchbase,,,,Core discovery
+FintechOS,https://www.fintechos.com,,https://www.crunchbase.com/organization/fintechos,101-250,178915181,90,High,Likely,2026-09-21,,Crunchbase,,,,Core discovery
+Ooni,http://ooni.com/,,https://www.crunchbase.com/organization/uuni,251-500,14976328,90,High,Very Likely,2026-11-12,,Crunchbase,,,,Core discovery
+Vamstar,https://www.vamstar.io/,,https://www.crunchbase.com/organization/vamstar,101-250,10954879,90,High,Very Likely,2026-10-04,,Crunchbase,,,,Core discovery
+Scan.com,https://scan.com/,,https://www.crunchbase.com/organization/scan-3,101-250,286979377,90,High,Very Likely,2026-08-31,,Crunchbase,,,,Core discovery
+Kubus,https://www.kubus.com,,https://www.crunchbase.com/organization/kubus-45d4,51-100,11816451,90,High,Likely,2024-10-03,,Crunchbase,,,,Core discovery
+NCMT,https://www.ncmt.co.uk,,https://www.crunchbase.com/organization/ncmt,101-250,18267905,90,High,Likely,2026-08-18,,Crunchbase,,,,Core discovery
+Interbridge Mortgages,https://interbridgemortgages.com,,https://www.crunchbase.com/organization/interbridge-mortgages,51-100,403770136,90,High,Very Likely,2026-01-13,,Crunchbase,,,,Core discovery
+Qureight,https://qureight.com/,,https://www.crunchbase.com/organization/qureight,51-100,28367213,89,High,Very Likely,2026-07-29,,Crunchbase,,,,Core discovery
+Gozney,https://www.gozney.com/uk/,,https://www.crunchbase.com/organization/gozney,101-250,6951500,89,High,Likely,2025-07-15,,Crunchbase,,,,Core discovery
+Mimica Automation,https://mimica.ai/,,https://www.crunchbase.com/organization/mimica-ai,251-500,32237286,89,High,Likely,2025-09-24,,Crunchbase,,,,Core discovery
+Mindsite,https://www.themindsite.com/,,https://www.crunchbase.com/organization/mindsite-a79f,51-100,5777577,89,High,Very Likely,2026-01-14,,Crunchbase,,,,Core discovery
+Protium Green Solutions,https://protium.green,,https://www.crunchbase.com/organization/protium-green-solutions,51-100,89495528,89,High,Likely,2025-01-10,,Crunchbase,,,,Core discovery
+Bath City Football Club,https://www.bathcityfc.com/,,https://www.crunchbase.com/organization/bath-city-football-club,51-100,8095200,89,High,Likely,2026-08-07,,Crunchbase,,,,Core discovery
+Pelican Engineering Group,https://pelican-eng.co.uk,,https://www.crunchbase.com/organization/pelican-engineering-company-sales-limited,51-100,120592101,89,High,Likely,2024-10-31,,Crunchbase,,,,Core discovery
+Kingsland Drinks,https://www.kingsland-drinks.com/,,https://www.crunchbase.com/organization/kingsland-drinks,101-250,87995397,89,High,Likely,2026-04-27,,Crunchbase,,,,Core discovery
+Zap Map,https://www.zap-map.com/,,https://www.crunchbase.com/organization/zap-map,51-100,13052042,89,High,Likely,2024-06-12,,Crunchbase,,,,Core discovery
+Fractile,https://fractile.ai,,https://www.crunchbase.com/organization/fractile-dd0e,101-250,989532889,88,Medium,Likely,2026-10-29,,Crunchbase,,,,Core discovery
+Nourished,https://get-nourished.com/,,https://www.crunchbase.com/organization/nourish3d,51-100,33716222,88,Medium,Very Likely,2026-11-11,,Crunchbase,,,,Core discovery
+Cyted,https://cyted.ai,,https://www.crunchbase.com/organization/cyted,51-100,83394746,88,Medium,Very Likely,2025-08-30,,Crunchbase,,,,Core discovery
+Street Group,https://www.streetgroup.co.uk,,https://www.crunchbase.com/organization/street-group,101-250,13543886,88,Medium,Likely,2026-07-22,,Crunchbase,,,,Core discovery
+social.plus,https://www.social.plus/,,https://www.crunchbase.com/organization/social-53d2,51-100,15000000,88,Medium,Likely,2024-06-26,,Crunchbase,,,,Core discovery
+Battersea Power Station,https://batterseapowerstation.co.uk/,,https://www.crunchbase.com/organization/battersea-power-station,101-250,1121163994,88,Medium,Likely,2026-10-12,,Crunchbase,,,,Core discovery
+Kaizen Reporting,https://www.kaizenreporting.com/,,https://www.crunchbase.com/organization/kaizen-reporting,51-100,54106071,88,Medium,Likely,2024-11-06,,Crunchbase,,,,Core discovery
+Novatus,https://www.novatus.com/,,https://www.crunchbase.com/organization/novatus-global,101-250,40000000,88,Medium,Likely,2024-09-12,,Crunchbase,,,,Core discovery
+Arkk Solutions,http://www.arkksolutions.com,,https://www.crunchbase.com/organization/arkk-solutions,101-250,12623438,88,Medium,Likely,2026-01-14,,Crunchbase,,,,Core discovery
+Absolute Financial Management,https://afmanagement.co.uk,,https://www.crunchbase.com/organization/absolute-financial-management,51-100,135049908,88,Medium,Likely,2025-08-12,,Crunchbase,,,,Core discovery
+MagicOrange,https://www.magicorange.com/,,https://www.crunchbase.com/organization/magic-orange,101-250,16414381,87,Medium,Likely,2025-04-07,,Crunchbase,,,,Core discovery
+Budibase,https://www.budibase.com,,https://www.crunchbase.com/organization/budibase,51-100,9690660,87,Medium,Likely,2025-09-15,,Crunchbase,,,,Core discovery
+Osprey Flight Solutions,https://www.ospreyflightsolutions.com/,,https://www.crunchbase.com/organization/osprey-f2db,51-100,58037966,87,Medium,Likely,2025-09-02,,Crunchbase,,,,Core discovery
+Reactive Technologies,https://www.reactive-technologies.com/,,https://www.crunchbase.com/organization/reactive-technologies,101-250,70573765,86,Medium,Likely,2026-09-23,,Crunchbase,,,,Core discovery
+Definely,https://www.definely.com,,https://www.crunchbase.com/organization/definely,101-250,42511832,86,Medium,Very Likely,2025-06-09,,Crunchbase,,,,Core discovery
+Agrovista,https://www.agrovista.co.uk/,,https://www.crunchbase.com/organization/agrovista,251-500,15000000,86,Medium,Likely,2025-05-02,,Crunchbase,,,,Core discovery
+Leanpay,https://www.leanpay.com/,,https://www.crunchbase.com/organization/leanpay,101-250,17174562,86,Medium,Likely,2024-07-30,,Crunchbase,,,,Core discovery
+Port,https://port.app/,,https://www.crunchbase.com/organization/port-af52,501-1000,16185619,94,High,Very Likely,2026-11-10,,Crunchbase,,,,Core discovery
+Tideway,https://www.tideway.london/,,https://www.crunchbase.com/organization/tideway-3b1b,501-1000,331768712,94,High,Very Likely,2026-10-15,,Crunchbase,,,,Core discovery
+Ascenti,https://www.ascenti.co.uk/,,https://www.crunchbase.com/organization/ascenti,501-1000,26178116,94,High,Very Likely,2026-05-22,,Crunchbase,,,,Core discovery
+Donnelly Group,https://www.donnellygroup.co.uk/,,https://www.crunchbase.com/organization/donnelly-group-f919,501-1000,10751749,93,High,Very Likely,2026-07-21,,Crunchbase,,,,Core discovery
+Amity Corporation,https://www.amitycorp.com/,,https://www.crunchbase.com/organization/amity-78ac,501-1000,188700000,91,High,Likely,2026-11-02,,Crunchbase,,,,Core discovery
+Nadara,https://nadara.com,,https://www.crunchbase.com/organization/nadara,501-1000,1366319318,90,High,Very Likely,2026-07-28,,Crunchbase,,,,Core discovery
+Cruden Group,https://www.crudengroup.co.uk/,,https://www.crunchbase.com/organization/cruden-group,501-1000,19658518,89,High,Likely,2025-11-24,,Crunchbase,,,,Core discovery
+GSMA,https://www.gsma.com,,https://www.crunchbase.com/organization/gsma,501-1000,46944553,88,Medium,Likely,2026-10-28,,Crunchbase,,,,Core discovery
+Monty Mobile,http://www.montymobile.com,,https://www.crunchbase.com/organization/monty-mobile,501-1000,12000000,88,Medium,Likely,2026-08-11,,Crunchbase,,,,Core discovery
+CVH Spirits,https://cvhspirits.com,,https://www.crunchbase.com/organization/cvh-spirits,501-1000,91644063,88,Medium,Likely,2024-09-17,,Crunchbase,,,,Core discovery
+LNT Care Developments,https://lntcaredevelopments.co.uk,,https://www.crunchbase.com/organization/lnt-care-developments,501-1000,133737577,87,Medium,Very Likely,2026-06-09,,Crunchbase,,,,Core discovery
+Mileway,https://www.mileway.com,,https://www.crunchbase.com/organization/mileway,501-1000,1714971703,85,Low,Very Likely,2026-07-09,,Crunchbase,,,,Core discovery
+AmberStudent,https://amberstudent.com,,https://www.crunchbase.com/organization/amberstudent,501-1000,21000000,85,Low,Likely,2024-02-12,,Crunchbase,,,,Core discovery
+Payhawk,https://payhawk.com,,https://www.crunchbase.com/organization/payhawk,501-1000,516090120,83,Low,Likely,2026-11-18,,Crunchbase,,,,Core discovery
+Brompton Bicycle,http://www.brompton.com,,https://www.crunchbase.com/organization/brompton-bicycle,501-1000,48263723,83,Low,Very Likely,2026-06-30,,Crunchbase,,,,Core discovery
+Kaluza,https://www.kaluza.com/,,https://www.crunchbase.com/organization/kaluza,501-1000,99112808,82,Low,Very Likely,2024-06-10,,Crunchbase,,,,Core discovery
+Huboo,https://www.huboo.com,,https://www.crunchbase.com/organization/huboo,501-1000,195707593,82,Low,Likely,2024-11-04,,Crunchbase,,,,Core discovery
+Hill Group UK,https://www.hill.co.uk/,,https://www.crunchbase.com/organization/hill-group-uk,501-1000,689616038,82,Low,Very Likely,2026-01-27,,Crunchbase,,,,Core discovery
+MIND,http://www.mind.org.uk/,,https://www.crunchbase.com/organization/mind,501-1000,30000000,81,Low,Likely,2025-06-06,,Crunchbase,,,,Core discovery
+TerraPay,https://terrapay.com,,https://www.crunchbase.com/organization/terrapay,501-1000,259117310,80,Low,Likely,2024-07-10,,Crunchbase,,,,Core discovery
+Flo Health,https://flo.health,,https://www.crunchbase.com/organization/flohealth,501-1000,275500000,78,Low,Likely,2026-10-12,,Crunchbase,,,,Core discovery
+Canary Wharf Group,http://canarywharf.com,,https://www.crunchbase.com/organization/canary-wharf-group,501-1000,561095057,77,Low,Likely,2024-12-10,,Crunchbase,,,,Core discovery
+McGoff Group,https://www.mcgoffgroup.com/,,https://www.crunchbase.com/organization/mcgoff-group,501-1000,100266719,77,Low,Likely,2026-07-09,,Crunchbase,,,,Core discovery
+9fin,https://9fin.com,,https://www.crunchbase.com/organization/9fin,501-1000,257164459,76,Low,Very Likely,2026-03-31,,Crunchbase,,,,Core discovery
+Allica Bank,https://www.allica.bank,,https://www.crunchbase.com/organization/allica-bank,501-1000,543412086,75,Low,Very Likely,2026-06-09,,Crunchbase;Dealroom,0ca8ea47-82ea-41b6-bc3b-8538ef1ca3c8,Early Stage + Breakout map (individual stage unverified),false,Core discovery
+Rolls-Royce SMR,https://rolls-royce-smr.com,,https://www.crunchbase.com/organization/rolls-royce-smr,501-1000,804766799,73,Low,Likely,2026-04-13,,Crunchbase,,,,Core discovery
+JIGSAW,http://www.jigsaw-online.com,,https://www.crunchbase.com/organization/jigsaw-e122,501-1000,20468410,72,Low,Likely,2025-04-04,,Crunchbase,,,,Core discovery
+Epos Now,https://www.eposnow.com,,https://www.crunchbase.com/organization/epos-now,501-1000,137280811,71,Low,Likely,2026-06-10,,Crunchbase,,,,Core discovery
+Form3,https://form3.tech,,https://www.crunchbase.com/organization/form3-financial-cloud,501-1000,300236620,70,Low,Very Likely,2025-09-23,,Crunchbase,,,,Core discovery
+PPRO,https://www.ppro.com,,https://www.crunchbase.com/organization/ppro-group,501-1000,463099366,69,Low,Very Likely,2024-03-13,,Crunchbase,,,,Core discovery
+Ascona Group Holdings,https://www.asconagroup.co.uk,,https://www.crunchbase.com/organization/ascona-group-holdings,501-1000,266059342,69,Low,Likely,2025-12-09,,Crunchbase,,,,Core discovery
+Tottenham Hotspur,http://www.tottenhamhotspur.com,,https://www.crunchbase.com/organization/tottenham-hotspur,501-1000,1068385375,66,Low,Very Likely,2026-09-01,,Crunchbase,,,,Core discovery
+Zopa,http://www.zopa.com,,https://www.crunchbase.com/organization/zopa,501-1000,1173693692,66,Low,Likely,2025-05-14,,Crunchbase,,,,Core discovery
+Smart Pension,https://www.smartpension.co.uk,,https://www.crunchbase.com/organization/smart-pension,501-1000,81283959,66,Low,Likely,2025-08-13,,Crunchbase,,,,Core discovery
+Panattoni,https://www.panattoni.co.uk,,https://www.crunchbase.com/organization/panattoni-7e9d,501-1000,830081627,66,Low,Very Likely,2024-09-19,,Crunchbase,,,,Core discovery
+Ballymore Group,http://www.ballymoregroup.com,,https://www.crunchbase.com/organization/ballymore-group,501-1000,149764927,66,Low,Likely,2025-11-24,,Crunchbase,,,,Core discovery
+Fuse Energy,https://www.fuseenergy.com,,https://www.crunchbase.com/organization/fuse-energy,501-1000,199856982,65,Low,Likely,2026-06-04,,Crunchbase;Dealroom,1079c719-4d9f-476b-8356-2f510f68c8ed,Early Stage + Breakout map (individual stage unverified),false,Core discovery
+Surface Technology International,https://www.sti-limited.com,,https://www.crunchbase.com/organization/surface-technology-international,501-1000,14404612,65,Low,Likely,2024-07-03,,Crunchbase,,,,Core discovery
+Lighthouse,https://www.mylighthouse.com,,https://www.crunchbase.com/organization/lighthouse-ltd,501-1000,470000000,64,Low,Likely,2024-11-21,,Crunchbase,,,,Core discovery
+Marshmallow,https://www.marshmallow.com,,https://www.crunchbase.com/organization/marshmallow,501-1000,224824402,64,Low,Likely,2025-04-14,,Crunchbase,,,,Core discovery
+Voy,https://joinvoy.in/,,https://www.crunchbase.com/organization/manual-b7ab,501-1000,195125629,63,Low,Very Likely,2026-01-26,,Crunchbase,,,,Core discovery
+Butternut Box,https://butternutbox.com,,https://www.crunchbase.com/organization/butternut-box,501-1000,551420498,63,Low,Likely,2025-05-20,,Crunchbase,,,,Core discovery
+South East Water,https://www.southeastwater.co.uk/,,https://www.crunchbase.com/organization/south-east-water-1d6a,501-1000,361323010,63,Low,Likely,2025-05-15,,Crunchbase,,,,Core discovery
+TradingView,https://www.tradingview.com,,https://www.crunchbase.com/organization/tradingview,501-1000,389252500,61,Low,Likely,2024-01-01,,Crunchbase,,,,Core discovery
+Synthesia,http://www.synthesia.io,,https://www.crunchbase.com/organization/synthesia,501-1000,536600000,61,Low,Likely,2025-10-29,,Crunchbase,,,,Core discovery
+Boldyn Networks,https://www.boldyn.com,,https://www.crunchbase.com/organization/boldyn-networks,501-1000,1200000000,60,Low,Likely,2025-01-30,,Crunchbase,,,,Core discovery
+Hamberley Care Homes,https://www.hamberleycarehomes.co.uk,,https://www.crunchbase.com/organization/hamberley-care-homes,501-1000,281010514,60,Low,Likely,2026-01-15,,Crunchbase,,,,Core discovery
+Yorkshire Housing,https://www.yorkshirehousing.co.uk/,,https://www.crunchbase.com/organization/yorkshire-housing,501-1000,94474501,60,Low,Likely,2025-02-27,,Crunchbase,,,,Core discovery
+HF,https://www.h-f.co.uk,,https://www.crunchbase.com/organization/horwich-farrelly,501-1000,15205194,59,Low,Likely,2024-05-16,,Crunchbase,,,,Core discovery
+Incommunities Group,http://www.incommunities.co.uk/,,https://www.crunchbase.com/organization/incommunities-group,501-1000,130858879,57,Low,Likely,2024-10-23,,Crunchbase,,,,Core discovery
+Cassava Technologies,https://www.cassavatechnologies.com/,,https://www.crunchbase.com/organization/cassava-technologies,501-1000,140000000,55,Low,Likely,2025-10-23,,Crunchbase,,,,Core discovery
+Quantexa,http://www.quantexa.com,,https://www.crunchbase.com/organization/quantexa,501-1000,545000000,53,Low,Very Likely,2025-03-05,,Crunchbase,,,,Core discovery
+Vital Energi,http://www.vitalenergi.co.uk,,https://www.crunchbase.com/organization/vital-energi,501-1000,243400035,53,Low,Likely,2025-11-20,,Crunchbase,,,,Core discovery
+Huma,https://huma.com,,https://www.crunchbase.com/organization/medopad,501-1000,322619465,52,Low,Likely,2024-07-16,,Crunchbase,,,,Core discovery
+Ultimate Performance,https://ultimateperformance.com,,https://www.crunchbase.com/organization/ultimate-performance,501-1000,11251099,51,Low,Likely,2025-01-06,,Crunchbase,,,,Core discovery
+LEOS Developments,https://leosdevelopments.com/,,https://www.crunchbase.com/organization/leos-developments,501-1000,56909462,48,Low,Likely,2025-10-09,,Crunchbase,,,,Core discovery
+Venterra,https://www.venterra-group.com/,,https://www.crunchbase.com/organization/venterra,501-1000,285336027,46,Low,Likely,2025-12-21,,Crunchbase,,,,Core discovery
+Capital on Tap,https://www.capitalontap.com,,https://www.crunchbase.com/organization/capital-on-tap,501-1000,4940810182,44,Low,Likely,2026-11-09,,Crunchbase;Dealroom,aaeb0084-d193-4a68-a15d-467180ef8eef,Early Stage + Breakout map (individual stage unverified),false,Core discovery
+Currensea,,,,,,,,,,,Dealroom,a241dba4-162e-4570-82c7-cde416f3eb21,Early Stage + Breakout map (individual stage unverified),true,Discovery - needs qualification
+ondato,,,,,,,,,,,Dealroom,e0602c13-97b4-44cc-b293-59a7280fbbb3,Early Stage + Breakout map (individual stage unverified),true,Discovery - needs qualification
+Archax,,,,,,,,,,,Dealroom,fa714b39-81a9-4678-a9f1-662e15c802fa,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+TrueLayer,,,,,,,,,,,Dealroom,6c1aa961-9675-45e5-b84d-bd1bbff19c02,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+LoanTube,,,,,,,,,,,Dealroom,f2b8b49b-dbbc-4b36-b147-58a0de60047c,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Titanbay,,,,,,,,,,,Dealroom,2b759977-1696-42b0-a1b2-56e39a8eda71,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Yapily,,,,,,,,,,,Dealroom,6612dd94-7c60-4b30-8d5d-10941255105e,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Masthaven Finance,,,,,,,,,,,Dealroom,8f0fd534-a218-4a20-89dd-0a7c2ba075a1,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Creditspring,,,,,,,,,,,Dealroom,3dafc181-3cab-4eb7-ac78-c59b0dd2c7fd,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Portman Finance Group,,,,,,,,,,,Dealroom,ec294c6b-3a51-4da2-85dc-7f66dff4d0eb,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+TFY,,,,,,,,,,,Dealroom,9b052ae6-0e7e-4781-8e42-bb3f589fb779,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Zilch,,,,,,,,,,,Dealroom,9689e9a2-5020-4cbc-8d53-65a0ed723c35,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+iwoca,,,,,,,,,,,Dealroom,32ae37bf-0804-4d35-9b92-e69e235e1b12,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Flagstone,,,,,,,,,,,Dealroom,9f23c0f2-a4c7-4b2e-ae6c-0e7316f954cb,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Plum,,,,,,,,,,,Dealroom,4ac2b17f-b0ff-44f5-9537-257a24b9c7b1,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+OpenPayd,,,,,,,,,,,Dealroom,aeb29c46-341b-47ae-b4ce-e559b0f6cff2,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+PayItMonthly,,,,,,,,,,,Dealroom,75c289a7-e3e2-44eb-acdc-65d874d99ffc,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Acquired,,,,,,,,,,,Dealroom,efff5eca-1df8-435d-9e49-10ec642505c4,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Raylo,,,,,,,,,,,Dealroom,c0bb1d08-86c6-4026-bd18-34ddb16d04d3,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Latitude Investment Management,,,,,,,,,,,Dealroom,912d7ade-9953-45fe-8029-ea36ca698dd6,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Pricing Monkey,,,,,,,,,,,Dealroom,2a076ab8-3d04-46c8-b8e6-263f44fc9b14,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Acorn Group,,,,,,,,,,,Dealroom,e99dd550-495f-4885-abcf-691abd4f8cd1,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+PensionBee,,,,,,,,,,,Dealroom,f041056b-4baf-48bf-b3c8-1c1519731564,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+My Pension Expert,,,,,,,,,,,Dealroom,2a871561-4bcc-4111-b327-e57917d8c7b9,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Moneyfarm,,,,,,,,,,,Dealroom,0388fcaa-36d8-4d8d-a19d-d94d0d55b404,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+ClearBank,,,,,,,,,,,Dealroom,5d4db16a-4d22-4593-ba8e-7e82c919f2a3,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Paysend,,,,,,,,,,,Dealroom,57df7442-a3f0-4b11-85ad-6131df294ada,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Bumper,,,,,,,,,,,Dealroom,01cc30e5-137a-455e-be9e-7d201cc3102c,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Blue Whale Capital,,,,,,,,,,,Dealroom,2f01b835-d62b-4d28-a4ee-312e28698f46,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+InstaVolt,,,,,,,,,,,Dealroom,fe147778-759d-4667-ba8d-dd9e7a247129,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Octopus Energy Group,,,,,,,,,,,Dealroom,68932201-dd34-4ca0-83b6-19d6eb2baddc,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Independent Utility Advice,,,,,,,,,,,Dealroom,17486686-c0ae-4d4e-9212-deb4ab463ac5,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Fastwarm Underfloor Heating,,,,,,,,,,,Dealroom,373b93e5-a6a6-40b1-afc9-9af31c1f12ac,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Everflow,,,,,,,,,,,Dealroom,53cd8935-7a5d-4dc9-833a-16db992cc82c,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+ESL Fuels,,,,,,,,,,,Dealroom,37144af9-4420-4c94-9f4b-84b820d9289a,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Pathos,,,,,,,,,,,Dealroom,cf9ec559-52e9-412e-99c5-7d728909bf68,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+WeDiscover,,,,,,,,,,,Dealroom,bd1c4503-ccb4-48d1-a74d-f9adb219a9ac,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+OCM,,,,,,,,,,,Dealroom,d704a5c6-5150-4e0a-8092-4a115e7103de,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Buzzcube,,,,,,,,,,,Dealroom,1891e92d-d90b-409d-bb80-1de2b5901b43,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Words+Pixels,,,,,,,,,,,Dealroom,3636ceaa-0d9c-4f0d-a12b-b29c7610fc8d,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Creation Group,,,,,,,,,,,Dealroom,6a7c3982-9742-4c71-ac7c-86cce81384b1,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Open Partners,,,,,,,,,,,Dealroom,42463990-03ce-4875-815c-b206b0441640,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Panache Cruises,,,,,,,,,,,Dealroom,f7c07eb3-37d5-4b47-bd90-13e70e03b5fa,Early Stage + Breakout map (individual stage unverified),true,Discovery - needs qualification
+Wingstop UK,,,,,,,,,,,Dealroom,983caf23-d422-4213-93ec-d3f1caa5afe8,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Another A Story,,,,,,,,,,,Dealroom,fae3f118-42ac-44d4-bd66-1a6cb196eb1f,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Golf Travel Group,,,,,,,,,,,Dealroom,0a530ca5-5f58-416f-95b4-8d2b2ccf1d6c,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Flightcatchers,,,,,,,,,,,Dealroom,06690a1a-11fc-4496-8d33-2ce16cdbf73e,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+ISON Travel,,,,,,,,,,,Dealroom,3070c7f8-18be-4070-91cd-257253a1f5e0,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Swift Strategies,,,,,,,,,,,Dealroom,1762cd9e-fc00-460d-81ee-093702cd169c,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Unthink,,,,,,,,,,,Dealroom,9c3294d0-7e4d-4f49-92e8-0e16493b747b,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Kittle Group,,,,,,,,,,,Dealroom,b03d0520-1542-46fe-b345-c544cef8c10a,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+BetterGov,,,,,,,,,,,Dealroom,0b467fee-955b-4729-901a-cb99d39349a9,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+areera,,,,,,,,,,,Dealroom,57084481-2f52-4a17-92b4-da56a9f8b822,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Axil,,,,,,,,,,,Dealroom,3d4986ee-dc49-4d2c-aae9-e45fc3b8b45c,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+The Housing Network,,,,,,,,,,,Dealroom,e1e12bd6-1a13-4e7e-a584-b59515396b6c,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+QCS Staffing,,,,,,,,,,,Dealroom,7123394d-bb19-4aae-8e66-6c6cc0887de6,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+FuelHub,,,,,,,,,,,Dealroom,8f915b4d-3f9f-4a47-81c8-25adb59158c1,Early Stage + Breakout map (individual stage unverified),true,Discovery - needs qualification
+Black Sheep Coffee,,,,,,,,,,,Dealroom,c74a6191-1b1f-4d07-ab40-ef7bc7e8691f,Early Stage + Breakout map (individual stage unverified),true,Discovery - needs qualification
+Coffi Lab,,,,,,,,,,,Dealroom,abda9ea3-1cda-4923-8741-80821a636644,Early Stage + Breakout map (individual stage unverified),true,Discovery - needs qualification
+Mother Root,,,,,,,,,,,Dealroom,5e8e1a10-c1f9-46da-9e9e-4a710c5be3c4,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Exhale Healthy Coffee,,,,,,,,,,,Dealroom,06631a3b-9f20-4165-a4f5-bde81cefab70,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Popeyes UK,,,,,,,,,,,Dealroom,66334b77-1c8f-49d8-8c2d-2ac82b6b73db,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Lune & Wild,,,,,,,,,,,Dealroom,1bbf8cf2-6dff-4516-89b1-125d6dd5dd2b,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Unrooted Drinks,,,,,,,,,,,Dealroom,5661dcf5-7e1f-4ea6-80f1-e1fb1c66ab6c,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Ty Nant,,,,,,,,,,,Dealroom,46e9ef61-dd8a-4d57-a3e1-e3a25a84af55,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Doughboys Pizza,,,,,,,,,,,Dealroom,db334d0c-c8b0-43b4-844b-70788e88966c,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Wafflemeister,,,,,,,,,,,Dealroom,81747e54-2c60-4316-ac8e-275fb87a87a6,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Mamedica,,,,,,,,,,,Dealroom,45a32ced-6e01-4029-b40b-3a0f897f0f27,Early Stage + Breakout map (individual stage unverified),true,Discovery - needs qualification
+Ancient + Brave,,,,,,,,,,,Dealroom,a9dc5771-7d46-41db-9f08-a6bbba935bcf,Early Stage + Breakout map (individual stage unverified),true,Discovery - needs qualification
+Townhouse,,,,,,,,,,,Dealroom,99409351-3542-4124-bbe9-b053923b3296,Early Stage + Breakout map (individual stage unverified),true,Discovery - needs qualification
+Lottie,,,,,,,,,,,Dealroom,6bc8c801-8b19-46b9-bdff-757ba29ee28e,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Simple Online Healthcare,,,,,,,,,,,Dealroom,8a4f8322-4a4d-4f2d-a3c4-94f2ff4a2bfd,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Knights Pharmacy,,,,,,,,,,,Dealroom,fb55d929-6800-4adf-8574-6a6e3c073051,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Alcove Group,,,,,,,,,,,Dealroom,dba19bd7-2f8a-4386-b3ea-a4ee6eba9319,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Lucky Egg,,,,,,,,,,,Dealroom,185e18d3-55d3-4f9a-afb9-6e4e465848fa,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+"""Pott'd""",,,,,,,,,,,Dealroom,8b903c37-8f86-4d17-9c33-db84281b8c31,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Scrumbles,,,,,,,,,,,Dealroom,6ea937a2-a58b-4668-a18e-9ad2e9a99705,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Specscart,,,,,,,,,,,Dealroom,8e3af41d-46d6-40c6-9fc2-b72e8d67cdf1,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Sole Bliss,,,,,,,,,,,Dealroom,c5674264-e6a7-4d7c-8ee9-d3c3e5c3bfdf,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Jenolite,,,,,,,,,,,Dealroom,df192465-8f09-4ef6-9365-62845892bf49,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Cambridge Spark,,,,,,,,,,,Dealroom,515355e3-57d6-4b2b-9acf-9cd1f8858846,Early Stage + Breakout map (individual stage unverified),true,Discovery - needs qualification
+PMT Education,,,,,,,,,,,Dealroom,c8cbcfe1-a0af-4772-af01-f75b495fcd49,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Powertutors,,,,,,,,,,,Dealroom,354b4067-bacb-4291-b53c-7121d6f7bb3c,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Rocksteady Music School,,,,,,,,,,,Dealroom,116cd996-83ce-4bf9-9a44-78740f58db73,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Hidden Disabilities Sunflower Scheme,,,,,,,,,,,Dealroom,c5352e2f-59f8-4184-b5ff-e34aa9849de7,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Goalhanger,,,,,,,,,,,Dealroom,8b13a4dd-4e37-47dd-8e96-e695edf4dbed,Early Stage + Breakout map (individual stage unverified),true,Discovery - needs qualification
+EXF.STUDIO,,,,,,,,,,,Dealroom,f6d4a954-8f10-4344-a09f-b879521f4fd0,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Kid-A,,,,,,,,,,,Dealroom,d3e61792-cda0-4518-980c-a2d21313ff18,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+TLA,,,,,,,,,,,Dealroom,92a9fd99-0989-4955-a79f-49f8c29a50ab,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Fix Auto Leicester,,,,,,,,,,,Dealroom,4811027e-1a94-43c3-bd54-719495c89c61,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Utopi,,,,,,,,,,,Dealroom,a0489dbe-8393-40d6-b33c-40e4b719748a,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Magic AI,,,,,,,,,,,Dealroom,6cc66730-13a0-412c-8f56-523ddee32a80,Early Stage + Breakout map (individual stage unverified),true,Discovery - needs qualification
+Yoti,,,,,,,,,,,Dealroom,8e105fd4-ad1a-4a50-96e2-b08bd09dff5d,Early Stage + Breakout map (individual stage unverified),true,Discovery - needs qualification
+Yoto,,,,,,,,,,,Dealroom,e4d726fe-0219-45d2-9c7d-0d1668822e04,Early Stage + Breakout map (individual stage unverified),true,Discovery - needs qualification
+Procure Ai,,,,,,,,,,,Dealroom,df7875ef-c892-4f63-9c8d-3181ad9eeac5,Early Stage + Breakout map (individual stage unverified),true,Discovery - needs qualification
+SourceWhale,,,,,,,,,,,Dealroom,9bb04ed8-f613-4175-baa8-e24e2805ef99,Early Stage + Breakout map (individual stage unverified),true,Discovery - needs qualification
+Hypercube,,,,,,,,,,,Dealroom,26059004-d974-4667-a2ab-5df52736f48d,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Transforming Technology,,,,,,,,,,,Dealroom,4d9fce6d-ee88-41ae-97a6-e3d7641dc38c,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Xelix,,,,,,,,,,,Dealroom,9a40196c-94f2-459f-97da-baf0ebda4458,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Reincubate,,,,,,,,,,,Dealroom,71643927-b7ca-499f-bfc2-7e929e2ff1ea,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Cloudsmith,,,,,,,,,,,Dealroom,82e2c882-26a5-42ae-80a6-f2ef81fdd03c,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+iplicit,,,,,,,,,,,Dealroom,73d6259d-fac4-4ef5-aec2-e135b04a38d0,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+PolyAI,,,,,,,,,,,Dealroom,e1d435ee-f06e-45dc-912d-80d43076b718,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+"Camascope, part of Person Centred Software (PCS)",,,,,,,,,,,Dealroom,ae0892e2-bc68-4214-b2a8-af79ec357f8d,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Daintta,,,,,,,,,,,Dealroom,91ec45b6-59dc-4219-8606-401269ae27c6,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+de Novo Solutions,,,,,,,,,,,Dealroom,56c96b54-df89-4e9b-b6bd-1882f2131712,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Gift & Go,,,,,,,,,,,Dealroom,6b729107-8c38-4546-a5ed-ba23e2571acb,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+SecureFlag,,,,,,,,,,,Dealroom,fff462e6-c79e-4386-b73a-7867b3a326e2,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Previsco,,,,,,,,,,,Dealroom,495d4a67-5a0f-4149-898d-1625fa892abb,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Matchingham Games,,,,,,,,,,,Dealroom,7ffde75b-2eea-4e29-aaed-5f4f682d7fac,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Thrive,,,,,,,,,,,Dealroom,988019fd-d20a-4d39-ba77-b14df20a517c,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Elsewhen,,,,,,,,,,,Dealroom,61954594-02f9-469f-8cc1-141200762db6,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Penta Consulting,,,,,,,,,,,Dealroom,bbd56327-934a-4fe2-a0f7-7683ea77622f,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Threedium,,,,,,,,,,,Dealroom,8d5b478f-77a4-4bc7-a542-fdb8e76e4a57,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Generation Digital,,,,,,,,,,,Dealroom,a2b4ef3c-328d-4984-be00-a8b3a8512bcf,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+AG Consultancy & Apps,,,,,,,,,,,Dealroom,ffaf7d2d-6dd5-4029-ac34-2e3c0b72b649,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Walr,,,,,,,,,,,Dealroom,5da2e2e2-23ef-42e6-b43a-86b81df9b869,Early Stage + Breakout map (individual stage unverified),true,Discovery - needs qualification
+Hernshead Recruitment,,,,,,,,,,,Dealroom,05e6d68d-e8cc-4686-a387-7dafd0ff4685,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Zero100,,,,,,,,,,,Dealroom,d8904f21-e661-4656-bf85-8f9143fe2826,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+The Wastepack Group,,,,,,,,,,,Dealroom,d5ad1a64-8d48-4db1-b016-910ff9393bef,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Sidekick Group,,,,,,,,,,,Dealroom,f3c550aa-1e74-4fd2-bbfd-6fc58931c8b5,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Techspert,,,,,,,,,,,Dealroom,e91c8487-9bb4-419f-9168-718c233dbd34,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+CloudRock,,,,,,,,,,,Dealroom,4d7e1ca6-de84-4335-b3e4-8c8e36bdf2f6,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Contego Environmental Services,,,,,,,,,,,Dealroom,8c59d881-9dcb-46f4-8e17-c6049264c27c,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Loop Horizon,,,,,,,,,,,Dealroom,f78f82df-28f1-40bd-86fb-c6a28eca82ba,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Safer Roadworks Group,,,,,,,,,,,Dealroom,29f3a745-d244-43ca-a75c-ca3796b010e2,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Tectonix,,,,,,,,,,,Dealroom,3371e7f6-10bf-4355-9653-c708bba87220,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+BSN Group,,,,,,,,,,,Dealroom,bdddbddf-845f-4aaf-adc0-65c87b7517e2,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+JD Winter,,,,,,,,,,,Dealroom,7f381626-2382-4218-bee3-283bfcace03a,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Pillar,,,,,,,,,,,Dealroom,87793b3f-efc0-4f58-905d-f14d151ba79e,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Kori Construction,,,,,,,,,,,Dealroom,ed01f5cc-b1d8-45d9-88a2-04c53f63590f,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Reds10,,,,,,,,,,,Dealroom,132bf86e-0ccd-4f4e-acb8-cac6a791a144,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Healf,,,,,,,,,,,Dealroom,33e31a6f-c244-4473-b7e7-ec1f0d7f0905,Early Stage + Breakout map (individual stage unverified),true,Discovery - needs qualification
+Senior Stairlifts,,,,,,,,,,,Dealroom,c4c8cb02-92a9-4c51-b3ee-f1fbf51428e4,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+PureXtracts,,,,,,,,,,,Dealroom,2fbc4d61-a481-4105-8b57-1e1c9f95cf25,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Must Have Ideas,,,,,,,,,,,Dealroom,3a762f41-32b2-4d5d-988e-91e9dc15a27b,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Sol Retail,,,,,,,,,,,Dealroom,bebce37b-4a73-4fdd-bd29-9ab300c2f5ce,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Grain & Frame,,,,,,,,,,,Dealroom,2c6edd86-b9b4-48c0-913d-999b59f873d9,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Vuba,,,,,,,,,,,Dealroom,d9b8b5cd-5352-4a05-acc3-89385154fb39,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Aviramp,,,,,,,,,,,Dealroom,ce0aef44-6a5e-4ba4-b0f3-bf42b02dd0ac,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Superior Wellness,,,,,,,,,,,Dealroom,d6c35a66-90d4-4bab-9b26-ef2cc30cd25e,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Specialist Heat Exchangers,,,,,,,,,,,Dealroom,54cc4a3a-61cb-4b37-bf6d-41a8e8727f88,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Moasure,,,,,,,,,,,Dealroom,46c55f24-6260-4bf9-817e-42061ffc7002,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Wilson Power Solutions,,,,,,,,,,,Dealroom,0109789a-0d8d-4e93-b519-adeced7e9965,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Daymade,,,,,,,,,,,Dealroom,03388c7d-f342-4507-8784-72808a471826,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+Direct Bullion,,,,,,,,,,,Dealroom,2f7de476-1c40-413d-b993-209310f975e9,Early Stage + Breakout map (individual stage unverified),false,Discovery - needs qualification
+ElevenLabs,https://elevenlabs.io,,,,,,,,,,Strategic manual,,,,Strategic AI-native watchlist
