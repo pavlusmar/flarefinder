@@ -196,24 +196,32 @@ function tasIndustryBaseline(sector) {
   if (/consult|it service/.test(s)) return {pct:10.5, label:"IT services"};
   return {pct:8.6, label:"Software / technology proxy"};
 }
+function tasRevenueScenario(c) {
+  if (/^polyai$/i.test(c.name || "")) return {millions:23.27, note:"PolyAI provisional turnover scenario: £17.9M × illustrative 1.30 USD/GBP. Verify Companies House filing and FX.", kind:"Provisional reported-turnover input"};
+  const raw = String(c.employees || "").replace(/,/g, "").trim();
+  const match = raw.match(/(\d+)\s*[-–]\s*(\d+)/);
+  const plus = raw.match(/^(\d+)\s*\+/);
+  const headcount = match ? (Number(match[1]) + Number(match[2])) / 2 : plus ? Number(plus[1]) : null;
+  if (!headcount || headcount <= 0) return {millions:null, note:"No reliable annual revenue or employee range available. Enter a sourced revenue figure to calculate.", kind:"Insufficient data"};
+  const millions = headcount * 0.2;
+  return {millions, note:"Illustrative headcount proxy: midpoint of "+raw+" employees × $200,000 annual revenue per employee. This is NOT reported revenue; highly uncertain for startups and not suitable as a forecast.", kind:"Headcount-based scenario (unverified)"};
+}
 function tasSection(c) {
   const baseline = tasIndustryBaseline(c.sector);
-  const poly = /^polyai$/i.test(c.name || "");
+  const scenario = tasRevenueScenario(c);
   return `<section class="brief-tas">
     <h3>Commercial potential · TAS scenario</h3>
-    <p class="meta">Planning scenario only — not a Cloudflare quote, verified budget, forecast or quota.</p>
+    <p class="meta">Illustrative annual Cloudflare opportunity, NOT a verified company budget, Cloudflare quote or sales forecast.</p>
     <div class="brief-signal">
-      <label>Annual revenue (USD millions; verify source)
-        <input id="tasRevenue" type="number" min="0" step="0.1" placeholder="Unknown — enter researched revenue" style="width:100%;margin-top:5px" ${poly ? 'value="23.27"' : ''}>
+      <p class="meta"><strong>${esc(scenario.kind)}</strong> · ${esc(scenario.note)}</p>
+      <label>Annual revenue / proxy (USD millions)
+        <input id="tasRevenue" type="number" min="0" step="0.01" placeholder="Unknown — enter sourced revenue" style="width:100%;margin-top:5px" ${scenario.millions != null ? 'value="'+scenario.millions.toFixed(2)+'"' : ''}>
       </label>
-      ${poly ? '<details><summary class="meta">Revenue source and FX assumptions</summary><p class="meta"><strong>PolyAI provisional input:</strong> £17.9M reported FY ended 31 Jan 2026 turnover × <strong>illustrative, unverified FX 1.30 USD/GBP</strong> = $23.27M. This is a scenario assumption, not a validated USD financial statement. <a href="https://find-and-update.company-information.service.gov.uk/company/11048129/filing-history" target="_blank" rel="noopener noreferrer">Companies House group accounts ↗</a>. Verify the exact turnover against the filing and update FX before presenting.</p></details>' : ''}
-
       <label>Technology spend % <input id="tasIT" type="number" min="0" max="100" step="0.1" value="${baseline.pct}" style="width:85px"></label>
-
       <label>Low % <input id="tasLow" type="number" min="0" max="100" step="0.1" value="1" style="width:75px"></label>
       <label>High % <input id="tasHigh" type="number" min="0" max="100" step="0.1" value="5" style="width:75px"></label>
-      <div id="tasResult" class="info">TAS not estimated: annual revenue is unknown.</div>
-      <details><summary class="meta">How the estimate works</summary><p class="meta">Revenue × assumed technology spend % × addressable share %. These are editable scenario assumptions, not verified budgets.</p></details>
+      <div id="tasResult" class="info">Calculating scenario…</div>
+      <details><summary class="meta">Method and limitations</summary><p class="meta">Annual revenue or explicitly labeled headcount proxy × assumed industry technology-spend % × illustrative Cloudflare-addressable share of 1–5%. Funding is NOT treated as revenue. These are user-editable assumptions, not Cloudflare's official account-sizing methodology. Replace proxies with sourced turnover whenever possible.</p></details>
     </div>
   </section>`;
 }
@@ -430,7 +438,7 @@ async function detail(id, silent = false) {
         <p><strong>Why this account:</strong> ${cite(reason)}</p>
         <p class="meta">Territory rank: ${rankedTerritory().find(x => x.id === c.id)?.rank ?? "Unranked"} · ${esc(priority.quality)} · Absolute score determines priority; rank compares researched accounts.</p>
       </div>
-      ${compact ? tasSection(c) : ""}
+      ${tasSection(c)}
       <div class="brief-stats"><span>Research: <strong>${esc(c.confidence || "unknown")} confidence</strong></span><span>Readiness: <strong>${esc(pursuit?.readiness?.tier || "unknown")}</strong></span></div>
       <section class="brief-priorities">
         <h3>Company priorities &amp; strategic direction</h3>
@@ -471,7 +479,7 @@ async function detail(id, silent = false) {
       ${compact ? "</details>" : ""}
       <h3>Discovery questions</h3>
       ${compact ? listHtml(list(c.questions).slice(0, 3)) : listHtml(c.questions)}
-      ${compact ? "" : `<details class="brief-details"><summary>Commercial potential · TAS scenario (optional planning assumptions)</summary>${tasSection(c)}</details>`}
+      
       <details class="brief-details"><summary>Detailed Clef scoring and readiness</summary>
       <h3>Account attractiveness · Clef Flash</h3>
       ${pursuit?.status === 'scored' && pursuit.account ? `
