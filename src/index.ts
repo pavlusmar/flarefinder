@@ -904,7 +904,7 @@ async function researchCompany(env: Env, id: string) {
 // BACKGROUND BATCH PROCESSING
 // --------------------------------------------------
 
-async function processBatch(env: Env, limit = 1) {
+async function processBatch(env: Env, limit = 3) {
   // Recover interrupted jobs, but mark them failed
   // instead of repeatedly retrying indefinitely.
   await env.DB.prepare(`
@@ -921,21 +921,21 @@ async function processBatch(env: Env, limit = 1) {
     FROM companies c
     JOIN research r ON r.company_id=c.id
     WHERE r.status='pending'
-    ORDER BY c.growth_score DESC
+    ORDER BY r.updated_at DESC, c.growth_score DESC
     LIMIT ?
   `).bind(limit).all<{ id: string }>();
 
   let completed = 0;
   let failed = 0;
 
-  for (const row of rows.results) {
+  await Promise.all(rows.results.map(async row => {
     try {
       const result = await researchCompany(env, row.id);
       if (result) completed++;
     } catch {
       failed++;
     }
-  }
+  }));
 
   const remaining = await env.DB.prepare(`
     SELECT count(*) AS n
@@ -962,7 +962,8 @@ async function processBatch(env: Env, limit = 1) {
 
 async function route(
   request: Request,
-  env: Env
+  env: Env,
+  ctx: ExecutionContext
 ): Promise<Response> {
   const url = new URL(request.url);
   const path = url.pathname;
@@ -1098,31 +1099,42 @@ async function route(
     return json({ imported });
   }
 
-  if (path === "/api/research-all" &&
-      request.method === "POST") {
+  // Explicitly cancel only waiting requests; preserve running and completed work.
+  if (path === "/api/research/clear-pending" && request.method === "POST") {
     const result = await env.DB.prepare(`
-      UPDATE research
-      SET status='pending', error=NULL,
+      UPDATE research SET status='unresearched', error=NULL,
           updated_at=datetime('now')
-      WHERE status IN ('failed','pending','unresearched')
+      WHERE status='pending'
     `).run();
-
-    return json({
-      queued: result.meta.changes,
-      message:
-        "Research queued. Background processing runs every 5 minutes."
-    });
+    return json({ cleared: result.meta.changes });
   }
 
-  // Manual batch endpoint now queues no long-running
-  // browser request. Cron performs actual processing.
-  if (path === "/api/process-next" &&
-      request.method === "POST") {
-    return json({
-      ok: true,
-      message:
-        "Background processing is handled by the scheduled trigger."
-    }, 202);
+  // Only the company IDs explicitly selected by the user may enter the queue.
+  if (path === "/api/research/selected" && request.method === "POST") {
+    const payload = await request.json().catch(() => null);
+    const ids = payload && typeof payload === "object" && "ids" in payload
+      ? (payload as {ids: unknown}).ids : null;
+    if (!Array.isArray(ids) || ids.length < 1 || ids.length > 10 ||
+        ids.some(id => typeof id !== "string" || id.length > 150)) {
+      return error("Select between 1 and 10 companies.");
+    }
+    const unique = [...new Set(ids as string[])];
+    const found = await env.DB.prepare(
+      `SELECT id FROM companies WHERE id IN (${unique.map(() => "?").join(",")})`
+    ).bind(...unique).all<{id:string}>();
+    if (found.results.length !== unique.length) return error("Unknown company in selection", 404);
+    for (const id of unique) {
+      await env.DB.prepare(`
+        INSERT INTO research(company_id,status,updated_at)
+        VALUES (?,'pending',datetime('now'))
+        ON CONFLICT(company_id) DO UPDATE SET
+          status=CASE WHEN research.status='running' THEN 'running' ELSE 'pending' END,
+          error=CASE WHEN research.status='running' THEN research.error ELSE NULL END,
+          updated_at=datetime('now')
+      `).bind(id).run();
+    }
+    ctx.waitUntil(processBatch(env, 3));
+    return json({queued: unique.length, message:"Selected research started in the background."}, 202);
   }
 
   // Queue individual research.
@@ -1151,6 +1163,7 @@ async function route(
         updated_at=datetime('now')
     `).bind(id).run();
 
+    ctx.waitUntil(processBatch(env, 3));
     console.log("Research queued:", id);
 
     return json({
@@ -1170,10 +1183,11 @@ async function route(
 export default {
   async fetch(
     request: Request,
-    env: Env
+    env: Env,
+    ctx: ExecutionContext
   ): Promise<Response> {
     try {
-      return await route(request, env);
+      return await route(request, env, ctx);
     } catch (e) {
       console.error(
         "Worker request error:",
@@ -1191,6 +1205,6 @@ export default {
     env: Env,
     ctx: ExecutionContext
   ) {
-    ctx.waitUntil(processBatch(env, 1));
+    ctx.waitUntil(processBatch(env, 3));
   }
 } satisfies ExportedHandler<Env>;
