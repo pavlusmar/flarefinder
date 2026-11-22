@@ -1309,6 +1309,33 @@ async function route(
     return error("Unauthorized. Supply the admin token.", 401);
   }
 
+  // Canonical 106-company shortlist from the curated 2026-11-22 import.
+  // Preview before deletion; confirmation requires the exact previewed IDs.
+  if (path === "/api/sync-curated" && request.method === "POST") {
+    const allowed = new Set(["universal-quantum","cloudnc","lovey","pubx","braid","cdn77","connexin","twenty7tec","ditto-id","approvalmax","aphex","kurtosys","magic-bean","scarlet","volta","xapien","prevalent-ai","thea-ai","y-tree","portswigger","fintechos","vamstar","scan-com","qureight","mimica-automation","mindsite","zap-map","fractile","cyted","street-group","social-plus","kaizen-reporting","novatus","arkk-solutions","magicorange","budibase","osprey-flight-solutions","reactive-technologies","definely","leanpay","port","monty-mobile","amberstudent","payhawk","kaluza","huboo","terrapay","flo-health","9fin","allica-bank","epos-now","form3","ppro","zopa","smart-pension","fuse-energy","lighthouse","marshmallow","tradingview","synthesia","quantexa","huma","capital-on-tap","currensea","ondato","archax","truelayer","loantube","titanbay","yapily","creditspring","zilch","iwoca","flagstone","plum","openpayd","payitmonthly","acquired","raylo","pricing-monkey","pensionbee","moneyfarm","clearbank","paysend","bumper","everflow","lottie","cambridge-spark","magic-ai","yoti","yoto","procure-ai","sourcewhale","xelix","reincubate","cloudsmith","iplicit","polyai","camascope","gift-go","secureflag","previsco","matchingham-games","threedium","walr","elevenlabs"]);
+    if (allowed.size !== 106) return error("Invalid curated shortlist configuration", 500);
+    const existing = await env.DB.prepare("SELECT id,name FROM companies ORDER BY id").all<{id:string;name:string}>();
+    const extras = existing.results.filter(c => !allowed.has(c.id));
+    const missing = [...allowed].filter(id => !existing.results.some(c => c.id === id));
+    const body = await request.json().catch(() => ({})) as {confirm?:boolean; expected_ids?:string[]};
+    if (body.confirm !== true) return json({preview:true, current:existing.results.length, target:106, remove:extras.length, missing:missing.length, names:extras.map(c=>c.name), ids:extras.map(c=>c.id)});
+    if (missing.length) return error("Import the bundled 106-company CSV before syncing; "+missing.length+" curated companies are missing.",409);
+    const expected = Array.isArray(body.expected_ids) ? body.expected_ids : [];
+    if (JSON.stringify(expected) !== JSON.stringify(extras.map(c=>c.id))) return error("Company list changed since preview. Preview again before deleting.",409);
+    if (extras.length === 0) return json({deleted:0,remaining:106});
+    const placeholders = extras.map(()=>"?").join(",");
+    const active = await env.DB.prepare(`SELECT company_id,status FROM research WHERE company_id IN (${placeholders}) AND status IN ('running','queued')`).bind(...extras.map(c=>c.id)).all<{company_id:string;status:string}>();
+    if (active.results.length) return error("Sync blocked: "+active.results.length+" excluded accounts have running or queued research. Wait for jobs to finish, then preview again.",409);
+    // D1 batch executes the deletes as a transaction. ON DELETE CASCADE also protects research references.
+    const statements = extras.flatMap(c=>[
+      env.DB.prepare("DELETE FROM research WHERE company_id=?").bind(c.id),
+      env.DB.prepare("DELETE FROM companies WHERE id=?").bind(c.id)
+    ]);
+    await env.DB.batch(statements);
+    const remaining = await env.DB.prepare("SELECT COUNT(*) AS n FROM companies").first<{n:number}>();
+    return json({deleted:extras.length,remaining:remaining?.n ?? null});
+  }
+
   // Explicitly excluded names from the 2026-11-22 digital-native CSV curation.
   // Only these known names are eligible for cleanup; other user-added accounts are untouched.
   if (path === "/api/cleanup-excluded" && request.method === "POST") {
