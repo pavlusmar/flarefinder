@@ -1104,7 +1104,7 @@ async function route(
       UPDATE research
       SET status='pending', error=NULL,
           updated_at=datetime('now')
-      WHERE status IN ('failed','pending')
+      WHERE status IN ('failed','pending','unresearched')
     `).run();
 
     return json({
