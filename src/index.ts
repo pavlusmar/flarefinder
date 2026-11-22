@@ -333,7 +333,6 @@ function normalizeReport(
   }
   // Require a real source marker for each asserted technical fact.
   // Unsupported statements are discarded rather than presented as evidence.
-  const cited = (value: unknown) => stringList(value).filter(x => /\[S\d+\]/.test(x));
   const scored = opportunities.filter(o => /\[S\d+\]/.test(o.evidence) && o.evidence !== "No specific evidence identified.");
   const weight = { high: 3, medium: 2, low: 1 };
   scored.sort((a, b) => weight[b.confidence] - weight[a.confidence]);
