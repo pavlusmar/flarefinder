@@ -6,6 +6,7 @@ let token = sessionStorage.getItem("flarefinder-admin") || "";
 let currentCompanyId = null;
 let detailRequestId = 0;
 let refreshBusy = false;
+const selectedCompanies = new Set();
 
 const esc = s =>
   String(s ?? "").replace(/[&<>"']/g, c => ({
@@ -137,6 +138,7 @@ function render() {
   $("pending").textContent = companies.filter(c => c.status !== "complete").length;
   $("rows").innerHTML = items.length ? items.map(c => `
     <tr>
+      <td><input type="checkbox" class="select-company" data-select-id="${esc(c.id)}" ${selectedCompanies.has(c.id) ? "checked" : ""} ${c.status === "running" ? "disabled" : ""} aria-label="Select ${esc(c.name)}"></td>
       <td class="score">${c.rank ?? "—"}</td>
       <td><div class="company-name">${esc(c.name)}</div><div class="description">${esc(c.sector || c.description || "No description")}</div></td>
       <td><strong>${esc(c.priority.tier)}</strong><div class="description" title="${esc(c.priority.reason)}">${esc(c.priority.reason)}</div><div class="meta">${esc(c.priority.quality)}</div></td>
@@ -145,8 +147,9 @@ function render() {
       <td>${esc(c.priority.ai)}</td>
       <td>${pill(c.status || "pending")}</td>
       <td><button class="link-btn" data-id="${esc(c.id)}">View signals →</button></td>
-    </tr>`).join("") : '<tr><td class="empty" colspan="8">No matching companies.</td></tr>';
+    </tr>`).join("") : '<tr><td class="empty" colspan="9">No matching companies.</td></tr>';
   document.querySelectorAll("[data-id]").forEach(b => b.onclick = () => detail(b.dataset.id));
+  document.querySelectorAll("[data-select-id]").forEach(b => b.onchange = () => { if (b.checked) selectedCompanies.add(b.dataset.selectId); else selectedCompanies.delete(b.dataset.selectId); $("batchBtn").textContent = `▶ Research selected (${selectedCompanies.size})`; });
 }
 
 // Curated, verified Cloudflare customer stories. These are peer proof points,
@@ -439,7 +442,7 @@ async function detail(id, silent = false) {
             { method: "POST" }
           );
 
-          const message = "Research queued for " + c.name + ". Background processing runs every 5 minutes.";
+          const message = "Research started for " + c.name + ". Check status shortly.";
           feedback(message);
           notice(message);
 
@@ -583,7 +586,7 @@ async function importData(text) {
 
   notice(
     `Imported ${imported} companies. ` +
-    "Click Research all pending to start batch research."
+    "Select the companies you want to research, then click Research selected."
   );
 
   await load();
@@ -649,20 +652,26 @@ $("crunchbaseBtn").onclick = async () => {
 };
 
 $("batchBtn").onclick = async () => {
+  const ids = [...selectedCompanies];
+  if (!ids.length) { notice("Select the companies you want to research first."); return; }
   try {
-    const result = await api("/api/research-all", {
-      method: "POST"
+    const result = await api("/api/research/selected", {
+      method: "POST", body: JSON.stringify({ids})
     });
-
-    notice(
-      `${result.queued} companies queued. ` +
-      "Research runs automatically every 5 minutes."
-    );
-
+    selectedCompanies.clear();
+    $("batchBtn").textContent = "▶ Research selected (0)";
+    notice(result.message + " " + result.queued + " companies selected; up to 3 run concurrently.");
     await load();
-  } catch (e) {
-    notice(e.message);
-  }
+  } catch (e) { notice(e.message); }
+};
+
+$("clearQueueBtn").onclick = async () => {
+  if (!confirm("Clear ALL pending research requests? Running and completed research will be preserved.")) return;
+  try {
+    const result = await api("/api/research/clear-pending", {method:"POST"});
+    notice(result.cleared + " pending research requests cleared. Running and completed research preserved.");
+    await load();
+  } catch (e) { notice(e.message); }
 };
 
 function closeDetail() {
