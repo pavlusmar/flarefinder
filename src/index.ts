@@ -556,6 +556,30 @@ function sourceGroundedOpportunities(sources: Source[]): Opportunity[] {
   return result;
 }
 
+function recoverSourceFacts(report: Report, sources: Source[]): void {
+  const facts = sources.map((s,i)=>({text:s.title+" "+s.snippet, ref:"[S"+(i+1)+"]",url:s.url}));
+  const first=(re:RegExp)=>facts.find(f=>re.test(f.text));
+  const add=(target:string[],value:string)=>{if(!target.some(v=>v.toLowerCase().replace(/\[s\d+\]/gi,"").trim()===value.toLowerCase().replace(/\[s\d+\]/gi,"").trim()))target.push(value);};
+  // Recovery of explicit events is deterministic, rather than trusting the
+  // large report model to repeat facts it already included elsewhere.
+  const funding=first(/\b(?:series [a-f]|funding round)\b/i);
+  if(funding){
+    const amount=funding.text.match(/\$\s?(\d+(?:\.\d+)?)\s?(?:million|m)\b/i);
+    if(amount)add(report.growth_signals,"Reported financing round"+(amount?" of $"+amount[1]+"M":"")+" "+funding.ref);
+  }
+  const hiring=first(/\b(?:VP of Engineering|Head of Engineering)\b/i);
+  if(hiring)add(report.growth_signals,"Engineering leadership recruitment "+hiring.ref);
+  const adoption=first(/\b(?:\d[\d,]*\+?\s+(?:enterprise customers|enterprises|live deployments)|\d[\d,]*\s+countries)\b/i);
+  if(adoption)add(report.growth_signals,"Publicly reported customer or deployment scale "+adoption.ref);
+  const platform=first(/\b(?:agent studio|agent development kit|developer APIs|inference runtime)\b/i);
+  if(platform)add(report.technical_signals,"Documented software platform or developer capabilities "+platform.ref);
+  const models=first(/\b(?:Claude|Gemini|GPT[- ]?\d)\b/i);
+  if(models && (models.text.match(/\b(?:Claude|Gemini|GPT[- ]?\d)\b/gi)||[]).length>=2){
+    const theme=report.ai_signals.find(x=>x.theme==="Multi-Model Operations");
+    if(theme){theme.signal="strong";theme.evidence="Multiple named model families referenced "+models.ref;theme.hypothesis="Validate existing model-provider observability and policy controls; no gap is assumed.";theme.confidence="medium";}
+  }
+}
+
 function evidenceGrounded(report: Report, sources: Source[]): Report {
   const refs = (value: string) => [...value.matchAll(/\[S(\d+)\]/g)].map(m => Number(m[1])-1);
   const valid = (value: string) => refs(value).length > 0 && refs(value).every(i => i >= 0 && i < sources.length);
@@ -587,6 +611,7 @@ function evidenceGrounded(report: Report, sources: Source[]): Report {
     return quality(b)-quality(a);
   });
   report.cloudflare_opportunities = report.cloudflare_opportunities.slice(0, 4);
+  recoverSourceFacts(report, sources);
   report.customer_perspective.priorities = report.customer_perspective.priorities.filter(p => valid(p.evidence));
   report.growth_signals = report.growth_signals.filter(valid);
   report.technical_signals = report.technical_signals.filter(valid);
