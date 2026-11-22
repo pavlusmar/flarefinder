@@ -538,6 +538,21 @@ function sourceGroundedOpportunities(sources: Source[]): Opportunity[] {
       confidence:"medium"
     });
   }
+  const runtime = find(/\\b(?:runtime|inference|model serving|data platform)\\b/i);
+  if (runtime && /\\b(?:engineer|product manager|platform|inference|model serving|runtime)\\b/i.test(runtime.text)) {
+    result.push({
+      pillar:"Build", evidence:runtime.ref,
+      signal:"Public material references runtime, inference or data-platform responsibilities " + runtime.ref,
+      hypothesis:"Validate whether inference traffic management, runtime observability or workload isolation is an active platform priority; do not assume an existing latency or reliability problem.",
+      implication:"Inference-platform ownership suggests a relevant technical discovery area, but does not establish a gap in the current architecture.",
+      product_fit:"AI Gateway for compatible third-party inference traffic, or Workers for discrete supporting API workloads, subject to SE validation.",
+      limitations:"PolyAI reports strong existing uptime and latency. Its internal serving architecture, existing tooling and model-hosting requirements are unknown.",
+      stakeholder:"Runtime platform engineering lead or infrastructure product manager",
+      discovery_question:"Which parts of your inference runtime are you optimizing this year, and where do your existing observability and traffic-management tools already meet the requirements?",
+      outreach:"I saw your platform team is working on runtime and inference capabilities " + runtime.ref + ". I'd be interested in how you evaluate infrastructure trade-offs as those workloads evolve.",
+      confidence:"medium"
+    });
+  }
   return result;
 }
 
