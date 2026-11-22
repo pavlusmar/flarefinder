@@ -29,6 +29,7 @@ type Source = {
   snippet: string;
   hiring_signals?: HiringSignal[];
   customer_perspective?: CustomerPerspective;
+  pursuit_score?: PursuitScore;
 };
 
 type HiringSignal = { role: string; posted_date: string; technologies: string[]; evidence: string; relevance: string; confidence: "high" | "medium" | "low" };
@@ -44,6 +45,8 @@ type AiSignal = { theme: "Build & Scale AI Applications" | "Secure AI Applicatio
 
 type CustomerPriority = { priority: string; basis: "stated" | "inferred"; evidence: string; why_it_matters: string };
 type CustomerPerspective = { mission: string; priorities: CustomerPriority[]; business_tension: string };
+
+type PursuitScore = { status: "scored" | "unavailable"; total: number | null; tier: string; dimensions: Array<{ key: string; label: string; score: number; weight: number }>; opportunity_size: string; primary_pillar: string; rationale: string; caveat: string; model: string };
 
 type Report = {
   customer_perspective: CustomerPerspective;
@@ -433,6 +436,86 @@ async function classifyDigitalNative(env: Env, company: Company, sources: Source
   }
 }
 
+
+const PURSUIT_DIMENSIONS = [
+  { key: "opportunity_fit", label: "Cloudflare opportunity fit", weight: 30, instructions: "How directly do specific evidence-backed Connect, Protect or Build use cases match the company? No evidenced use case means 0." },
+  { key: "commercial_potential", label: "Commercial potential", weight: 25, instructions: "How large might the relative opportunity be given verified company scale, digital footprint and relevant workloads? Never assume ARR, budget or spend." },
+  { key: "urgency_triggers", label: "Business urgency & triggers", weight: 20, instructions: "How strong and recent are company-specific verified changes that could motivate action? Do not infer an active buying cycle." },
+  { key: "strategic_fit", label: "Strategic account fit", weight: 15, instructions: "How well does the company fit Cloudflare digital-native targeting and relevant product areas?" },
+  { key: "evidence_quality", label: "Evidence quality", weight: 10, instructions: "How specific, credible and recent are the supporting company-specific sources? Generic or ambiguous sources score poorly." }
+] as const;
+
+function clefChoice(answer: unknown): number | null {
+  if (!answer || typeof answer !== "object") return null;
+  const a = answer as Record<string, unknown>;
+  for (const candidate of [a.value, a.choice, a.selected, a.answer]) {
+    if (typeof candidate === "string" && /^[0-4]$/.test(candidate)) return Number(candidate);
+    if (typeof candidate === "number" && Number.isInteger(candidate) && candidate >= 0 && candidate <= 4) return candidate;
+  }
+  return null;
+}
+
+async function scorePursuitWithClef(env: Env, company: Company, report: Report, sources: Source[]): Promise<PursuitScore> {
+  const unavailable = (caveat: string): PursuitScore => ({
+    status: "unavailable", total: null, tier: "Not evaluated", dimensions: [],
+    opportunity_size: "Unknown", primary_pillar: "Not evaluated",
+    rationale: "Clef assessment was unavailable. No substitute score was generated.",
+    caveat, model: DECISION_MODEL
+  });
+  try {
+    const questions = Object.fromEntries(PURSUIT_DIMENSIONS.map(d => [d.key, {
+      type: "choice",
+      instructions: d.instructions + " Assess only the supplied evidence, not imagined customer pain. Use 0 if unsupported. 4 requires exceptionally strong evidence.",
+      criteria: {
+        "0": "No relevant or credible evidence",
+        "1": "Weak or indirect indicators",
+        "2": "Some credible indicators, material unknowns",
+        "3": "Strong, specific indicators with some unknowns",
+        "4": "Exceptional, corroborated evidence of high relevance"
+      }
+    }]));
+    const result = await env.AI.run(DECISION_MODEL as Parameters<Ai["run"]>[0], {
+      model: "clef-flash",
+      state: JSON.stringify({
+        company: { name: company.name, sector: company.sector, description: company.description, employees: company.employees, funding_usd: company.funding_usd, growth_score: company.growth_score },
+        research: {
+          digital_native: report.digital_native,
+          summary: report.summary,
+          priorities: report.customer_perspective.priorities,
+          growth_signals: report.growth_signals,
+          technical_signals: report.technical_signals,
+          opportunities: report.cloudflare_opportunities,
+          ai_signals: report.ai_signals,
+          hiring: report.hiring_signals
+        },
+        sources: sources.map((source, i) => ({ ref: "S" + (i + 1), title: source.title, snippet: source.snippet, url: source.url }))
+      }),
+      questions
+    } as never) as Record<string, unknown>;
+    const answers = result.answers as Record<string, unknown> | undefined;
+    if (!answers) return unavailable("Clef returned no scoring answers.");
+    const dimensions = PURSUIT_DIMENSIONS.map(d => ({
+      key: d.key, label: d.label, weight: d.weight, score: clefChoice(answers[d.key])
+    }));
+    if (dimensions.some(d => d.score === null)) return unavailable("Clef did not return all five valid rubric choices.");
+    const complete = dimensions as Array<{ key: string; label: string; weight: number; score: number }>;
+    const total = Math.round(complete.reduce((sum, d) => sum + d.score / 4 * d.weight, 0));
+    const tier = total >= 80 ? "T1 · Pursue actively" : total >= 60 ? "T2 · Develop" : total >= 40 ? "T3 · Monitor" : "T4 · Deprioritize";
+    const opportunity_size = complete.find(d => d.key === "commercial_potential")!.score >= 3 ? "Potentially large (unverified)" : complete.find(d => d.key === "commercial_potential")!.score === 2 ? "Potentially medium (unverified)" : "Unknown / limited evidence";
+    const sorted = [...report.cloudflare_opportunities].sort((a, b) => ({high:3,medium:2,low:1}[b.confidence] - {high:3,medium:2,low:1}[a.confidence]));
+    const primary_pillar = sorted[0]?.pillar || "Not established";
+    return {
+      status: "scored", total, tier, dimensions: complete, opportunity_size, primary_pillar,
+      rationale: "Weighted assessment of researched fit, potential scale, urgency, strategic relevance and source quality.",
+      caveat: "Model-assisted prioritization, not a revenue forecast or proof of buying intent. Validate with discovery.",
+      model: DECISION_MODEL
+    };
+  } catch (e) {
+    console.warn("Clef pursuit scoring unavailable:", company.id, e instanceof Error ? e.message : String(e));
+    return unavailable("Clef scoring call failed; retry research to evaluate.");
+  }
+}
+
 // --------------------------------------------------
 // WORKERS AI
 // --------------------------------------------------
@@ -698,6 +781,9 @@ async function researchCompany(env: Env, id: string) {
       report.digital_native_reason = "The research model and Cloudflare Clef Flash disagreed. Manual qualification required. " + report.digital_native_reason;
       report.confidence = "low";
     }
+
+    const pursuit = await scorePursuitWithClef(env, company, report, sources);
+    if (sources.length) sources[0].pursuit_score = pursuit;
 
     // Preserve customer perspective with research sources to avoid a D1 migration.
     if (sources.length) sources[0].customer_perspective = report.customer_perspective;
