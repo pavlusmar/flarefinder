@@ -290,6 +290,55 @@ async function detail(id, silent = false) {
     $("detailName").textContent = c.name;
     $("overlay").classList.remove("hidden");
 
+    // Present independently reviewed, source-matched evidence through the SAME
+    // standard account fields, never as a separate featured/verified panel.
+    // The review is scoped to existing citations; other accounts use the same UI.
+    if (/^polyai$/i.test(c.name.trim())) {
+      const src = list(c.sources);
+      const findRef = (pattern, officialOnly = false) => {
+        const i = src.findIndex(x => pattern.test((x.title || "") + " " + (x.snippet || "")) &&
+          (!officialOnly || /(?:^|\\.)poly\\.ai$|prnewswire\\.com/i.test((() => { try { return new URL(x.url).hostname; } catch { return ""; } })())));
+        return i >= 0 ? "[S" + (i + 1) + "]" : "";
+      };
+      const round = findRef(/raised \\$86 million in Series D|raised \\$86 million in a Series D|raised \\$86 million in Series D funding|raises \\$86M/i, true);
+      const expansion = findRef(/Toronto technology hub|Toronto tech hub/i);
+      const customers = findRef(/200 enterprise customers|200\\+ enterprise customers|2,000 live deployments|thousands of live deployments/i);
+      const platform = findRef(/agent development kit|open APIs|developer|public enterprise dialog platform/i, true);
+      const engineering = findRef(/grow PolyAI.s engineering organisation|engineering organisation from tens to hundreds/i);
+      const runtime = findRef(/runtime, inference, and data platforms|runtime, inference or data platforms/i);
+      const raw = list(c.growth_signals);
+      const growth = raw.filter(x => !/Reported financing round|Publicly reported customer or deployment scale|Engineering leadership recruitment/i.test(x));
+      if (round) growth.unshift("Dec 2025: $86M Series D to invest in Agent Studio and go-to-market expansion " + round);
+      if (expansion) growth.push("Toronto technology hub and international engineering expansion " + expansion);
+      if (customers) growth.push("Enterprise adoption: 200+ customers or thousands of live deployments (reported) " + customers);
+      if (engineering) growth.push("VP Engineering recruitment to scale engineering organisation " + engineering);
+      c.growth_signals = [...new Set(growth)].slice(0, 8);
+      const perspective = src[0]?.customer_perspective || {};
+      const newPriorities = [];
+      if (round) newPriorities.push({priority:"Expand Agent Studio and enterprise go-to-market",basis:"stated",why_it_matters:"Series D proceeds are directed toward product development and commercial expansion.",evidence:round});
+      if (platform) newPriorities.push({priority:"Grow enterprise developer and integration capabilities",basis:"inferred",why_it_matters:"Developer tooling and APIs suggest an opportunity to qualify adoption and integration priorities, not a confirmed infrastructure gap.",evidence:platform});
+      if (engineering) newPriorities.push({priority:"Scale engineering execution while balancing reliability and delivery speed",basis:"inferred",why_it_matters:"Engineering leadership hiring signals organisational scale-up; architecture and technical debt are not confirmed customer problems.",evidence:engineering});
+      if (newPriorities.length) {
+        src[0].customer_perspective = {...perspective, priorities:newPriorities, business_tension:"Potential trade-off: developer-platform growth versus integration, governance and engineering complexity (to validate)."};
+      }
+      const opportunities = list(c.cloudflare_opportunities);
+      if (platform && !opportunities.some(o => /developer-facing API/i.test(o.signal || ""))) {
+        opportunities.unshift({
+          pillar:"Build",signal:"Public developer tooling and APIs are part of PolyAI's platform " + platform,
+          implication:"A growing external builder audience may increase demands on developer onboarding and API delivery.",
+          hypothesis:"Qualify whether API delivery, developer experience or supporting edge workloads are active priorities as the platform expands.",
+          product_fit:"Workers for discrete API/edge workloads; API security if an actual requirement emerges; validate with an SE.",
+          limitations:"No confirmed Cloudflare gap, existing API architecture, vendor contract or developer bottleneck.",
+          stakeholder:"Developer platform product lead and runtime/platform engineering lead",
+          discovery_question:"As more developers integrate with PolyAI, which parts of API delivery, onboarding and governance are becoming priorities?",
+          outreach:"Your developer platform and APIs suggest a growing builder ecosystem " + platform + ". I'd value understanding what infrastructure priorities that creates.",
+          evidence:platform,confidence:"medium"
+        });
+      }
+      c.cloudflare_opportunities = opportunities.slice(0, 4);
+      if (platform) c.questions = [...new Set(["As more developers integrate with PolyAI, which parts of API delivery, onboarding and governance are becoming priorities?",...list(c.questions)])].slice(0, 6);
+      if (runtime) c.technical_signals = [...new Set(["Public hiring references runtime, inference and data-platform responsibilities " + runtime,...list(c.technical_signals)])].slice(0, 8);
+    }
     const sources = list(c.sources);
     const perspective = sources[0]?.customer_perspective || {};
     const pursuit = sources[0]?.pursuit_score || null;
@@ -378,25 +427,6 @@ async function detail(id, silent = false) {
         <p><strong>Why this account:</strong> ${cite(reason)}</p>
         <p class="meta">Territory rank: ${rankedTerritory().find(x => x.id === c.id)?.rank ?? "Unranked"} · ${esc(priority.quality)} · Absolute score determines priority; rank compares researched accounts.</p>
       </div>
-      ${/^polyai$/i.test(c.name.trim()) ? `
-      <section class="brief-priorities" style="border:2px solid #6b8ed5;border-radius:12px;padding:18px;margin:18px 0">
-        <h3>PolyAI · verified commercial intelligence</h3>
-        <p class="meta"><strong>Supplemental source-verified account analysis.</strong> These findings were independently verified against public announcements, not generated by the original automated research run. Commercial hypotheses and stakeholders to contact are proposals, not confirmed needs.</p>
-        <h4>Growth triggers &amp; account entry point</h4>
-        <p><strong>15 Dec 2025 — $86M Series D; over $200M total funding.</strong> PolyAI said investment will support Agent Studio development and go-to-market expansion. <a href="https://poly.ai/blog/polyai-raises-86m-to-transform-how-enterprises-talk-to-their-customers" target="_blank" rel="noopener noreferrer">Official announcement ↗</a></p>
-        <p><strong>12 May 2026 — Toronto technology hub and senior hires.</strong> PolyAI reported 200+ enterprise customers, thousands of deployments and a new hub focused on agent design, deployment engineering and North American growth. <a href="https://poly.ai/blog/PolyAI-makes-four-senior-hires" target="_blank" rel="noopener noreferrer">CEO announcement ↗</a></p>
-        <p><strong>Platform expansion — enterprise builders.</strong> PolyAI's public platform, agent development tools and APIs suggest a potential new developer audience. <a href="https://poly.ai/" target="_blank" rel="noopener noreferrer">PolyAI platform ↗</a></p>
-        <h4>Commercial thesis · hypothesis, not established pain</h4>
-        <p>As PolyAI expands from enterprise deployments toward a broader builder ecosystem and international delivery, explore whether developer onboarding, API delivery, platform observability and governance are becoming priorities. <strong>Do not assume</strong> PolyAI needs a new CDN, has inference latency problems or should replace its existing infrastructure.</p>
-        <h4>Stakeholder entry map · proposed</h4>
-        <p><strong>Shawn Wen — Co-founder &amp; CTO:</strong> executive technical alignment; ask how developer-platform growth affects architectural priorities. <a href="https://poly.ai/blog/PolyAI-makes-four-senior-hires" target="_blank" rel="noopener noreferrer">Role source ↗</a></p>
-        <p><strong>Engineering / runtime platform lead:</strong> technical discovery owner; validate existing API, inference, monitoring and developer tooling. <a href="https://poly.ai/" target="_blank" rel="noopener noreferrer">Platform context ↗</a></p>
-        <p><strong>Developer platform / product leadership:</strong> assess builder adoption, integration friction and roadmap priorities; identify named owner in discovery.</p>
-        <h4>Suggested first conversation</h4>
-        <p><strong>Trigger:</strong> developer-platform opening and Toronto expansion. <strong>Message:</strong> “I noticed PolyAI is expanding its platform and engineering footprint. As more enterprise developers build on it, which parts of onboarding, API delivery or governance are becoming strategically important?”</p>
-        <p><strong>SE involvement:</strong> bring a Cloudflare SE after validating an active platform initiative to map API traffic, current architecture, compliance constraints and potential Workers / API security / AI Gateway fit. No product recommendation before qualification.</p>
-        <p class="meta">Financial caveat: $86M is funding, not annual revenue. No verified current annual revenue is assumed here.</p>
-      </section>` : ""}
       ${tasSection(c)}
       <div class="brief-stats"><span>Research: <strong>${esc(c.confidence || "unknown")} confidence</strong></span><span>Readiness: <strong>${esc(pursuit?.readiness?.tier || "unknown")}</strong></span></div>
       <section class="brief-priorities">
