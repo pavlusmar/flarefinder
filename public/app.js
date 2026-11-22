@@ -307,6 +307,24 @@ async function detail(id, silent = false) {
     const businessHighlights = priorities.filter(p => p.basis === "stated" && /\[S\d+\]/.test(p.evidence || "")).slice(0, 3);
     const reason = [c.last_funding_date ? "Latest funding " + c.last_funding_date : "", businessHighlights[0]?.why_it_matters || "", opportunities.find(o => o.confidence !== "low" && /\[S\d+\]/.test(o.evidence || ""))?.hypothesis || ""].filter(Boolean).join(" · ") || priority.reason;
 
+    // Keep imported Crunchbase fields unchanged. Display clearly labelled
+    // sourced research facts when the import lacks headcount/funding.
+    const sourceFacts = sources.map((source, index) => ({
+      text: (source.title || "") + " " + (source.snippet || ""),
+      ref: "[S" + (index + 1) + "]",
+      url: source.url || ""
+    }));
+    const headcountFact = sourceFacts.find(x => /\b(?:employees|total employees|headcount)\b/i.test(x.text) &&
+      /\b(?:employees|total employees|headcount)\b/i.test(x.text) && /\b\d{2,5}\s+(?:total\s+)?employees\b/i.test(x.text));
+    const headcountMatch = headcountFact?.text.match(/\b(\d{2,5})\s+(?:total\s+)?employees\b/i);
+    const fundingFact = sourceFacts.find(x => /\b(?:series [a-f]|funding round)\b/i.test(x.text) &&
+      /\$\s?(\d+(?:\.\d+)?)\s?(?:million|m)\b/i.test(x.text));
+    const fundingMatch = fundingFact?.text.match(/\$\s?(\d+(?:\.\d+)?)\s?(?:million|m)\b/i);
+    const headcountDisplay = c.employees ? esc(c.employees) : headcountMatch
+      ? esc(headcountMatch[1]) + " (reported " + cite(headcountFact.ref) + ")" : "Unknown size";
+    const fundingDisplay = c.funding_usd != null ? money(c.funding_usd) : fundingMatch
+      ? "$" + esc(fundingMatch[1]) + "M round (reported " + cite(fundingFact.ref) + ")" : "—";
+
     const statusMessage =
       c.status === "running"
         ? "Research is running in the background."
@@ -321,8 +339,8 @@ async function detail(id, silent = false) {
     $("detailContent").innerHTML = `
       <div class="meta">
         ${esc(c.sector || "Unclassified")} ·
-        ${esc(c.employees || "Unknown size")} employees ·
-        ${money(c.funding_usd)} funding ·
+        ${headcountDisplay} employees ·
+        ${fundingDisplay} funding ·
         Growth score ${c.growth_score ?? "—"} ·
         Prediction ${esc(c.growth_prediction || "—")} ·
         Last funding ${esc(c.last_funding_date || "—")}
