@@ -375,7 +375,17 @@ async function detail(id, silent = false) {
       <p class="meta">Outside-in hypotheses, not verified customer problems.</p>
       ${pillars.map(p => {
         const matches = opportunities.filter(o => o.pillar === p && /\[S\d+\]/.test(o.evidence || ""));
-        return '<div class="brief-signal"><strong>' + p + '</strong>' + (matches.length ? matches.map(o => '<p>' + cite(o.hypothesis) + '</p><div class="meta">' + cite(o.evidence) + ' · ' + esc(o.confidence) + ' confidence</div>').join("") : '<p class="meta">No specific evidenced opportunity.</p>') + '</div>';
+        return '<div class="brief-signal"><strong>' + p + '</strong>' + (matches.length ? matches.map(o =>
+          '<p><strong>Verified signal:</strong> ' + cite(o.signal || o.evidence) + '</p>' +
+          (o.implication ? '<p><strong>Why it matters:</strong> ' + cite(o.implication) + '</p>' : '') +
+          '<p><strong>Hypothesis:</strong> ' + cite(o.hypothesis) + '</p>' +
+          (o.product_fit ? '<p><strong>Potential fit:</strong> ' + esc(o.product_fit) + '</p>' : '') +
+          (o.limitations ? '<p><strong>What we do not know:</strong> ' + esc(o.limitations) + '</p>' : '') +
+          (o.stakeholder ? '<p><strong>Who to approach:</strong> ' + esc(o.stakeholder) + '</p>' : '') +
+          (o.discovery_question ? '<p><strong>Discovery:</strong> ' + esc(o.discovery_question) + '</p>' : '') +
+          (o.outreach ? '<p><strong>Outreach example:</strong> ' + esc(o.outreach) + '</p>' : '') +
+          '<div class="meta">Evidence: ' + cite(o.evidence) + ' · ' + esc(o.confidence) + ' confidence</div>'
+        ).join("") : '<p class="meta">No specific evidenced opportunity.</p>') + '</div>';
       }).join("")}
       <h3>AI opportunity signals</h3>
       <p class="meta">AI economics and multi-model signals are exploratory and not separately scored.</p>
