@@ -168,7 +168,7 @@ async function searchWeb(
       seen.add(url);
       return [{ title, url, snippet, searchIndex: r.searchIndex, jobLike: official ? jobLike : specificJob }];
     })
-    .sort((a, b) => Number(new URL(b.url).hostname.replace(/^www\./,"") === domain) - Number(new URL(a.url).hostname.replace(/^www\\./,"") === domain) || a.searchIndex - b.searchIndex || Number(b.jobLike) - Number(a.jobLike))
+    .sort((a, b) => Number(new URL(b.url).hostname.replace(/^www\./,"") === domain) - Number(new URL(a.url).hostname.replace(/^www\./,"") === domain) || a.searchIndex - b.searchIndex || Number(b.jobLike) - Number(a.jobLike))
     .slice(0, 16)
     .map(({ title, url, snippet }) => ({ title, url, snippet }));
 
@@ -829,10 +829,10 @@ async function researchCompany(env: Env, id: string) {
     // A single pricing/review article is not a researched account.
     // Reject low-coverage results instead of generating a confident-looking
     // score and marking the job complete.
-    const hosts = new Set(sources.map(s => new URL(s.url).hostname.replace(/^www\\./, "")));
-    const officialDomain = (() => { try { return new URL(company.website || "").hostname.replace(/^www\\./, ""); } catch { return ""; } })();
+    const hosts = new Set(sources.map(s => new URL(s.url).hostname.replace(/^www\./, "")));
+    const officialDomain = (() => { try { return new URL(company.website || "").hostname.replace(/^www\./, ""); } catch { return ""; } })();
     const hasOfficial = sources.some(s => {
-      const h = new URL(s.url).hostname.replace(/^www\\./, "");
+      const h = new URL(s.url).hostname.replace(/^www\./, "");
       return !!officialDomain && (h === officialDomain || h.endsWith("." + officialDomain));
     });
     if (sources.length < 3 || hosts.size < 2 || (!hasOfficial && sources.length < 5)) {
