@@ -34,3 +34,17 @@ enabled = true
 [observability.logs]
 enabled = true
 invocation_logs = true
+
+# Durable account-research processing: one account per queue delivery.
+[[queues.producers]]
+queue = "flarefinder-research"
+binding = "RESEARCH_QUEUE"
+
+[[queues.consumers]]
+queue = "flarefinder-research"
+max_batch_size = 1
+max_batch_timeout = 2
+max_retries = 4
+max_concurrency = 10
+retry_delay = 30
+dead_letter_queue = "flarefinder-research-dlq"
