@@ -620,6 +620,32 @@ function evidenceGrounded(report: Report, sources: Source[]): Report {
     if (/\b(performance|latency|scalability)\b/i.test(o.hypothesis) && /\b(sub.300ms|<300ms|99\.994% uptime)\b/i.test(evidence) && !/\b(existing|already|reported|claims|verify|whether|if)\b/i.test(o.hypothesis)) return false;
     return true;
   });
+  // Deterministic evidence recovery: prospect-owned API workloads are relevant even
+  // when the report model emits no opportunities. This is a discovery hypothesis,
+  // NOT evidence of a security problem or buying intent.
+  const apiEvidence = sources.map((source,i)=>({source,ref:"[S"+(i+1)+"]",text:source.title+" "+source.snippet}))
+    .find(x => /\\b(?:single API|customer-facing API|public API|API-first|API platform|API-based|API endpoint|API integrations?)\\b/i.test(x.text) &&
+      /\\b(?:customers?|payments?|transactions?|developers?|financial institutions|integrations?|platform)\\b/i.test(x.text) &&
+      !/\\b(?:job board|competitor comparison|pricing comparison)\\b/i.test(x.source.title));
+  if (apiEvidence) {
+    const fact = "Documented customer-facing API workload "+apiEvidence.ref;
+    if (!report.technical_signals.some(x=>x.includes(apiEvidence.ref)&&/\\bAPI\\b/i.test(x)))
+      report.technical_signals.push(fact);
+    if (!report.cloudflare_opportunities.some(o=>/API Shield/i.test(o.product_fit||""))) {
+      report.cloudflare_opportunities.push({pillar:"Protect",evidence:apiEvidence.ref,signal:fact,
+        hypothesis:"Assess whether the documented customer-facing API has an unmet API discovery, authentication, schema-validation or abuse-protection requirement; no weakness is assumed.",
+        implication:"The documented API is a concrete workload for qualification, not evidence that current controls are inadequate.",
+        product_fit:"API Shield — assess endpoint discovery, schema validation, authentication and abuse protection only where relevant.",
+        limitations:"Existing API gateway, WAF, security controls and procurement plans are unknown; do not assume replacement or migration.",
+        stakeholder:"API platform owner or security engineering lead",
+        discovery_question:"How are the documented customer-facing APIs protected today, and are any API visibility, authentication or abuse-control gaps unresolved?",
+        outreach:"Your published platform describes a customer-facing API "+apiEvidence.ref+". I'm interested in how your team handles API visibility and protection today, and whether any requirements remain unaddressed.",confidence:"low"});
+    }
+  }
+  const namedAi = sources.map((source,i)=>({text:source.title+" "+source.snippet,ref:"[S"+(i+1)+"]"}))
+    .find(x=>/\\b(?:AI-assisted operations|AI-assisted engineering|AI-enabled engineering|agentic AI infrastructure|AI agents?)\\b/i.test(x.text));
+  if (namedAi && !report.technical_signals.some(x=>x.includes(namedAi.ref)&&/\\bAI\\b/i.test(x)))
+    report.technical_signals.push("Documented AI-related engineering or product activity (not evidence of model inference spend) "+namedAi.ref);
   // Add conservative, source-specific opportunities when the LLM missed
   // concrete model-provider or engineering signals. Never replace a better
   // model answer with a generic pitch.
