@@ -232,6 +232,7 @@ async function detail(id, silent = false) {
 
     const sources = list(c.sources);
     const perspective = sources[0]?.customer_perspective || {};
+    const pursuit = sources[0]?.pursuit_score || null;
     const priorities = Array.isArray(perspective.priorities) ? perspective.priorities : [];
     const opportunities = list(c.cloudflare_opportunities);
     const aiSignals = list(c.ai_signals);
@@ -284,9 +285,24 @@ async function detail(id, silent = false) {
         ${researchButtonText(c.status)}
       </button>
 
-      <h3>Account priority</h3>
-      <p><strong>${esc(priority.tier)}</strong> · ${esc(priority.reason)}</p>
-      <p class="meta">Provisional research-based tier, not an estimate of deal size or buying intent.</p>
+      <h3>Pursuit priority · Clef Flash</h3>
+      ${pursuit?.status === 'scored' ? `
+        <p><strong>${esc(pursuit.total)}/100 · ${esc(pursuit.tier)}</strong></p>
+        <p class="meta">Weighted, model-assisted assessment; not an ARR estimate or a confirmed buying signal.</p>
+        ${(pursuit.dimensions || []).map(d => `
+          <div class="opportunity">
+            <strong>${esc(d.label)}: ${esc(Math.round(d.score / 4 * d.weight))}/${esc(d.weight)} points</strong>
+            <div class="meta">Clef rubric: ${esc(d.score)}/4</div>
+          </div>
+        `).join('')}
+        <p><strong>Primary pillar:</strong> ${esc(pursuit.primary_pillar || 'Not established')}</p>
+        <p><strong>Opportunity size:</strong> ${esc(pursuit.opportunity_size || 'Unknown')}</p>
+        <p class="meta">${esc(pursuit.caveat || '')}</p>
+      ` : `
+        <p><strong>Not evaluated</strong></p>
+        <p class="meta">${esc(pursuit?.caveat || 'Clef pursuit scoring is not available for this report. Refresh research to assess.')}</p>
+      `}
+      <p class="meta">Previous rule-based account tier: ${esc(priority.tier)} · ${esc(priority.reason)} (legacy comparison only).</p>
 
       <h3>Digital-native qualification</h3>
       ${pill(c.digital_native || "unresearched")}
