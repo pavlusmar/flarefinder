@@ -248,10 +248,14 @@ async function detail(id, silent = false) {
     const aiSignals = list(c.ai_signals);
     const hiring = sources.flatMap(source => Array.isArray(source.hiring_signals) ? source.hiring_signals : [])
       .filter((h, i, all) => all.findIndex(x => x.role === h.role && x.evidence === h.evidence) === i);
-    const priority = accountPriority(c, opportunities, aiSignals, hiring);
+    const priority = priorityFor(c);
     const pillars = ["Connect", "Protect", "Build"];
     const aiThemes = ["Build & Scale AI Applications", "Secure AI Applications & Agents", "Optimise AI Inference & Delivery", "AI Cost & Inference Economics", "Multi-Model Operations"];
     const link = validLink(c.crunchbase_url);
+    const cite = value => esc(value || "").replace(/\[S(\d+)\]/g, (match, n) =>
+      Number(n) > 0 && Number(n) <= sources.length ? '<a class="citation" href="#source-' + n + '">' + match + '</a>' : match);
+    const businessHighlights = priorities.filter(p => p.basis === "stated" && /\[S\d+\]/.test(p.evidence || "")).slice(0, 3);
+    const reason = [c.last_funding_date ? "Latest funding " + c.last_funding_date : "", businessHighlights[0]?.why_it_matters || "", opportunities.find(o => o.confidence !== "low" && /\[S\d+\]/.test(o.evidence || ""))?.hypothesis || ""].filter(Boolean).join(" · ") || priority.reason;
 
     const statusMessage =
       c.status === "running"
@@ -296,11 +300,29 @@ async function detail(id, silent = false) {
       </button>
       <p class="info" id="researchFeedback" role="status" aria-live="polite"></p>
 
-      <div class="priority-summary">
-        <div class="priority-head"><strong>${esc(priorityFor(c).tier)}</strong><strong>${esc(priorityFor(c).score ?? "—")}/100</strong></div>
-        <p><strong>Why this tier:</strong> ${esc(priorityFor(c).reason)}</p>
-        <p class="meta">Territory rank: ${rankedTerritory().find(x => x.id === c.id)?.rank ?? "Unranked"} · ${esc(priorityFor(c).quality)} · Absolute score determines priority; rank compares researched accounts.</p>
+      <div class="priority-summary brief-hero">
+        <div class="priority-head"><strong>${esc(priority.tier)}</strong><strong>${esc(priority.score ?? "—")}/100</strong></div>
+        <p><strong>Why this account:</strong> ${cite(reason)}</p>
+        <p class="meta">Territory rank: ${rankedTerritory().find(x => x.id === c.id)?.rank ?? "Unranked"} · ${esc(priority.quality)} · Absolute score determines priority; rank compares researched accounts.</p>
       </div>
+      <div class="brief-stats"><span>Research: <strong>${esc(c.confidence || "unknown")} confidence</strong></span><span>Readiness: <strong>${esc(pursuit?.readiness?.tier || "unknown")}</strong></span></div>
+      <h3>Key business signals</h3>
+      ${businessHighlights.length ? businessHighlights.map(p => '<div class="brief-signal"><strong>' + esc(p.priority) + '</strong><p>' + cite(p.why_it_matters) + '</p><div class="meta">' + cite(p.evidence) + '</div></div>').join("") : '<p class="meta">No verified structured strategic priorities. See the source excerpts for company announcements.</p>'}
+      <h3>Cloudflare opportunities</h3>
+      <p class="meta">Outside-in hypotheses, not verified customer problems.</p>
+      ${pillars.map(p => {
+        const matches = opportunities.filter(o => o.pillar === p && /\[S\d+\]/.test(o.evidence || ""));
+        return '<div class="brief-signal"><strong>' + p + '</strong>' + (matches.length ? matches.map(o => '<p>' + cite(o.hypothesis) + '</p><div class="meta">' + cite(o.evidence) + ' · ' + esc(o.confidence) + ' confidence</div>').join("") : '<p class="meta">No specific evidenced opportunity.</p>') + '</div>';
+      }).join("")}
+      <h3>AI opportunity signals</h3>
+      <p class="meta">AI economics and multi-model signals are exploratory and not separately scored.</p>
+      ${aiThemes.map(theme => {
+        const signal = aiSignals.find(x => x.theme === theme);
+        return '<div class="brief-ai-row"><div class="signal-head"><strong>' + esc(theme) + '</strong>' + pill(signal?.signal || "insufficient") + '</div>' + (signal && signal.signal !== "insufficient" ? '<p>' + cite(signal.evidence) + '</p>' : '<p class="meta">Insufficient public evidence.</p>') + '</div>';
+      }).join("")}
+      <h3>Discovery questions</h3>
+      ${listHtml(c.questions)}
+      <details class="brief-details"><summary>Detailed Clef scoring and readiness</summary>
       <h3>Account attractiveness · Clef Flash</h3>
       ${pursuit?.status === 'scored' && pursuit.account ? `
         <p><strong>${esc(pursuit.account.total)}/100 · ${esc(pursuit.tier)}</strong></p>
@@ -324,7 +346,7 @@ async function detail(id, silent = false) {
         <p><strong>Not evaluated</strong></p>
         <p class="meta">${esc(pursuit?.caveat || 'Refresh research to evaluate.')}</p>
       `}
-      <h3>Digital-native qualification</h3>
+      </details>\n      <details class="brief-details"><summary>Additional company research and technical context</summary>\n      <h3>Digital-native qualification</h3>
       ${pill(c.digital_native || "unresearched")}
       <p>
         ${esc(c.digital_native_reason ||
@@ -365,36 +387,11 @@ async function detail(id, silent = false) {
         </div>
       `).join('') : '<p class="meta">No verified employer-specific hiring signals found in the research sources.</p>'}
 
-      <h3>Cloudflare opportunities · Connect / Protect / Build</h3>
-      <p class="meta">Core pillar research for every company. Hypotheses are not verified customer problems.</p>
-      ${pillars.map(p => {
-        const matches = opportunities.filter(o => o.pillar === p);
-        return `<div class="opportunity"><strong>${p}</strong>${matches.length
-          ? matches.map(o => `<p>${esc(o.hypothesis || "")}</p><div class="meta">Evidence: ${esc(o.evidence || "Not established")} · Confidence: ${esc(o.confidence || "low")}</div>`).join("")
-          : '<p class="meta">Insufficient evidence for a specific opportunity.</p>'}</div>`;
-      }).join("")}
-
-      <h3>AI opportunity signals</h3>
-      <p class="meta">Company-specific signals, not confirmed needs. AI economics and multi-model operations are exploratory and do not increase the attractiveness score or priority tier.</p>
-      ${aiThemes.map(theme => {
-        const s = aiSignals.find(x => x.theme === theme);
-        const level = s?.signal || "insufficient";
-        return `<div class="opportunity">
-          <div class="signal-head"><strong>${esc(theme)}</strong>${pill(level)}</div>
-          ${["AI Cost & Inference Economics", "Multi-Model Operations"].includes(theme) ? '<div class="meta">Exploratory · not included in ranking score</div>' : ""}
-          <p class="meta">Evidence: ${esc(s?.evidence || "No specific public evidence identified.")}</p>
-          ${s?.hypothesis && level !== "insufficient" ? `<p>Potential discovery angle: ${esc(s.hypothesis)}</p><div class="meta">Confidence: ${esc(s.confidence || "low")}</div>` : ""}
-        </div>`;
-      }).join("")}
-
-      <h3>Discovery questions</h3>
-      ${listHtml(c.questions)}
-
-      <h3>Research sources (${sources.length})</h3>
+      </details>\n\n      <h3 id="research-sources">Sources and excerpts (${sources.length})</h3>\n      <p class="meta">Numbered citations link to the corresponding source excerpt. Open the original page to verify context.</p>
       ${sources.map((s, i) => {
         const u = validLink(s.url);
         return `
-          <div class="source">
+          <div class="source" id="source-${i + 1}">
             ${u
               ? `<a href="${esc(u)}"
                     target="_blank"
