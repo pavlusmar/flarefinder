@@ -310,6 +310,27 @@ function normalizeReport(
     });
   }
 
+  // Reconcile explicitly cited facts from the customer perspective with
+  // structured signals. These are company facts, NOT infrastructure claims.
+  const perspective = normalizeCustomerPerspective(obj.customer_perspective);
+  const growth = stringList(obj.growth_signals).filter(x => /\[S\d+\]/.test(x));
+  const technical = stringList(obj.technical_signals).filter(x => /\[S\d+\]/.test(x));
+  const addUnique = (items: string[], fact: string) => {
+    if (fact && !items.some(x => x.toLowerCase().includes(fact.toLowerCase().slice(0, 35)))) items.push(fact);
+  };
+  for (const p of perspective.priorities) {
+    const detail = (p.priority + " — " + p.why_it_matters).trim();
+    if (/\b(fund(?:ing|raise|ed)?|invest(?:ment|or)?|expand|expansion|launch|new market|commercial scal|customer adoption|growth|partnership)\b/i.test(detail)) {
+      addUnique(growth, p.priority + ": " + p.why_it_matters + " " + p.evidence);
+    }
+  }
+  // Only treat specific documented products as technical signals; a product
+  // is not evidence of a particular cloud stack or deployed infrastructure.
+  for (const a of normalizeAiSignals(obj.ai_signals)) {
+    if (a.signal === "strong" && /\[S\d+\]/.test(a.evidence) && /\b(product|platform|software|application|agent|model)\b/i.test(a.evidence)) {
+      addUnique(technical, "Verified AI product activity (not infrastructure): " + a.evidence);
+    }
+  }
   // Require a real source marker for each asserted technical fact.
   // Unsupported statements are discarded rather than presented as evidence.
   const cited = (value: unknown) => stringList(value).filter(x => /\[S\d+\]/.test(x));
@@ -324,11 +345,11 @@ function normalizeReport(
     ),
     digital_native_reason: safe(obj.digital_native_reason),
     summary: safe(obj.summary),
-    growth_signals: cited(obj.growth_signals),
-    technical_signals: cited(obj.technical_signals),
+    growth_signals: growth.slice(0, 8),
+    technical_signals: technical.slice(0, 8),
     cloudflare_opportunities: scored.slice(0, 5),
     ai_signals: normalizeAiSignals(obj.ai_signals),
-    customer_perspective: normalizeCustomerPerspective(obj.customer_perspective),
+    customer_perspective: perspective,
     hiring_signals: normalizeHiringSignals(obj.hiring_signals),
     questions: stringList(obj.questions),
     confidence: choice(
@@ -553,6 +574,7 @@ Company-specific job postings ARE valuable hiring signals, but requirements
 are not proof that a technology is already deployed.
 Prioritize official company pages, company-specific announcements and credible
 reporting. Only extract hiring signals from identifiable roles tied to THIS employer.
+Company-specific hiring sources may identify a role without proving the underlying technology is deployed. Extract roles explicitly tied to the employer even when the source does not specify technologies. Do not infer posting dates.
 Official company career postings are high-confidence sources; employer-specific
 third-party listings are medium-confidence; ambiguous listings are excluded.
 Do not infer posting dates from search dates or the current year.
@@ -561,6 +583,8 @@ For growth signals, prioritize dated company-specific launches, financing,
 customer adoption, geographic expansion, partnerships or hiring. Do not
 repeat Crunchbase growth scores or funding totals as independent signals.
 If there are no verified recent triggers, return an empty growth_signals array.
+IMPORTANT: If the overview or strategic priorities mention a dated, cited funding round, launch, customer adoption or expansion, include the SAME factual event in growth_signals with its citation. Do not contradict your own overview.
+Technical signals can include VERIFIED product capabilities (e.g. an AI application launch), explicitly labeled product activity; do not confuse product activity with deployed infrastructure. Include cited product activity when known, even if hosting, APIs and cloud vendors are unknown.
 Use concise source references such as [S1] for every factual growth or technical
 signal and for each opportunity evidence. Source identifiers are defined below.
 Do not invent source identifiers. State unknowns explicitly and distinguish
@@ -584,6 +608,7 @@ from inferred priorities. Every priority requires an exact [S#] reference.
 Do not invent executive quotes, motivations, urgency or customer pain.
 Business tension is a cautious question or tradeoff, not a confirmed problem.
 If priorities cannot be substantiated, leave them empty.
+For every Cloudflare opportunity distinguish: (1) verified customer fact [S#], (2) an explicit conditional discovery hypothesis, (3) unknown infrastructure, provider, buying intent or pain. A new AI application can justify a cautious Build or Protect discovery angle, but NEVER claim the company needs Cloudflare or has a specific problem. Prefer no opportunity over an unsupported low-latency or WAN claim.
 Only suggest opportunities supported by the evidence.
 Use empty arrays where evidence is insufficient.
 Assess all three Cloudflare pillars as core research; do not force a hypothesis for every pillar.
