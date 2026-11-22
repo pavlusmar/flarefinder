@@ -633,28 +633,52 @@ async function detail(id, silent = false) {
       button.onclick = async () => {
         button.disabled = true;
         button.textContent = "Queuing research…";
-        feedback("Sending refresh request…");
-
+        feedback("Submitting one refresh request…");
         try {
-          await api(
-            "/api/research/" + encodeURIComponent(id),
-            { method: "POST" }
-          );
-
-          const message = "Research started for " + c.name + ". Check status shortly.";
+          const result = await api("/api/research/" + encodeURIComponent(id), {method:"POST"});
+          const already = result.status === "already_queued";
+          const message = already ? "Research is already queued or running. No extra click needed." : "Research queued. Waiting for the updated report…";
           feedback(message);
+          button.textContent = "⏳ Research queued";
           notice(message);
-
-          await load();
-          await detail(id, true);
+          // Poll the actual persisted status rather than re-rendering the stale
+          // completed brief immediately (which previously re-enabled Refresh).
+          let sawActive = !already;
+          for (let attempt=0;attempt<90;attempt++) {
+            await new Promise(resolve=>setTimeout(resolve,4000));
+            if (currentCompanyId !== id) return;
+            let latest;
+            try { latest = await api("/api/companies/"+encodeURIComponent(id)); }
+            catch (pollError) { feedback("Research submitted; status check failed: "+pollError.message); continue; }
+            if (latest.status === "queued" || latest.status === "running" || latest.status === "pending") {
+              sawActive = true;
+              feedback("Research "+latest.status+"… checking automatically.");
+              button.textContent = "⏳ Research "+latest.status;
+              continue;
+            }
+            if (latest.status === "failed") {
+              feedback("Research failed: "+(latest.error||"Unknown error"));
+              button.disabled=false;
+              button.textContent="↻ Retry research";
+              return;
+            }
+            if (latest.status === "complete" && (sawActive || latest.researched_at !== c.researched_at)) {
+              feedback("Updated research is ready.");
+              await load();
+              await detail(id,true);
+              return;
+            }
+          }
+          feedback("Research request accepted but still processing. You can close this brief and return later; no repeated clicks are needed.");
+          button.textContent="⏳ Check back later";
         } catch (e) {
           const message = /Unauthorized/i.test(e.message)
             ? "Refresh requires an admin token. Close this brief, select Set admin token, enter the configured ADMIN_TOKEN, then try again."
             : "Could not queue research: " + e.message;
           feedback(message);
           notice(message);
-          button.disabled = false;
-          button.textContent = researchButtonText(c.status);
+          button.disabled=false;
+          button.textContent=researchButtonText(c.status);
         }
       };
     }
