@@ -120,6 +120,22 @@ function rankedTerritory() {
   return result;
 }
 
+function updateSelectionLabel() {
+  $("batchBtn").textContent = "▶ Research selected (" + selectedCompanies.size + ")";
+}
+function visibleResearchCandidates() {
+  const q = $("search").value.toLowerCase();
+  const native = $("nativeFilter").value;
+  const status = $("statusFilter").value;
+  const tier = $("tierFilter")?.value || "";
+  return rankedTerritory().filter(c =>
+    (c.name + " " + (c.sector || "") + " " + (c.description || "")).toLowerCase().includes(q) &&
+    (!native || c.digital_native === native) &&
+    (!status || (c.status || "pending") === status) &&
+    (!tier || c.priority.tier.startsWith(tier)) &&
+    !["running","pending","complete"].includes(c.status)
+  );
+}
 function render() {
   const q = $("search").value.toLowerCase();
   const native = $("nativeFilter").value;
@@ -149,7 +165,7 @@ function render() {
       <td><button class="link-btn" data-id="${esc(c.id)}">View signals →</button></td>
     </tr>`).join("") : '<tr><td class="empty" colspan="9">No matching companies.</td></tr>';
   document.querySelectorAll("[data-id]").forEach(b => b.onclick = () => detail(b.dataset.id));
-  document.querySelectorAll("[data-select-id]").forEach(b => b.onchange = () => { if (b.checked) selectedCompanies.add(b.dataset.selectId); else selectedCompanies.delete(b.dataset.selectId); $("batchBtn").textContent = `▶ Research selected (${selectedCompanies.size})`; });
+  document.querySelectorAll("[data-select-id]").forEach(b => b.onchange = () => { if (b.checked) selectedCompanies.add(b.dataset.selectId); else selectedCompanies.delete(b.dataset.selectId); updateSelectionLabel(); });
 }
 
 // Curated, verified Cloudflare customer stories. These are peer proof points,
@@ -817,18 +833,44 @@ $("crunchbaseBtn").onclick = async () => {
   }
 };
 
+$("selectVisibleBtn").onclick = () => {
+  for (const c of visibleResearchCandidates()) selectedCompanies.add(c.id);
+  render();
+  updateSelectionLabel();
+  notice(selectedCompanies.size + " companies selected. Click Research selected to queue them in batches.");
+};
+$("clearSelectionBtn").onclick = () => {
+  selectedCompanies.clear();
+  render();
+  updateSelectionLabel();
+};
 $("batchBtn").onclick = async () => {
   const ids = [...selectedCompanies];
-  if (!ids.length) { notice("Select the companies you want to research first."); return; }
+  if (!ids.length) { notice("Select companies or click Select visible unresearched first."); return; }
+  const button = $("batchBtn");
+  button.disabled = true;
+  let queued = 0, submitted = 0;
   try {
-    const result = await api("/api/research/selected", {
-      method: "POST", body: JSON.stringify({ids})
-    });
-    selectedCompanies.clear();
-    $("batchBtn").textContent = "▶ Research selected (0)";
-    notice(result.message + " " + result.queued + " companies selected; up to 3 run concurrently.");
+    for (let i = 0; i < ids.length; i += 10) {
+      const chunk = ids.slice(i, i + 10);
+      const result = await api("/api/research/selected", {
+        method: "POST", body: JSON.stringify({ids:chunk})
+      });
+      queued += result.queued || 0;
+      submitted += chunk.length;
+      for (const id of chunk) selectedCompanies.delete(id);
+      updateSelectionLabel();
+      notice("Submitted " + submitted + "/" + ids.length + " accounts; " + queued + " newly queued. Research runs in the background.");
+    }
+    notice("Submitted " + submitted + " accounts; " + queued + " newly queued. Research runs in the background (up to 3 concurrently).");
     await load();
-  } catch (e) { notice(e.message); }
+  } catch (e) {
+    notice("Batch stopped after " + submitted + "/" + ids.length + " submissions: " + e.message + ". Remaining selection is preserved; retry when ready.");
+    await load();
+  } finally {
+    button.disabled = false;
+    updateSelectionLabel();
+  }
 };
 
 $("clearQueueBtn").onclick = async () => {
