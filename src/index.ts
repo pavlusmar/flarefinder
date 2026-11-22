@@ -1309,6 +1309,28 @@ async function route(
     return error("Unauthorized. Supply the admin token.", 401);
   }
 
+  // Explicitly excluded names from the 2026-11-22 digital-native CSV curation.
+  // Only these known names are eligible for cleanup; other user-added accounts are untouched.
+  if (path === "/api/cleanup-excluded" && request.method === "POST") {
+    const excludedNames = ["Masthaven Finance","Portman Finance Group","TFY","Mother Root","Exhale Healthy Coffee","Popeyes UK","Lune & Wild","FuelHub","Unrooted Drinks","Ty Nant","Doughboys Pizza","Black Sheep Coffee","Coffi Lab","Wafflemeister","Hernshead Recruitment","The Wastepack Group","Sidekick Group","Contego Environmental Services","Independent Utility Advice","Fastwarm Underfloor Heating","ESL Fuels","Mamedica","Ancient + Brave","Townhouse","Knights Pharmacy","Alcove Group","Safer Roadworks Group","BSN Group","JD Winter","Kori Construction","Reds10","Pathos","OCM","Words+Pixels","Creation Group","Open Partners","Lucky Egg","Pott'd","Scrumbles","Specscart","Sole Bliss","Jenolite","Panache Cruises","Wingstop UK","Another A Story","Golf Travel Group","Flightcatchers","ISON Travel","Senior Stairlifts","PureXtracts","Must Have Ideas","Sol Retail","PMT Education","Powertutors","Rocksteady Music School","Hidden Disabilities Sunflower Scheme","Grain & Frame","Vuba","Aviramp","Superior Wellness","Specialist Heat Exchangers","Swift Strategies","Kittle Group","Wilson Power Solutions","Fix Auto Leicester","The Housing Network","Direct Bullion","QCS Staffing","Octopus Energy Group"];
+    const ids = excludedNames.map(name => idFor(name));
+    const matches = await env.DB.prepare(
+      `SELECT id,name FROM companies WHERE id IN (${ids.map(() => "?").join(",")})`
+    ).bind(...ids).all<{id:string;name:string}>();
+    const payload = await request.json().catch(() => ({})) as {confirm?:boolean};
+    if (payload.confirm !== true) return json({count:matches.results.length,names:matches.results.map(x=>x.name),preview:true});
+    let deleted = 0;
+    for (const company of matches.results) {
+      // Skip active work: queued/running tasks may still write research results.
+      const active = await env.DB.prepare("SELECT status FROM research WHERE company_id=?").bind(company.id).first<{status:string}>();
+      if (active?.status === "running" || active?.status === "queued" || active?.status === "pending") continue;
+      await env.DB.prepare("DELETE FROM research WHERE company_id=?").bind(company.id).run();
+      const result = await env.DB.prepare("DELETE FROM companies WHERE id=?").bind(company.id).run();
+      deleted += result.meta.changes || 0;
+    }
+    return json({deleted,skipped:matches.results.length-deleted,message:"Excluded accounts cleaned up. Active research was preserved."});
+  }
+
   if (path === "/api/import" &&
       request.method === "POST") {
     const payload = await request.json().catch(() => null);
