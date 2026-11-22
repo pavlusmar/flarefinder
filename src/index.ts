@@ -642,6 +642,38 @@ function evidenceGrounded(report: Report, sources: Source[]): Report {
         outreach:"Your published platform describes a customer-facing API "+apiEvidence.ref+". I'm interested in how your team handles API visibility and protection today, and whether any requirements remain unaddressed.",confidence:"low"});
     }
   }
+  // Evidence-led Connect: product-owned video delivery is a workload, not proof of CDN gaps.
+  const videoDelivery = sources.map((source,i)=>({source,ref:"[S"+(i+1)+"]",text:source.title+" "+source.snippet}))
+    .find(x=>/\b(?:video|avatar|dubbing|streaming)\b/i.test(x.text) &&
+      /\b(?:API|real.time|render|download|delivery|platform)\b/i.test(x.text) &&
+      /\b(?:developer|API|platform|product)\b/i.test(x.source.title) &&
+      !/\b(?:reviews|jobs|careers|competitors)\b/i.test(x.source.title));
+  if (videoDelivery && !report.cloudflare_opportunities.some(o=>o.pillar==="Connect")) {
+    report.cloudflare_opportunities.push({pillar:"Connect",evidence:videoDelivery.ref,
+      signal:"Company documents customer-facing video or interactive media delivery "+videoDelivery.ref,
+      hypothesis:"Qualify whether geographic delivery, caching, bandwidth or interactive session performance is an active priority for this media workload.",
+      implication:"Media and real-time interfaces create concrete delivery requirements, but do not establish any current latency or cost gap.",
+      product_fit:"Cloudflare CDN and network delivery services, subject to cacheability, streaming architecture and incumbent validation.",
+      limitations:"Existing CDN, delivery architecture, media cacheability and performance are unknown; dynamic video generation may not be CDN-cacheable.",
+      stakeholder:"Media platform or infrastructure engineering lead",
+      discovery_question:"How do you deliver generated and interactive video globally today, and where, if anywhere, are performance or delivery costs creating trade-offs?",
+      outreach:"Your developer platform documents video delivery and interactive media "+videoDelivery.ref+". I'm curious how your team approaches global delivery and whether any requirements remain unresolved.",confidence:"low"});
+  }
+  // Developer-owned external APIs qualify for API security discovery even without the phrase 'single API'.
+  const developerApi = sources.map((source,i)=>({source,ref:"[S"+(i+1)+"]",text:source.title+" "+source.snippet}))
+    .find(x=>/\bAPI\b/i.test(x.source.title) && /\b(?:developer|platform|integration)\b/i.test(x.source.title) &&
+      /\b(?:key|webhook|request|authentication|enterprise|customer|render)\b/i.test(x.text));
+  if (developerApi && !report.cloudflare_opportunities.some(o=>o.pillar==="Protect")) {
+    report.cloudflare_opportunities.push({pillar:"Protect",evidence:developerApi.ref,
+      signal:"Company documents externally consumed developer APIs "+developerApi.ref,
+      hypothesis:"Explore whether API discovery, abuse protection, schema validation or bot management has an unmet requirement.",
+      implication:"External APIs are a concrete attack surface to assess, not evidence that the company's controls are deficient.",
+      product_fit:"API Shield and WAF where compatible with existing API architecture and security controls.",
+      limitations:"Existing API gateway, WAF, authentication and abuse controls are unknown; no replacement or vulnerability is assumed.",
+      stakeholder:"API security lead or platform engineering lead",
+      discovery_question:"How are your external developer APIs protected today, and what API visibility or abuse-prevention requirements, if any, remain open?",
+      outreach:"Your published developer APIs "+developerApi.ref+" caught my attention. How is your team thinking about API security as usage expands?",confidence:"low"});
+  }
   const namedAi = sources.map((source,i)=>({text:source.title+" "+source.snippet,ref:"[S"+(i+1)+"]"}))
     .find(x=>/\b(?:AI-assisted operations|AI-assisted engineering|AI-enabled engineering|agentic AI infrastructure|AI agents?)\b/i.test(x.text));
   if (namedAi && !report.technical_signals.some(x=>x.includes(namedAi.ref)&&/\bAI\b/i.test(x)))
@@ -672,15 +704,21 @@ function evidenceGrounded(report: Report, sources: Source[]): Report {
       report.cloudflare_opportunities.push(candidate);
     }
   }
-  // Prefer actionable source-grounded findings over plausible but generic
-  // model output. Do not silently let weaker hypotheses fill the four slots.
-  report.cloudflare_opportunities.sort((a,b) => {
-    const quality = (o: Opportunity) => Number(/\[S\d+\]/.test(o.signal || "")) +
-      Number(/\b(AI Gateway|API Shield|Workers|Zero Trust|R2|D1|CDN|WAF)\b/i.test(o.product_fit || "")) +
-      Number(/\b(existing|unknown|already|incumbent|not established|not assumed)\b/i.test(o.limitations || ""));
-    return quality(b)-quality(a);
-  });
-  report.cloudflare_opportunities = report.cloudflare_opportunities.slice(0, 4);
+  // Preserve at least one source-grounded opportunity per pillar before filling remaining slots.
+  const quality = (o: Opportunity) => Number(/\[S\d+\]/.test(o.signal || "")) +
+    Number(/\b(AI Gateway|API Shield|Workers|Zero Trust|R2|D1|CDN|WAF)\b/i.test(o.product_fit || "")) +
+    Number(/\b(existing|unknown|already|incumbent|not established|not assumed)\b/i.test(o.limitations || ""));
+  report.cloudflare_opportunities.sort((a,b)=>quality(b)-quality(a));
+  const selected: Opportunity[] = [];
+  for (const pillar of ["Connect","Protect","Build"]) {
+    const match = report.cloudflare_opportunities.find(o=>o.pillar===pillar);
+    if (match) selected.push(match);
+  }
+  for (const candidate of report.cloudflare_opportunities) {
+    if (selected.length>=4) break;
+    if (!selected.includes(candidate)) selected.push(candidate);
+  }
+  report.cloudflare_opportunities = selected;
   recoverSourceFacts(report, sources);
   report.customer_perspective.priorities = report.customer_perspective.priorities.filter(p => valid(p.evidence));
   report.growth_signals = report.growth_signals.filter(valid);
