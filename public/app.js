@@ -221,9 +221,9 @@ function tasRevenueScenario(c) {
     const source = sources[i];
     const snippet = String(source.snippet || "");
     const title = String(source.title || "");
-    const lines = (title+" "+snippet).split(/(?<=[.!?])\\s+|\\n/);
+    const lines = (title+" "+snippet).split(/(?<=[.!?])\s+|\n/);
     for (const line of lines) {
-      const matches = [...line.matchAll(/(?:annual revenue|annual turnover|revenue (?:was|of|reached|is)|turnover (?:was|of|reached|is))[^$£€\\d]{0,35}([$£€])\\s*([\\d,.]+)\\s*(billion|million|bn|m)\\b/gi)];
+      const matches = [...line.matchAll(/(?:annual revenue|annual turnover|revenue (?:was|of|reached|is)|turnover (?:was|of|reached|is))[^$£€\d]{0,35}([$£€])\s*([\d,.]+)\s*(billion|million|bn|m)\b/gi)];
       for (const match of matches) {
         const amount = Number(match[2].replace(/,/g,"")) * (/billion|bn/i.test(match[3])?1000:1);
         if (!(amount>0 && amount<100000)) continue;
