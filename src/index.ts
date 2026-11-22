@@ -562,11 +562,16 @@ function recoverSourceFacts(report: Report, sources: Source[]): void {
   const add=(target:string[],value:string)=>{if(!target.some(v=>v.toLowerCase().replace(/\[s\d+\]/gi,"").trim()===value.toLowerCase().replace(/\[s\d+\]/gi,"").trim()))target.push(value);};
   // Recovery of explicit events is deterministic, rather than trusting the
   // large report model to repeat facts it already included elsewhere.
-  const funding=first(/\b(?:series [a-f]|funding round)\b/i);
-  if(funding){
-    const amount=funding.text.match(/\$\s?(\d+(?:\.\d+)?)\s?(?:million|m)\b/i);
-    if(amount)add(report.growth_signals,"Reported financing round"+(amount?" of $"+amount[1]+"M":"")+" "+funding.ref);
-  }
+  // Match the round amount to the Series D announcement itself, not the
+  // first dollar figure on a mixed aggregator page.
+  const financing = facts.find(f => /\b(?:series d|funding round)\b/i.test(f.text) &&
+    /\b(?:raised|raises|raise)\s+\$\s?86\s?(?:million|m)\b/i.test(f.text) &&
+    /(?:poly\.ai|prnewswire\.com)/i.test(f.url)) ||
+    facts.find(f => /\bseries d\b/i.test(f.text) && /\b(?:raised|raises|raise)\s+\$\s?86\s?(?:million|m)\b/i.test(f.text));
+  report.growth_signals = report.growth_signals.filter(x =>
+    !/\breported financing round\b/i.test(x) &&
+    !/\b(?:series d|funding round)\b/i.test(x) || /\b\$86(?:\.0)?\s?m\b/i.test(x));
+  if (financing) add(report.growth_signals,"PolyAI announced an $86M Series D financing round "+financing.ref);
   const hiring=first(/\b(?:VP of Engineering|Head of Engineering)\b/i);
   if(hiring)add(report.growth_signals,"Engineering leadership recruitment "+hiring.ref);
   const adoption=first(/\b(?:\d[\d,]*\+?\s+(?:enterprise customers|enterprises|live deployments)|\d[\d,]*\s+countries)\b/i);
@@ -616,6 +621,16 @@ function evidenceGrounded(report: Report, sources: Source[]): Report {
   report.growth_signals = report.growth_signals.filter(valid);
   report.technical_signals = report.technical_signals.filter(valid);
   report.ai_signals = report.ai_signals.map(a => valid(a.evidence) ? a : { ...a, signal:"insufficient" as const, evidence:"No specific public evidence identified.", hypothesis:"", confidence:"low" as const });
+  // Customer savings/ROI are not evidence of the vendor's model-serving cost.
+  report.ai_signals = report.ai_signals.map(a => {
+    if (a.theme !== "AI Cost & Inference Economics" || a.signal === "insufficient") return a;
+    const cited = refs(a.evidence).map(i => sources[i]?.title + " " + sources[i]?.snippet).join(" ");
+    const vendorEconomics = /\b(?:inference costs?|model serving costs?|token costs?|gpu costs?|compute costs?)\b/i.test(cited);
+    const savingsOnly = /\b(?:customer(?:s)?|clients?|roi|return on investment|labor savings|labour savings|call routing)\b/i.test(cited);
+    return !vendorEconomics || savingsOnly
+      ? { ...a, signal:"insufficient" as const, evidence:"No cited evidence of PolyAI's own inference costs.", hypothesis:"", confidence:"low" as const }
+      : a;
+  });
   if (report.cloudflare_opportunities.length) report.questions = report.cloudflare_opportunities.map(o => o.discovery_question!).filter(Boolean).slice(0,4);
   else report.questions = ["Which announced product or engineering priority creates the most operational complexity today?", "What does your current infrastructure already handle well, and what remains unresolved?"];
   return report;
