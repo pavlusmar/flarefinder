@@ -326,6 +326,44 @@ function normalizeReport(
   };
 }
 
+
+const DECISION_MODEL = "@cf/cloudflare/clef-flash";
+
+// Cloudflare-developed decision model; optional enrichment, not a report generator.
+// Never treat a model probability as proof of a customer need.
+async function classifyDigitalNative(env: Env, company: Company, sources: Source[]) {
+  try {
+    const result = await env.AI.run(DECISION_MODEL as Parameters<Ai["run"]>[0], {
+      model: "clef-flash",
+      state: JSON.stringify({
+        company: { name: company.name, description: company.description, sector: company.sector, website: company.website },
+        sources: sources.map(s => ({ title: s.title, snippet: s.snippet }))
+      }),
+      questions: {
+        digital_native: {
+          type: "choice",
+          instructions: "Does the available evidence establish that this company primarily builds and sells software, digital platforms or internet-native products? Choose uncertain if evidence is insufficient.",
+          criteria: {
+            yes: "Primarily develops software or internet-native digital products",
+            no: "Primarily sells physical products or non-digital services",
+            uncertain: "Insufficient or ambiguous evidence"
+          }
+        }
+      }
+    } as never) as Record<string, unknown>;
+    const answer = (result.answers as Record<string, unknown> | undefined)?.digital_native;
+    console.log("Clef qualification response:", company.id, JSON.stringify(answer).slice(0, 500));
+    if (!answer || typeof answer !== "object") return null;
+    const a = answer as Record<string, unknown>;
+    // Choice responses can include a selected option or probabilities.
+    const selected = [a.value, a.choice, a.selected, a.answer].find(v => typeof v === "string");
+    return selected === "yes" || selected === "no" || selected === "uncertain" ? selected : null;
+  } catch (e) {
+    console.warn("Clef qualification unavailable:", company.id, e instanceof Error ? e.message : String(e));
+    return null;
+  }
+}
+
 // --------------------------------------------------
 // WORKERS AI
 // --------------------------------------------------
@@ -432,6 +470,7 @@ ${JSON.stringify(sources)}
         output?: unknown;
       };
 
+      console.log("AI response shape:", company.id, Object.keys(result || {}), JSON.stringify(result || {}).slice(0, 800));
       let raw = "";
 
       if (typeof result.response === "string") {
@@ -449,6 +488,13 @@ ${JSON.stringify(sources)}
         }).join("\n");
       }
 
+      if (!raw && result && typeof result === "object") {
+        const r = result as Record<string, unknown>;
+        const nested = r.result as Record<string, unknown> | undefined;
+        if (typeof nested?.response === "string") raw = nested.response;
+        const choices = r.choices as Array<{message?: {content?: string}}> | undefined;
+        if (!raw && typeof choices?.[0]?.message?.content === "string") raw = choices[0].message.content;
+      }
       const report = normalizeReport(extractJson(raw));
 
       console.log("AI generation completed:", company.id);
@@ -511,6 +557,15 @@ async function researchCompany(env: Env, id: string) {
     }
 
     const report = await analyze(env, company, sources);
+    // Qualification is advisory. Preserve the researched explanation and mark
+    // disagreements as uncertain rather than silently overriding the report.
+    const clef = await classifyDigitalNative(env, company, sources);
+    if (clef && clef !== report.digital_native) {
+      console.log("Model disagreement:", id, "report:", report.digital_native, "clef:", clef);
+      report.digital_native = "uncertain";
+      report.digital_native_reason = "The research model and Cloudflare Clef Flash disagreed. Manual qualification required. " + report.digital_native_reason;
+      report.confidence = "low";
+    }
 
     await env.DB.prepare(`
       UPDATE research
@@ -639,7 +694,8 @@ async function route(
       searchConfigured: !!env.SEARCH_API_KEY,
       aiConfigured: !!env.AI,
       dbConfigured: !!env.DB,
-      model: MODEL
+      model: MODEL,
+      decisionModel: DECISION_MODEL
     });
   }
 
