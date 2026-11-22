@@ -6,6 +6,7 @@ let token = sessionStorage.getItem("flarefinder-admin") || "";
 let currentCompanyId = null;
 let detailRequestId = 0;
 let refreshBusy = false;
+const activeResearchRequests = new Set();
 const selectedCompanies = new Set();
 
 const esc = s =>
@@ -631,6 +632,8 @@ async function detail(id, silent = false) {
 
     if (button && !button.disabled) {
       button.onclick = async () => {
+        if (activeResearchRequests.has(id)) return;
+        activeResearchRequests.add(id);
         button.disabled = true;
         button.textContent = "Queuing research…";
         feedback("Submitting one refresh request…");
@@ -658,12 +661,14 @@ async function detail(id, silent = false) {
             }
             if (latest.status === "failed") {
               feedback("Research failed: "+(latest.error||"Unknown error"));
+              activeResearchRequests.delete(id);
               button.disabled=false;
               button.textContent="↻ Retry research";
               return;
             }
             if (latest.status === "complete" && (sawActive || latest.researched_at !== c.researched_at)) {
               feedback("Updated research is ready.");
+              activeResearchRequests.delete(id);
               await load();
               await detail(id,true);
               return;
@@ -677,6 +682,7 @@ async function detail(id, silent = false) {
             : "Could not queue research: " + e.message;
           feedback(message);
           notice(message);
+          activeResearchRequests.delete(id);
           button.disabled=false;
           button.textContent=researchButtonText(c.status);
         }
@@ -708,7 +714,9 @@ async function refreshStatus() {
       currentCompanyId &&
       !$("overlay").classList.contains("hidden")
     ) {
-      await detail(currentCompanyId, true);
+      // The per-account refresh poll owns the brief until research finishes.
+      // Do not replace its button or feedback during a background status tick.
+      if (!activeResearchRequests.has(currentCompanyId)) await detail(currentCompanyId, true);
     }
   } finally {
     refreshBusy = false;
