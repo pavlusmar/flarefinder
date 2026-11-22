@@ -133,44 +133,88 @@ async function searchWeb(
   // Four targeted searches are deliberately capped to control API spending.
   const identity = '"' + company.name + '"' + (domain ? ' "' + domain + '"' : '');
   const queries = [
-    identity + ' official website products customers what does the company do',
-    '"' + company.name + '" company funding growth expansion leadership announcements 2025 2026',
-    '"' + company.name + '" engineering blog technology stack infrastructure architecture API security CDN',
-    '"' + company.name + '" careers engineering jobs AI product launch partnerships 2025 2026'
+    '"' + company.name + '" official company website products platform customers',
+    '"' + company.name + '" funding expansion partnerships product announcements',
+    '"' + company.name + '" engineering infrastructure API security cloud architecture',
+    '"' + company.name + '" careers engineering AI product hiring'
   ];
   console.log("Tavily searches started:", company.id);
-  const searches = await Promise.all(queries.map(async query => {
-    const response = await fetch("https://api.tavily.com/search", {
-      method: "POST",
-      headers: { "content-type": "application/json", authorization: "Bearer " + env.SEARCH_API_KEY },
-      body: JSON.stringify({ query, topic: "general", search_depth: "advanced", max_results: 8, include_answer: false }),
-      signal: AbortSignal.timeout(20000)
-    });
-    if (!response.ok) throw new Error("Tavily search failed: HTTP " + response.status);
-    const data = await response.json() as { results?: Array<{ title?: string; url?: string; content?: string }> };
-    return data.results || [];
-  }));
-  const seen = new Set<string>();
-  const sources: Source[] = searches.flatMap((results, searchIndex) => results.map(r => ({ ...r, searchIndex })))
-    .flatMap(r => {
+  type SearchHit = { title?: string; url?: string; content?: string; searchIndex: number };
+  async function runSearch(query: string, searchIndex: number): Promise<SearchHit[]> {
+    try {
+      const response = await fetch("https://api.tavily.com/search", {
+        method: "POST",
+        headers: { "content-type": "application/json", authorization: "Bearer " + env.SEARCH_API_KEY },
+        body: JSON.stringify({ query, topic: "general", search_depth: "advanced", max_results: 8, include_answer: false }),
+        signal: AbortSignal.timeout(20000)
+      });
+      if (!response.ok) throw new Error("HTTP " + response.status);
+      const data = await response.json() as { results?: Array<{ title?: string; url?: string; content?: string }> };
+      return (data.results || []).map(hit => ({ ...hit, searchIndex }));
+    } catch (e) {
+      console.warn("Search failed:", company.id, searchIndex, e instanceof Error ? e.message : String(e));
+      return [];
+    }
+  }
+  function filterSources(results: SearchHit[]): Source[] {
+    const seen = new Set<string>();
+    const candidates = results.flatMap(r => {
       const url = validUrl(r.url);
-      if (!url || seen.has(url)) return [];
-      const host = new URL(url).hostname.toLowerCase().replace(/^www\./, "");
+      if (!url) return [];
+      const parsed = new URL(url);
+      const host = parsed.hostname.toLowerCase().replace(/^www\./, "");
       const official = !!domain && (host === domain || host.endsWith("." + domain));
       const title = safe(r.title).slice(0, 200);
-      const snippet = safe(r.content).slice(0, 650);
+      const snippet = safe(r.content).slice(0, 1400);
       const haystack = (title + " " + snippet + " " + host).toLowerCase();
       const employerNamed = tokens.length > 0 && tokens.every(t => haystack.includes(t));
       const jobSite = /(^|\.)(indeed\.com|glassdoor\.com|ziprecruiter\.com|linkedin\.com|greenhouse\.io|lever\.co|ashbyhq\.com|workable\.com)$/.test(host);
       const jobLike = /\b(job|jobs|careers|vacancy|hiring|apply|engineer|developer|architect)\b/i.test(title + " " + url);
       const specificJob = jobLike && employerNamed && !/jobs?\s+(in|near|search|results|openings)\b/i.test(title);
       if ((!official && !employerNamed) || (jobSite && !specificJob) || snippet.length < 60) return [];
-      seen.add(url);
-      return [{ title, url, snippet, searchIndex: r.searchIndex, jobLike: official ? jobLike : specificJob }];
-    })
-    .sort((a, b) => Number(new URL(b.url).hostname.replace(/^www\./,"") === domain) - Number(new URL(a.url).hostname.replace(/^www\./,"") === domain) || a.searchIndex - b.searchIndex || Number(b.jobLike) - Number(a.jobLike))
-    .slice(0, 16)
-    .map(({ title, url, snippet }) => ({ title, url, snippet }));
+      const canonical = parsed.origin + parsed.pathname.replace(/\/$/, "").toLowerCase();
+      if (seen.has(canonical)) return [];
+      seen.add(canonical);
+      const pricingOnly = /\b(pricing|cost of|how much does|reviews?|alternatives?|competitors?|coupon)\b/i.test(title) && !official;
+      const core = /\b(about|platform|product|solutions|customers|company|funding|launch|engineering|blog|news|careers)\b/i.test(title);
+      return [{ title, url, snippet, searchIndex: r.searchIndex, official, pricingOnly, core, host }];
+    });
+    // Select source diversity: official and company-specific primary evidence first,
+    // and avoid filling the context with duplicate third-party pricing sites.
+    candidates.sort((a,b) => Number(b.official)-Number(a.official) ||
+      Number(b.core)-Number(a.core) || Number(a.pricingOnly)-Number(b.pricingOnly) ||
+      a.searchIndex-b.searchIndex);
+    const chosen: typeof candidates = [];
+    const byHost = new Map<string,number>();
+    for (const hit of candidates) {
+      const count = byHost.get(hit.host) || 0;
+      if (count >= (hit.official ? 6 : 2)) continue;
+      if (hit.pricingOnly && chosen.some(s => s.pricingOnly)) continue;
+      chosen.push(hit);
+      byHost.set(hit.host,count+1);
+      if (chosen.length >= 16) break;
+    }
+    return chosen.map(({title,url,snippet})=>({title,url,snippet}));
+  }
+  const initial = (await Promise.all(queries.map(runSearch))).flat();
+  let sources = filterSources(initial);
+  const domains = () => new Set(sources.map(s=>new URL(s.url).hostname.replace(/^www\./,""))).size;
+  const officialFound = () => sources.some(s => {
+    const h = new URL(s.url).hostname.replace(/^www\./,"");
+    return !!domain && (h === domain || h.endsWith("."+domain));
+  });
+  // Recovery search: query the known company domain, not AI keywords.
+  // This is triggered by poor coverage rather than silently accepting one result.
+  if (sources.length < 5 || domains() < 2 || !officialFound()) {
+    const recoveryQueries = [
+      domain ? "site:" + domain + " " + company.name + " about products platform" : '"' + company.name + '" official website what we do',
+      '"' + company.name + '" "customers" "platform" "product" case study',
+      '"' + company.name + '" latest news funding new features 2025 2026'
+    ];
+    const recovered = (await Promise.all(recoveryQueries.map((q,i)=>runSearch(q,queries.length+i)))).flat();
+    sources = filterSources(initial.concat(recovered));
+    console.log("Recovery search completed:",company.id,sources.length,domains(),"domains");
+  }
 
   console.log(
     "Tavily search completed:",
@@ -826,20 +870,12 @@ async function researchCompany(env: Env, id: string) {
   try {
     const sources = await searchWeb(env, company);
 
-    // A single pricing/review article is not a researched account.
-    // Reject low-coverage results instead of generating a confident-looking
-    // score and marking the job complete.
-    const hosts = new Set(sources.map(s => new URL(s.url).hostname.replace(/^www\./, "")));
-    const officialDomain = (() => { try { return new URL(company.website || "").hostname.replace(/^www\./, ""); } catch { return ""; } })();
-    const hasOfficial = sources.some(s => {
-      const h = new URL(s.url).hostname.replace(/^www\./, "");
-      return !!officialDomain && (h === officialDomain || h.endsWith("." + officialDomain));
-    });
-    if (sources.length < 3 || hosts.size < 2 || (!hasOfficial && sources.length < 5)) {
-      throw new Error("Research incomplete: insufficient independent company-specific evidence (" +
-        sources.length + " sources, " + hosts.size + " domains, official source " +
-        (hasOfficial ? "yes" : "no") + "). No account score assigned. Verify company website or retry later.");
-    }
+    // Only fail if absolutely no company-specific evidence can be retrieved.
+    // Sparse coverage still yields a clearly labeled partial brief, not a
+    // fabricated negative account score.
+    if (!sources.length) throw new Error("No company-specific sources found after recovery searches.");
+    const researchCoverageLow = sources.length < 3 ||
+      new Set(sources.map(s => new URL(s.url).hostname)).size < 2;
 
     const report = await analyze(env, company, sources);
     // Qualification is advisory. Preserve the researched explanation and mark
@@ -852,7 +888,13 @@ async function researchCompany(env: Env, id: string) {
       report.confidence = "low";
     }
 
-    const pursuit = await scorePursuitWithClef(env, company, report, sources);
+    if (researchCoverageLow) report.confidence = "low";
+    const pursuit = researchCoverageLow ? {
+      status: "unavailable" as const, total: null, tier: "Unscored", dimensions: [],
+      opportunity_size: "Unknown", primary_pillar: "Unknown",
+      rationale: "Insufficient independent sources; do not interpret this as low account potential.",
+      caveat: "Research coverage is limited; prioritize follow-up verification.", model: DECISION_MODEL
+    } : await scorePursuitWithClef(env, company, report, sources);
     if (sources.length) sources[0].pursuit_score = pursuit;
 
     // Preserve customer perspective with research sources to avoid a D1 migration.
