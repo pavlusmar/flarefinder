@@ -1253,7 +1253,41 @@ async function route(
       WHERE c.id=?
     `).bind(id).first();
 
-    return row ? json(row) : error("Not found", 404);
+    if (!row) return error("Not found", 404);
+    // Rebuild a grounded brief from the already-saved citations. This makes
+    // improvements visible without spending credits or rerunning research.
+    const stored = row as Record<string, unknown>;
+    const parseArray = (value: unknown): unknown[] => {
+      if (Array.isArray(value)) return value;
+      if (typeof value !== "string") return [];
+      try { const parsed: unknown = JSON.parse(value); return Array.isArray(parsed) ? parsed : []; }
+      catch { return []; }
+    };
+    const sources = parseArray(stored.sources) as Source[];
+    if (sources.length) {
+      const perspective = sources[0]?.customer_perspective ||
+        { mission: "", priorities: [], business_tension: "" };
+      const report: Report = {
+        digital_native: stored.digital_native === "yes" || stored.digital_native === "no" ? stored.digital_native : "uncertain",
+        digital_native_reason: safe(stored.digital_native_reason),
+        summary: safe(stored.summary),
+        customer_perspective: perspective,
+        growth_signals: parseArray(stored.growth_signals).filter((x): x is string => typeof x === "string"),
+        technical_signals: parseArray(stored.technical_signals).filter((x): x is string => typeof x === "string"),
+        cloudflare_opportunities: parseArray(stored.cloudflare_opportunities) as Opportunity[],
+        ai_signals: parseArray(stored.ai_signals) as AiSignal[],
+        hiring_signals: [],
+        questions: parseArray(stored.questions).filter((x): x is string => typeof x === "string"),
+        confidence: stored.confidence === "high" || stored.confidence === "medium" ? stored.confidence : "low"
+      };
+      evidenceGrounded(report, sources);
+      stored.growth_signals = report.growth_signals;
+      stored.technical_signals = report.technical_signals;
+      stored.cloudflare_opportunities = report.cloudflare_opportunities;
+      stored.ai_signals = report.ai_signals;
+      stored.questions = report.questions;
+    }
+    return json(stored);
   }
 
   if (!authorized(request, env)) {
