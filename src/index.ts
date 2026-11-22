@@ -614,7 +614,7 @@ async function researchCompany(env: Env, id: string) {
           technical_signals=?,
           cloudflare_opportunities=?,
           ai_signals=?,
-          questions=?
+          questions=?,
           confidence=?,
           sources=?,
           error=NULL,
@@ -762,7 +762,7 @@ async function route(
       SELECT c.*, r.status, r.digital_native,
              r.digital_native_reason, r.summary,
              r.growth_signals, r.technical_signals,
-             r.cloudflare_opportunities, r.questions,
+             r.cloudflare_opportunities, r.ai_signals, r.questions,
              r.confidence, r.sources, r.researched_at,
              r.error
       FROM companies c
