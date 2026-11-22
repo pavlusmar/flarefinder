@@ -71,6 +71,25 @@ type Report = {
   confidence: "low" | "medium" | "high";
 };
 
+// Source-linked Cloudflare capability catalogue. Prospect evidence is never inferred from these docs.
+// Refresh these official documentation entries when product capabilities change.
+const CLOUDFLARE_CAPABILITIES = [
+ {pillar:"Protect",product:"API Shield",workloads:["api","payment","transaction","bank","fintech","authentication","endpoint","integration","mcp"],capability:"API endpoint discovery, request schema validation, JWT validation, mTLS and abuse protections; requires appropriate traffic routing and feature entitlements.",url:"https://developers.cloudflare.com/api-shield/get-started/"},
+ {pillar:"Protect",product:"WAF and DDoS protection",workloads:["web","api","traffic","security","attack","application","platform"],capability:"Edge application protection and traffic filtering; existing protection and deployment architecture must be established.",url:"https://developers.cloudflare.com/waf/"},
+ {pillar:"Protect",product:"Cloudflare Zero Trust",workloads:["remote","employee","internal","access","identity","workforce","saas"],capability:"Identity-aware access controls for internal applications; verify existing identity and access stack.",url:"https://developers.cloudflare.com/cloudflare-one/"},
+ {pillar:"Connect",product:"Cloudflare CDN",workloads:["cdn","content","media","image","video","static","delivery","latency"],capability:"Caching and delivery of cacheable content at the edge; does not automatically accelerate database queries or uncachable payment transactions.",url:"https://developers.cloudflare.com/cache/"},
+ {pillar:"Connect",product:"Cloudflare DNS",workloads:["dns","domain","availability","resolution"],capability:"Authoritative DNS and related traffic management; existing DNS provider and migration constraints are unknown.",url:"https://developers.cloudflare.com/dns/"},
+ {pillar:"Build",product:"Cloudflare Workers",workloads:["serverless","edge","api","developer","application","microservice","integration","agent"],capability:"Run selected application logic and APIs on Cloudflare's serverless platform; not an automatic replacement for existing core systems.",url:"https://developers.cloudflare.com/workers/"},
+ {pillar:"Build",product:"AI Gateway",workloads:["llm","inference","model","genai","agent","ai","mcp"],capability:"Observability and controls for supported model-provider requests, including caching and rate limiting; verify actual LLM traffic and existing gateway.",url:"https://developers.cloudflare.com/ai-gateway/"},
+ {pillar:"Build",product:"Workers AI",workloads:["inference","model","ai","llm","embedding"],capability:"Run supported AI models on Cloudflare; do not infer model compatibility or migration feasibility.",url:"https://developers.cloudflare.com/workers-ai/"}
+] as const;
+
+function relevantCloudflareCapabilities(company: Company, sources: Source[]) {
+ const text = [company.description || "",company.sector || "",...sources.map(s=>s.title+" "+s.snippet)].join(" ").toLowerCase();
+ const matches = CLOUDFLARE_CAPABILITIES.map(c=>({capability:c,hits:c.workloads.filter(w=>new RegExp("\\b"+w+"\\b","i").test(text))})).filter(x=>x.hits.length);
+ return matches.sort((a,b)=>b.hits.length-a.hits.length).slice(0,6).map(x=>({...x.capability,matched_terms:x.hits}));
+}
+
 const MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 
 const json = (value: unknown, status = 200) =>
@@ -712,7 +731,7 @@ async function scorePursuitWithClef(env: Env, company: Company, report: Report, 
   try {
     const questions = Object.fromEntries(allDimensions.map(d => [d.key, {
       type:"choice",
-      instructions:d.instructions + " Follow the dimension-specific 0-4 anchors strictly. Use only supplied company-specific evidence. Do not award generic middle scores by default. Unknown cannot count as verified opportunity. Do not infer budget, technical stack or buying intent.",
+      instructions:d.instructions + (d.key==="product_relevance" ? " Score evidenced workloads, NOT verified customer pain: documented high-volume API or sensitive customer-facing API warrants considering 2; multiple demanding documented workflows can warrant 3. A zero requires no identifiable relevant workload in the ORIGINAL sources. Cloudflare capability catalogue describes product fit, never prospect adoption. " : "") + " Follow the dimension-specific 0-4 anchors strictly. Use only supplied company-specific evidence. Do not award generic middle scores by default. Unknown cannot count as verified opportunity. Do not infer budget, technical stack or buying intent.",
       criteria:{
         "0":"No relevant evidence for this dimension",
         "1":"Weak or indirect evidence",
@@ -731,7 +750,8 @@ async function scorePursuitWithClef(env: Env, company: Company, report: Report, 
           priorities:report.customer_perspective.priorities, growth_signals:report.growth_signals,
           technical_signals:report.technical_signals, opportunities:report.cloudflare_opportunities,
           ai_signals:report.ai_signals, hiring:report.hiring_signals},
-        sources:sources.map((source,i)=>({ref:"S"+(i+1),title:source.title,snippet:source.snippet,url:source.url}))
+        sources:sources.map((source,i)=>({ref:"S"+(i+1),title:source.title,snippet:source.snippet,url:source.url})),
+        cloudflare_capability_catalogue:relevantCloudflareCapabilities(company,sources)
       }),
       questions
     } as never) as Record<string,unknown>;
@@ -945,7 +965,7 @@ Keep the JSON concise. No Markdown or explanations.
 Company:
 ${JSON.stringify(companyData)}
 
-Sources (use [S1], [S2], etc. for references):
+Official Cloudflare capability catalogue (product documentation, NOT evidence of prospect adoption; matched keywords are only retrieval hints):\n${JSON.stringify(relevantCloudflareCapabilities(company,sources))}\nCompare actual sourced prospect workloads against the catalogue. Do not treat keyword matches as verified needs. Each product fit must name a relevant catalogue product and prospect [S#] evidence. Explain incumbents and missing facts.\n\nSources (use [S1], [S2], etc. for references):
 ${JSON.stringify(sources.map((source, i) => ({ id: `S${i+1}`, ...source })))}
 `;
 
