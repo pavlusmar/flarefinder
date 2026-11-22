@@ -210,34 +210,55 @@ function tasSection(c) {
   const baseline = tasIndustryBaseline(c.sector);
   const scenario = tasRevenueScenario(c);
   return `<section class="brief-tas">
-    <h3>Commercial potential · TAS scenario</h3>
-    <p class="meta">Illustrative annual Cloudflare opportunity, NOT a verified company budget, Cloudflare quote or sales forecast.</p>
+    <h3>Commercial potential · Annual TAS</h3>
+    <p class="meta">Calculated scenarios, not verified Cloudflare spend or sales forecasts. AI TAS is a subset of overall TAS; do not add the two.</p>
     <div class="brief-signal">
+      <div id="tasResult" class="info">Calculating overall and AI TAS…</div>
       <p class="meta"><strong>${esc(scenario.kind)}</strong> · ${esc(scenario.note)}</p>
       <label>Annual revenue / proxy (USD millions)
         <input id="tasRevenue" type="number" min="0" step="0.01" placeholder="Unknown — enter sourced revenue" style="width:100%;margin-top:5px" ${scenario.millions != null ? 'value="'+scenario.millions.toFixed(2)+'"' : ''}>
       </label>
       <label>Technology spend % <input id="tasIT" type="number" min="0" max="100" step="0.1" value="${baseline.pct}" style="width:85px"></label>
-      <label>Low % <input id="tasLow" type="number" min="0" max="100" step="0.1" value="1" style="width:75px"></label>
-      <label>High % <input id="tasHigh" type="number" min="0" max="100" step="0.1" value="5" style="width:75px"></label>
-      <div id="tasResult" class="info">Calculating scenario…</div>
-      <details><summary class="meta">Method and limitations</summary><p class="meta">Annual revenue or explicitly labeled headcount proxy × assumed industry technology-spend % × illustrative Cloudflare-addressable share of 1–5%. Funding is NOT treated as revenue. These are user-editable assumptions, not Cloudflare's official account-sizing methodology. Replace proxies with sourced turnover whenever possible.</p></details>
+      <label>Overall Cloudflare-addressable low % <input id="tasLow" type="number" min="0" max="100" step="0.1" value="1" style="width:75px"></label>
+      <label>Overall Cloudflare-addressable high % <input id="tasHigh" type="number" min="0" max="100" step="0.1" value="5" style="width:75px"></label>
+      <label>AI share of technology spend % <input id="tasAIShare" type="number" min="0" max="100" step="0.1" value="15" style="width:75px"></label>
+      <label>AI Cloudflare-addressable low % <input id="tasAILow" type="number" min="0" max="100" step="0.1" value="2" style="width:75px"></label>
+      <label>AI Cloudflare-addressable high % <input id="tasAIHigh" type="number" min="0" max="100" step="0.1" value="10" style="width:75px"></label>
+      <details><summary class="meta">Method, assumptions and limitations</summary>
+        <p class="meta">Technology budget = annual revenue × technology spend %. Overall TAS = technology budget × 1–5% addressable share. AI budget = technology budget × 15% AI allocation. AI TAS = AI budget × 2–10% addressable share. Displayed central estimates are arithmetic midpoints of each range, not forecasts. AI TAS is already part of overall TAS and must not be added to it. All percentages are editable, illustrative planning assumptions; no validated AI budget, pricing, spend or official Cloudflare sizing methodology is implied. Funding is never treated as revenue. For headcount-based proxies, annual revenue is estimated at $200k per employee, which can be materially inaccurate.</p>
+      </details>
     </div>
   </section>`;
 }
 function wireTas() {
-  const inputs = ["tasRevenue","tasIT","tasLow","tasHigh"].map(id => $(id));
+  const ids = ["tasRevenue","tasIT","tasLow","tasHigh","tasAIShare","tasAILow","tasAIHigh"];
+  const inputs = ids.map(id => $(id));
   if (inputs.some(x => !x)) return;
   const update = () => {
-    const [revenue,it,low,high] = inputs.map(x => x.value === "" ? NaN : Number(x.value));
+    const vals = inputs.map(x => x.value.trim() === "" ? NaN : Number(x.value));
+    const [revenue,it,low,high,aiShare,aiLow,aiHigh] = vals;
     const out = $("tasResult");
-    if (![revenue,it,low,high].every(Number.isFinite) || revenue <= 0 || it < 0 || it > 100 || low < 0 || high > 100 || high < low) {
-      out.textContent = "TAS not estimated: enter valid revenue and percentage assumptions (high ≥ low).";
+    if (!vals.every(Number.isFinite) || revenue <= 0 ||
+        [it,low,high,aiShare,aiLow,aiHigh].some(x => x < 0 || x > 100) ||
+        high < low || aiHigh < aiLow) {
+      out.textContent = "Enter valid revenue and percentage assumptions (high must be ≥ low) to calculate both TAS values.";
       return;
     }
     const tech = revenue * 1e6 * it / 100;
+    const overallMin = tech * low / 100;
+    const overallMax = tech * high / 100;
+    const aiBudget = tech * aiShare / 100;
+    const aiMin = aiBudget * aiLow / 100;
+    const aiMax = aiBudget * aiHigh / 100;
     const fmt = n => "$" + Math.round(n).toLocaleString("en-US");
-    out.textContent = "Estimated technology spend: " + fmt(tech) + "/yr · Illustrative Cloudflare TAS: " + fmt(tech * low / 100) + "–" + fmt(tech * high / 100) + "/yr (unvalidated)";
+    const midpoint = (a,b) => fmt((a+b)/2);
+    out.innerHTML =
+      '<strong>Overall Cloudflare TAS: ' + midpoint(overallMin,overallMax) + '/yr</strong>' +
+      '<div class="meta">Range: ' + fmt(overallMin) + '–' + fmt(overallMax) + '/yr</div>' +
+      '<strong>AI TAS (subset): ' + midpoint(aiMin,aiMax) + '/yr</strong>' +
+      '<div class="meta">Range: ' + fmt(aiMin) + '–' + fmt(aiMax) + '/yr</div>' +
+      '<div class="meta">Assumed technology spend: ' + fmt(tech) + '/yr · AI budget: ' + fmt(aiBudget) + '/yr</div>' +
+      (aiMax > overallMax ? '<div class="meta">Warning: AI high scenario exceeds overall high scenario; review addressable-share assumptions.</div>' : '');
   };
   inputs.forEach(x => x.addEventListener("input", update));
   update();
