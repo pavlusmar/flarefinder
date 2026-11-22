@@ -139,6 +139,25 @@ function render() {
   });
 }
 
+// Curated, verified Cloudflare customer stories. These are peer proof points,
+// never evidence that the prospect has the same needs.
+const CASE_STUDIES = [
+  { name: "Tightknit", url: "https://www.cloudflare.com/case-studies/tightknit/", pillar: "Build", themes: ["Build & Scale AI Applications"], products: "Workers, KV, Queues, Workflows", outcome: "Built and scaled its application with Cloudflare's developer platform." },
+  { name: "TrueLayer", url: "https://www.cloudflare.com/case-studies/truelayer/", pillar: "Protect", themes: ["Secure AI Applications & Agents"], products: "DNS, Access, Zero Trust", outcome: "Secured access to internal applications and simplified infrastructure management." },
+  { name: "Applied Systems", url: "https://www.cloudflare.com/en-gb/case-studies/applied-systems/", pillar: "Protect", themes: ["Secure AI Applications & Agents"], products: "Zero Trust, WAF", outcome: "Unified security controls and improved granular access to internal applications." }
+];
+
+function relevantCaseStudies(opportunities, signals) {
+  const pillars = new Set(opportunities.filter(o => o.hypothesis && o.evidence && o.evidence !== "No specific evidence identified.").map(o => o.pillar));
+  const themes = new Set(signals.filter(s => ["strong", "possible"].includes(s.signal)).map(s => s.theme));
+  return CASE_STUDIES.map(story => {
+    const reasons = [];
+    if (pillars.has(story.pillar)) reasons.push(story.pillar + " opportunity");
+    if (story.themes.some(t => themes.has(t))) reasons.push("related AI commercial theme");
+    return { ...story, reasons };
+  }).filter(story => story.reasons.length).slice(0, 3);
+}
+
 // --------------------------------------------------
 // RESEARCH DISPLAY
 // --------------------------------------------------
@@ -281,6 +300,16 @@ async function detail(id, silent = false) {
           ${s?.hypothesis && level !== "insufficient" ? `<p>Potential discovery angle: ${esc(s.hypothesis)}</p><div class="meta">Confidence: ${esc(s.confidence || "low")}</div>` : ""}
         </div>`;
       }).join("")}
+
+      <h3>Relevant Cloudflare customer stories</h3>
+      <p class="meta">Published Cloudflare examples matched to this account's research themes. They are not proof of this prospect's needs.</p>
+      ${relevantCaseStudies(opportunities, aiSignals).map(story => `
+        <div class="opportunity">
+          <strong><a href="${esc(story.url)}" target="_blank" rel="noopener noreferrer">${esc(story.name)} ↗</a></strong>
+          <p>${esc(story.outcome)}</p>
+          <div class="meta">Cloudflare products: ${esc(story.products)} · Matched on: ${esc(story.reasons.join(", "))}</div>
+        </div>
+      `).join("") || '<p>No closely matched case studies yet. <a href="https://www.cloudflare.com/case-studies/" target="_blank" rel="noopener noreferrer">Browse Cloudflare customer stories ↗</a></p>'}
 
       <h3>Discovery questions</h3>
       ${listHtml(c.questions)}
