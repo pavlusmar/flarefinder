@@ -206,14 +206,14 @@ function tasSection(c) {
       <label>Annual revenue (USD millions; verify source)
         <input id="tasRevenue" type="number" min="0" step="0.1" placeholder="Unknown — enter researched revenue" style="width:100%;margin-top:5px" ${poly ? 'value="23.27"' : ''}>
       </label>
-      ${poly ? '<p class="meta"><strong>PolyAI provisional input:</strong> £17.9M reported FY ended 31 Jan 2026 turnover × <strong>illustrative, unverified FX 1.30 USD/GBP</strong> = $23.27M. This is a scenario assumption, not a validated USD financial statement. <a href="https://find-and-update.company-information.service.gov.uk/company/11048129/filing-history" target="_blank" rel="noopener noreferrer">Companies House group accounts ↗</a>. Verify the exact turnover against the filing and update FX before presenting.</p>' : ''}
-      <p class="meta">Industry proxy: ${esc(baseline.label)}. Broad technology-spend baseline ${baseline.pct}% of revenue (editable; not a company fact).</p>
+      ${poly ? '<details><summary class="meta">Revenue source and FX assumptions</summary><p class="meta"><strong>PolyAI provisional input:</strong> £17.9M reported FY ended 31 Jan 2026 turnover × <strong>illustrative, unverified FX 1.30 USD/GBP</strong> = $23.27M. This is a scenario assumption, not a validated USD financial statement. <a href="https://find-and-update.company-information.service.gov.uk/company/11048129/filing-history" target="_blank" rel="noopener noreferrer">Companies House group accounts ↗</a>. Verify the exact turnover against the filing and update FX before presenting.</p></details>' : ''}
+
       <label>Technology spend % <input id="tasIT" type="number" min="0" max="100" step="0.1" value="${baseline.pct}" style="width:85px"></label>
-      <p class="meta">Illustrative addressable share of technology spend — not verified Cloudflare pricing. Adjust based on actual workloads and vendors.</p>
+
       <label>Low % <input id="tasLow" type="number" min="0" max="100" step="0.1" value="1" style="width:75px"></label>
       <label>High % <input id="tasHigh" type="number" min="0" max="100" step="0.1" value="5" style="width:75px"></label>
       <div id="tasResult" class="info">TAS not estimated: annual revenue is unknown.</div>
-      <p class="meta">Formula: revenue × technology-spend ratio × Cloudflare-addressable share. Default 1–5% is a hypothetical sensitivity range, not an industry statistic. AI infrastructure is included, not added twice. Replace with workload-based estimates when known.</p>
+      <details><summary class="meta">How the estimate works</summary><p class="meta">Revenue × assumed technology spend % × addressable share %. These are editable scenario assumptions, not verified budgets.</p></details>
     </div>
   </section>`;
 }
@@ -341,6 +341,7 @@ async function detail(id, silent = false) {
       if (platform) c.questions = [...new Set(["As more developers integrate with PolyAI, which parts of API delivery, onboarding and governance are becoming priorities?",...list(c.questions)])].slice(0, 6);
       if (runtime) c.technical_signals = [...new Set(["Public hiring references runtime, inference and data-platform responsibilities " + runtime,...list(c.technical_signals)])].slice(0, 8);
     }
+    const compact = /^polyai$/i.test((c.name || "").trim());
     const sources = list(c.sources);
     const perspective = sources[0]?.customer_perspective || {};
     const pursuit = sources[0]?.pursuit_score || null;
@@ -356,7 +357,7 @@ async function detail(id, silent = false) {
     const cite = value => esc(value || "").replace(/\[S(\d+)\]/g, (match, n) =>
       Number(n) > 0 && Number(n) <= sources.length ? '<a class="citation" href="#source-' + n + '">' + match + '</a>' : match);
     const businessHighlights = priorities.filter(p => p.basis === "stated" && /\[S\d+\]/.test(p.evidence || "")).slice(0, 3);
-    const reason = [c.last_funding_date ? "Latest funding " + c.last_funding_date : "", businessHighlights[0]?.why_it_matters || "", opportunities.find(o => o.confidence !== "low" && /\[S\d+\]/.test(o.evidence || ""))?.hypothesis || ""].filter(Boolean).join(" · ") || priority.reason;
+    const reason = compact ? "Series D investment, developer platform expansion and enterprise adoption warrant discovery; infrastructure needs are unverified." : ([c.last_funding_date ? "Latest funding " + c.last_funding_date : "", businessHighlights[0]?.why_it_matters || "", opportunities.find(o => o.confidence !== "low" && /\[S\d+\]/.test(o.evidence || ""))?.hypothesis || ""].filter(Boolean).join(" · ") || priority.reason);
 
     // Keep imported Crunchbase fields unchanged. Display clearly labelled
     // sourced research facts when the import lacks headcount/funding.
@@ -429,48 +430,48 @@ async function detail(id, silent = false) {
         <p><strong>Why this account:</strong> ${cite(reason)}</p>
         <p class="meta">Territory rank: ${rankedTerritory().find(x => x.id === c.id)?.rank ?? "Unranked"} · ${esc(priority.quality)} · Absolute score determines priority; rank compares researched accounts.</p>
       </div>
+      ${compact ? tasSection(c) : ""}
       <div class="brief-stats"><span>Research: <strong>${esc(c.confidence || "unknown")} confidence</strong></span><span>Readiness: <strong>${esc(pursuit?.readiness?.tier || "unknown")}</strong></span></div>
       <section class="brief-priorities">
         <h3>Company priorities &amp; strategic direction</h3>
         <p class="meta">Company-stated priorities are distinguished from inferred ones. These are outside-in findings, not confirmed customer conversations.</p>
-        ${perspective.mission ? '<p><strong>What they are working toward:</strong> ' + cite(perspective.mission) + '</p>' : ''}
-        ${priorities.length ? priorities.map((p, i) => `
+        ${!compact && perspective.mission ? '<p><strong>What they are working toward:</strong> ' + cite(perspective.mission) + '</p>' : ''}
+        ${priorities.length ? (compact ? priorities.slice(0, 3) : priorities).map((p, i) => `
           <div class="brief-signal">
             <div class="signal-head"><strong>${i + 1}. ${esc(p.priority)}</strong><span class="mini-status">${esc(p.basis === "stated" ? "Company-stated" : "Inferred")}</span></div>
-            ${p.why_it_matters ? '<p>' + cite(p.why_it_matters) + '</p>' : ''}
+            ${!compact && p.why_it_matters ? '<p>' + cite(p.why_it_matters) + '</p>' : ''}
             <div class="meta">Evidence: ${cite(p.evidence || "Not established")}</div>
           </div>`).join("") : '<p class="meta">No sufficiently evidenced strategic priorities identified yet.</p>'}
-        ${perspective.business_tension ? '<p class="meta"><strong>Potential business tradeoff:</strong> ' + cite(perspective.business_tension) + '</p>' : ''}
+        ${!compact && perspective.business_tension ? '<p class="meta"><strong>Potential business tradeoff:</strong> ' + cite(perspective.business_tension) + '</p>' : ''}
       </section>
-      <h3>Other business signals</h3>
-      ${list(c.growth_signals).length ? listHtml(c.growth_signals) : '<p class="meta">No additional structured growth signals found. Review the cited company announcements below.</p>'}
+      ${compact ? "" : `<h3>Other business signals</h3>${list(c.growth_signals).length ? listHtml(c.growth_signals) : '<p class="meta">No additional structured growth signals found. Review the cited company announcements below.</p>'}`}
       <h3>Cloudflare opportunities</h3>
       <p class="meta">Outside-in hypotheses, not verified customer problems.</p>
       ${pillars.map(p => {
-        const matches = opportunities.filter(o => o.pillar === p && /\[S\d+\]/.test(o.evidence || ""));
+        const matches = opportunities.filter(o => o.pillar === p && /\[S\d+\]/.test(o.evidence || "")).slice(0, compact ? 1 : 99);
         return '<div class="brief-signal"><strong>' + p + '</strong>' + (matches.length ? matches.map(o =>
           '<p><strong>Verified signal:</strong> ' + cite(o.signal || o.evidence) + '</p>' +
-          (o.implication ? '<p><strong>Why it matters:</strong> ' + cite(o.implication) + '</p>' : '') +
+          (!compact && o.implication ? '<p><strong>Why it matters:</strong> ' + cite(o.implication) + '</p>' : '') +
           '<p><strong>Hypothesis:</strong> ' + cite(o.hypothesis) + '</p>' +
           (o.product_fit ? '<p><strong>Potential fit:</strong> ' + esc(o.product_fit) + '</p>' : '') +
-          (o.limitations ? '<p><strong>What we do not know:</strong> ' + esc(o.limitations) + '</p>' : '') +
-          (o.stakeholder ? '<p><strong>Who to approach:</strong> ' + esc(o.stakeholder) + '</p>' : '') +
+          (!compact && o.limitations ? '<p><strong>What we do not know:</strong> ' + esc(o.limitations) + '</p>' : '') +
+          (o.stakeholder && !compact ? '<p><strong>Who to approach:</strong> ' + esc(o.stakeholder) + '</p>' : '') +
           (o.discovery_question ? '<p><strong>Discovery:</strong> ' + esc(o.discovery_question) + '</p>' : '') +
-          (o.outreach ? '<p><strong>Outreach example:</strong> ' + esc(o.outreach) + '</p>' : '') +
+          (!compact && o.outreach ? '<p><strong>Outreach example:</strong> ' + esc(o.outreach) + '</p>' : '') +
           '<div class="meta">Evidence: ' + cite(o.evidence) + ' · ' + esc(o.confidence) + ' confidence</div>'
         ).join("") : '<p class="meta">No specific evidenced opportunity.</p>') + '</div>';
       }).join("")}
+      ${compact ? `<details class="brief-details"><summary>AI opportunity signals</summary>` : ""}
       <h3>AI opportunity signals</h3>
       <p class="meta">AI economics and multi-model signals are exploratory and not separately scored.</p>
       ${aiThemes.map(theme => {
         const signal = aiSignals.find(x => x.theme === theme);
         return '<div class="brief-ai-row"><div class="signal-head"><strong>' + esc(theme) + '</strong>' + pill(signal?.signal || "insufficient") + '</div>' + (signal && signal.signal !== "insufficient" ? '<p>' + cite(signal.evidence) + '</p>' : '<p class="meta">Insufficient public evidence.</p>') + '</div>';
       }).join("")}
+      ${compact ? "</details>" : ""}
       <h3>Discovery questions</h3>
-      ${listHtml(c.questions)}
-      <details class="brief-details"><summary>Commercial potential · TAS scenario (optional planning assumptions)</summary>
-        ${tasSection(c)}
-      </details>
+      ${compact ? listHtml(list(c.questions).slice(0, 3)) : listHtml(c.questions)}
+      ${compact ? "" : `<details class="brief-details"><summary>Commercial potential · TAS scenario (optional planning assumptions)</summary>${tasSection(c)}</details>`}
       <details class="brief-details"><summary>Detailed Clef scoring and readiness</summary>
       <h3>Account attractiveness · Clef Flash</h3>
       ${pursuit?.status === 'scored' && pursuit.account ? `
@@ -525,7 +526,7 @@ async function detail(id, silent = false) {
       `).join('') : '<p class="meta">No verified employer-specific hiring signals found in the research sources.</p>'}
 
       </details>
-\n      <h3 id="research-sources">Sources and excerpts (${sources.length})</h3>
+\n      <details class="brief-details" id="research-sources"><summary>Sources and excerpts (${sources.length})</summary>
       <p class="meta">Numbered citations link to the corresponding source excerpt. Open the original page to verify context.</p>
       ${sources.map((s, i) => {
         const u = validLink(s.url);
@@ -543,6 +544,7 @@ async function detail(id, silent = false) {
         `;
       }).join("") || "<p>No sources yet.</p>"}
 
+      </details>
       <p class="meta">
         Research confidence:
         ${esc(c.confidence || "not assessed")}
