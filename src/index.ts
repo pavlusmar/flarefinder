@@ -490,29 +490,82 @@ function normalizeAiSignals(value: unknown): AiSignal[] {
 
 // Reject generic pitches even when a model attaches a real citation.
 // A source reference alone does not establish the proposed problem.
+// Source-grounded opportunity builder. Rules are intentionally narrow: these
+// identify discovery hypotheses, never assert customer pain or purchase intent.
+function sourceGroundedOpportunities(sources: Source[]): Opportunity[] {
+  const hits = sources.map((source, i) => ({
+    ref: "[S" + (i + 1) + "]",
+    text: (source.title + " " + source.snippet),
+    title: source.title,
+    source
+  }));
+  const find = (re: RegExp) => hits.find(h => re.test(h.text));
+  const result: Opportunity[] = [];
+  const model = find(/\b(?:GPT[- ]?\d|Claude|Gemini|OpenAI|Anthropic)\b/i);
+  const multiple = model && /\b(?:GPT[- ]?\d|Claude|Gemini|OpenAI|Anthropic)\b/i.test(model.text) &&
+    (model.text.match(/\b(?:GPT[- ]?\d|Claude|Gemini|OpenAI|Anthropic)\b/gi) || []).length >= 2;
+  if (model && multiple) {
+    const incumbent = find(/\b(?:Kong|Apigee|MuleSoft|API gateway)\b/i);
+    const signal = "Company documentation or announcement names multiple model families/providers " + model.ref;
+    result.push({
+      pillar:"Build", evidence:model.ref, signal,
+      hypothesis:"Determine whether third-party model traffic creates an observability or policy gap not already addressed by existing infrastructure.",
+      implication:"Supporting several model families can introduce operational choices around visibility and governance; whether this creates a gap is unknown.",
+      product_fit:"AI Gateway — assess compatibility for supported third-party inference requests, not proprietary model hosting.",
+      limitations:"Existing model observability, routing and policy controls are unknown." + (incumbent ? " Existing API infrastructure is referenced " + incumbent.ref + "; do not propose replacing it." : ""),
+      stakeholder:"CTO or AI platform engineering lead",
+      discovery_question:"With multiple model families supported, how do you currently observe and govern third-party inference traffic, and is there anything your existing tooling cannot cover?",
+      outreach:"I noticed your platform supports several model families " + model.ref + ". I'm curious how your team approaches observability and governance across those integrations, and whether it is already solved internally.",
+      confidence:"medium"
+    });
+  }
+  const engineering = find(/\b(?:VP of Engineering|Head of Engineering|engineering organisation|engineering organization)\b/i);
+  if (engineering && /\b(?:scal|reliab|technical debt|cloud.native|AWS|Azure)\b/i.test(engineering.text)) {
+    result.push({
+      pillar:"Build", evidence:engineering.ref,
+      signal:"Engineering leadership hiring describes scaling teams and maintaining delivery quality " + engineering.ref,
+      hypothesis:"Explore whether engineering growth is creating specific platform delivery or developer-workflow priorities before proposing any architecture change.",
+      implication:"Engineering scale-up can change platform-team priorities; it does not prove a production performance problem.",
+      product_fit:"Workers or developer platform services only if a specific edge workload or developer workflow emerges in discovery.",
+      limitations:"Current architecture, developer tooling and satisfaction are not established by a job description; no migration is assumed.",
+      stakeholder:"VP Engineering or platform engineering lead",
+      discovery_question:"As your engineering organisation grows, which platform responsibilities or developer workflows are you actively reassessing, if any?",
+      outreach:"Your engineering leadership role discusses scaling the organisation while preserving reliability and delivery speed " + engineering.ref + ". I'd be interested to learn which platform priorities that creates for your team.",
+      confidence:"medium"
+    });
+  }
+  return result;
+}
+
 function evidenceGrounded(report: Report, sources: Source[]): Report {
-  const refs = (value: string) => [...value.matchAll(/\\[S(\\d+)\\]/g)].map(m => Number(m[1])-1);
+  const refs = (value: string) => [...value.matchAll(/\[S(\d+)\]/g)].map(m => Number(m[1])-1);
   const valid = (value: string) => refs(value).length > 0 && refs(value).every(i => i >= 0 && i < sources.length);
   const sourceText = (value: string) => refs(value).map(i => sources[i]?.title + " " + sources[i]?.snippet).join(" ").toLowerCase();
-  const generic = /\\b(may benefit from|might benefit from|could benefit from|potential benefits of using|improve (the )?(scalability|performance|security)|enhance (the )?(scalability|performance|security))\\b/i;
-  const specific = /\\b(model|provider|api|gateway|integration|release|launch|hiring|engineer|funding|fundraise|compliance|latency|uptime|architecture|failover|multi.model|developer|agent|cloud|inference|deployment|customer)\\b/i;
+  const generic = /\b(may benefit from|might benefit from|could benefit from|potential benefits of using|improve (the )?(scalability|performance|security)|enhance (the )?(scalability|performance|security))\b/i;
   report.cloudflare_opportunities = report.cloudflare_opportunities.filter(o => {
     if (!valid(o.evidence) || !valid(o.signal || "")) return false;
     if (!o.implication || !o.product_fit || !o.limitations || !o.stakeholder || !o.discovery_question || !o.outreach) return false;
     if (generic.test(o.hypothesis) || generic.test(o.discovery_question)) return false;
-    if (!specific.test(sourceText(o.evidence))) return false;
-    // Do not manufacture an existing performance problem from evidence of excellent performance.
     const evidence = sourceText(o.evidence);
-    if (/\\b(performance|latency|scalability)\\b/i.test(o.hypothesis) && /\\b(sub.300ms|<300ms|99\\.994% uptime)\\b/i.test(evidence) && !/\\b(existing|already|reported|claims|verify|whether|if)\\b/i.test(o.hypothesis)) return false;
+    if (!/\b(model|provider|api|gateway|integration|release|launch|hiring|engineer|funding|compliance|latency|uptime|architecture|failover|developer|agent|cloud|inference|deployment|customer)\b/i.test(evidence)) return false;
+    if (/\b(performance|latency|scalability)\b/i.test(o.hypothesis) && /\b(sub.300ms|<300ms|99\.994% uptime)\b/i.test(evidence) && !/\b(existing|already|reported|claims|verify|whether|if)\b/i.test(o.hypothesis)) return false;
     return true;
   });
+  // Add conservative, source-specific opportunities when the LLM missed
+  // concrete model-provider or engineering signals. Never replace a better
+  // model answer with a generic pitch.
+  for (const candidate of sourceGroundedOpportunities(sources)) {
+    if (!report.cloudflare_opportunities.some(o => o.evidence === candidate.evidence && o.product_fit?.split(" ")[0] === candidate.product_fit?.split(" ")[0])) {
+      report.cloudflare_opportunities.push(candidate);
+    }
+  }
+  report.cloudflare_opportunities = report.cloudflare_opportunities.slice(0, 4);
   report.customer_perspective.priorities = report.customer_perspective.priorities.filter(p => valid(p.evidence));
   report.growth_signals = report.growth_signals.filter(valid);
   report.technical_signals = report.technical_signals.filter(valid);
   report.ai_signals = report.ai_signals.map(a => valid(a.evidence) ? a : { ...a, signal:"insufficient" as const, evidence:"No specific public evidence identified.", hypothesis:"", confidence:"low" as const });
-  // Questions should be based on validated opportunities, not invented problems.
-  if (report.cloudflare_opportunities.length) report.questions = report.cloudflare_opportunities.map(o => o.discovery_question!).slice(0,4);
-  else report.questions = ["Which of your announced product or engineering priorities creates the most operational complexity today?", "Where do your existing infrastructure and vendor choices already meet your requirements, and what remains unresolved?"];
+  if (report.cloudflare_opportunities.length) report.questions = report.cloudflare_opportunities.map(o => o.discovery_question!).filter(Boolean).slice(0,4);
+  else report.questions = ["Which announced product or engineering priority creates the most operational complexity today?", "What does your current infrastructure already handle well, and what remains unresolved?"];
   return report;
 }
 
