@@ -646,6 +646,24 @@ function evidenceGrounded(report: Report, sources: Source[]): Report {
     .find(x=>/\b(?:AI-assisted operations|AI-assisted engineering|AI-enabled engineering|agentic AI infrastructure|AI agents?)\b/i.test(x.text));
   if (namedAi && !report.technical_signals.some(x=>x.includes(namedAi.ref)&&/\bAI\b/i.test(x)))
     report.technical_signals.push("Documented AI-related engineering or product activity (not evidence of model inference spend) "+namedAi.ref);
+  // A named AI-assisted internal tool is evidence of an AI engineering workflow,
+  // not proof of third-party inference, cloud spend, or an unsolved problem.
+  const aiTool = sources.map((source,i)=>({text:source.title+" "+source.snippet,ref:"[S"+(i+1)+"]",title:source.title}))
+    .find(x=>/\b(?:AI-assisted operations|AI-assisted engineering|AI-enabled engineering|agentic AI infrastructure|AI agents?)\b/i.test(x.text) &&
+      /\b(?:engineering|security|patch|vulnerabilit|platform|application|software|agent)\b/i.test(x.text) &&
+      !/\b(?:funding round-up|company profile|competitors)\b/i.test(x.title));
+  if (aiTool && !report.cloudflare_opportunities.some(o=>o.pillar==="Build" && /AI Gateway|Workers AI|Workers/i.test(o.product_fit||""))) {
+    report.cloudflare_opportunities.push({pillar:"Build",evidence:aiTool.ref,
+      signal:"Company documents an AI-assisted engineering or application workflow "+aiTool.ref,
+      hypothesis:"Explore whether the documented AI-assisted workflow uses external inference endpoints and whether deployment, request visibility or governance requirements are unmet.",
+      implication:"A real AI engineering workflow merits architecture discovery, but does not establish third-party model usage or a need to change its current stack.",
+      product_fit:"AI Gateway for compatible third-party model requests, or Workers for a discrete supporting service, only if the actual architecture warrants it.",
+      limitations:"Model providers, hosting location, inference traffic, existing controls and costs are unknown. The tool may be entirely self-hosted; Cloudflare may offer no incremental value.",
+      stakeholder:"AI platform engineering lead or engineering security lead",
+      discovery_question:"For your documented AI-assisted engineering workflow, where does inference run today, and how are model requests, access controls and operational visibility managed?",
+      outreach:"I saw your team's published AI-assisted engineering work "+aiTool.ref+". I'd be interested in how you approach model infrastructure and governance, and whether your existing approach already meets your needs.",
+      confidence:"low"});
+  }
   // Add conservative, source-specific opportunities when the LLM missed
   // concrete model-provider or engineering signals. Never replace a better
   // model answer with a generic pitch.
