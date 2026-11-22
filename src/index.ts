@@ -1301,7 +1301,8 @@ async function route(
       aiConfigured: !!env.AI,
       dbConfigured: !!env.DB,
       model: MODEL,
-      decisionModel: DECISION_MODEL
+      decisionModel: DECISION_MODEL,
+      researchRevision: "api-evidence-regex-v2"
     });
   }
 
