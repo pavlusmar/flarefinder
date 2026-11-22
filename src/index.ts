@@ -28,6 +28,7 @@ type Source = {
   url: string;
   snippet: string;
   hiring_signals?: HiringSignal[];
+  customer_perspective?: CustomerPerspective;
 };
 
 type HiringSignal = { role: string; posted_date: string; technologies: string[]; evidence: string; relevance: string; confidence: "high" | "medium" | "low" };
@@ -41,7 +42,11 @@ type Opportunity = {
 
 type AiSignal = { theme: "Build & Scale AI Applications" | "Secure AI Applications & Agents" | "Optimise AI Inference & Delivery"; signal: "strong" | "possible" | "insufficient"; evidence: string; hypothesis: string; confidence: "low" | "medium" | "high"; };
 
+type CustomerPriority = { priority: string; basis: "stated" | "inferred"; evidence: string; why_it_matters: string };
+type CustomerPerspective = { mission: string; priorities: CustomerPriority[]; business_tension: string };
+
 type Report = {
+  customer_perspective: CustomerPerspective;
   ai_signals: AiSignal[];
   hiring_signals: HiringSignal[];
   digital_native: "yes" | "no" | "uncertain";
@@ -320,6 +325,7 @@ function normalizeReport(
     technical_signals: cited(obj.technical_signals),
     cloudflare_opportunities: scored.slice(0, 5),
     ai_signals: normalizeAiSignals(obj.ai_signals),
+    customer_perspective: normalizeCustomerPerspective(obj.customer_perspective),
     hiring_signals: normalizeHiringSignals(obj.hiring_signals),
     questions: stringList(obj.questions),
     confidence: choice(
@@ -348,6 +354,29 @@ function normalizeHiringSignals(value: unknown): HiringSignal[] {
       confidence: choice(h.confidence, ["high", "medium", "low"] as const, "low")
     }];
   });
+}
+
+function normalizeCustomerPerspective(value: unknown): CustomerPerspective {
+  const obj = value && typeof value === "object" ? value as Record<string, unknown> : {};
+  const raw = Array.isArray(obj.priorities) ? obj.priorities : [];
+  const priorities: CustomerPriority[] = raw.slice(0, 3).flatMap(item => {
+    if (!item || typeof item !== "object") return [];
+    const p = item as Record<string, unknown>;
+    const priority = safe(p.priority).slice(0, 160);
+    const evidence = safe(p.evidence).slice(0, 300);
+    if (!priority || !/\[S\d+\]/.test(evidence)) return [];
+    return [{
+      priority,
+      basis: choice(p.basis, ["stated", "inferred"] as const, "inferred"),
+      evidence,
+      why_it_matters: safe(p.why_it_matters).slice(0, 250)
+    }];
+  });
+  return {
+    mission: safe(obj.mission).slice(0, 280),
+    priorities,
+    business_tension: safe(obj.business_tension).slice(0, 280)
+  };
 }
 
 const AI_THEMES = ["Build & Scale AI Applications", "Secure AI Applications & Agents", "Optimise AI Inference & Delivery"] as const;
@@ -466,6 +495,12 @@ Connect: CDN, DNS, WAN, connectivity, performance.
 Protect: WAF, DDoS, bots, Zero Trust, SASE, API security.
 Build: Workers, R2, D1, AI Gateway, Workers AI.
 
+Describe the company's perspective in plain business language, not Cloudflare jargon.
+Identify up to three strategic priorities, distinguishing stated company goals
+from inferred priorities. Every priority requires an exact [S#] reference.
+Do not invent executive quotes, motivations, urgency or customer pain.
+Business tension is a cautious question or tradeoff, not a confirmed problem.
+If priorities cannot be substantiated, leave them empty.
 Only suggest opportunities supported by the evidence.
 Use empty arrays where evidence is insufficient.
 Assess all three Cloudflare pillars as core research; do not force a hypothesis for every pillar.
@@ -482,6 +517,7 @@ Return ONLY one valid JSON object with exactly these keys:
  "digital_native": "uncertain",
  "digital_native_reason": "",
  "summary": "",
+ "customer_perspective": {"mission":"","priorities":[{"priority":"","basis":"inferred","evidence":"[S1]","why_it_matters":""}],"business_tension":""},
  "growth_signals": [],
  "technical_signals": [],
  "hiring_signals": [{"role":"","posted_date":"","technologies":[],"evidence":"[S1]","relevance":"","confidence":"medium"}],
@@ -505,7 +541,7 @@ Return ONLY one valid JSON object with exactly these keys:
 digital_native: yes, no, or uncertain.
 pillar: Connect, Protect, or Build.
 confidence: low, medium, or high.
-Include 0-4 opportunities, 0-3 company-specific hiring signals, and 3-5 discovery questions.
+Include 0-3 concise customer priorities, 0-4 opportunities, 0-3 company-specific hiring signals, and 3-5 discovery questions.
 For hiring_signals, role is the actual job title, posted_date is YYYY-MM-DD only when explicitly stated otherwise empty,
 technologies contains only named requirements, evidence includes [S#], relevance is a cautious Cloudflare discovery angle.
 Return [] if no verified company-specific job posting is present.
@@ -541,7 +577,7 @@ ${JSON.stringify(sources.map((source, i) => ({ id: `S${i+1}`, ...source })))}
             { role: "user", content: prompt }
           ],
           chat_template_kwargs: { enable_thinking: false },
-          max_completion_tokens: 3500,
+          max_completion_tokens: 4200,
           temperature: 0.1
         } as never
       ) as unknown;
@@ -580,6 +616,7 @@ ${JSON.stringify(sources.map((source, i) => ({ id: `S${i+1}`, ...source })))}
       const report = normalizeReport(parsed);
       // Drop citations to non-existent snippets (the model can invent indices).
       const validCitations = (v: string) => [...v.matchAll(/\[S(\d+)\]/g)].every(m => Number(m[1]) >= 1 && Number(m[1]) <= sources.length);
+      report.customer_perspective.priorities = report.customer_perspective.priorities.filter(p => validCitations(p.evidence));
       report.growth_signals = report.growth_signals.filter(validCitations);
       report.technical_signals = report.technical_signals.filter(validCitations);
       report.cloudflare_opportunities = report.cloudflare_opportunities.filter(o => validCitations(o.evidence));
@@ -661,6 +698,9 @@ async function researchCompany(env: Env, id: string) {
       report.digital_native_reason = "The research model and Cloudflare Clef Flash disagreed. Manual qualification required. " + report.digital_native_reason;
       report.confidence = "low";
     }
+
+    // Preserve customer perspective with research sources to avoid a D1 migration.
+    if (sources.length) sources[0].customer_perspective = report.customer_perspective;
 
     // Store hiring signals with the relevant source, avoiding a D1 migration.
     for (const hiring of report.hiring_signals) {
