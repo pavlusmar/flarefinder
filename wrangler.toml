@@ -10,7 +10,7 @@ run_worker_first = ["/api/*"]
 [[d1_databases]]
 binding = "DB"
 database_name = "flarefinder-db"
-database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+database_id = "62a86a76-432e-4595-894f-4ba8bce97cd7"
 migrations_dir = "migrations"
 
 [ai]
