@@ -786,7 +786,22 @@ async function analyze(
     growth_prediction: company.growth_prediction
   };
 
+  // Quality reference only: this is NOT Form3 research to save, score or copy.
+  // The live company must be independently researched from its own supplied sources.
+  const researchQualityExample = `
+EXAMPLE OF ANALYTICAL DEPTH (Form3; illustration only, NOT evidence for the target):
+Business: cloud-native account-to-account payments provider; revenue, payment volumes and international expansion can indicate scale, but not a Cloudflare buying project.
+Trigger: a new AI-facing read-only MCP payments interface raises a specific DISCOVERY QUESTION about API governance. It does not establish a security vulnerability or model-inference spend.
+Architecture/counter-evidence: published multi-cloud Kubernetes/Cilium networking indicates mature existing controls. Do NOT pitch generic multi-cloud resilience or imply a greenfield network migration.
+Cloudflare fit: Protect (API Shield, WAF, rate limiting) is a conditional hypothesis: ask who owns customer-facing API security, which provider is deployed, whether a gap exists, and whether an evaluation has a budget/timeline. Connect and Build have weaker evidence; do not inflate them to fill all pillars.
+AI: secure agent-facing API access may be relevant; AI Gateway/model routing/inference optimization are UNPROVEN because an MCP interface is not proof that the company hosts LLM inference.
+Commercial sizing: keep observed revenue separate from scenario assumptions. Illustrative annual overall Cloudflare TAS = revenue x assumed technology-spend fraction x assumed Cloudflare-addressable share; AI TAS = technology budget x assumed AI allocation x assumed AI-addressable share. AI TAS is a SUBSET of overall TAS, never additive. Use explicit currency/FX and low/high ranges. No assumed budget is actual spend or forecast.
+Decision: an illustrative analyst 74/100 could still be a qualification-only prospect because incumbent strength and missing buyer intent matter. Do NOT copy 74, company facts, URLs, signals, citations, revenue, scores or TAS into the target company's report. Cite ONLY the target's supplied [S#] sources. If there is no comparable evidence, say unknown and lower confidence.
+QUALITY CHECK: each recommended opportunity must show company-specific evidence, an honest counterargument, relevant Cloudflare product, commercial implication and a precise discovery question. Distinguish account attractiveness from readiness to buy. Avoid buzzwords and generic 'scale/security/AI' claims.
+`;
+
   const prompt = `
+${researchQualityExample}
 You are a rigorous B2B account researcher for a Cloudflare seller.
 First understand the company's actual products, business model, customers,
 strategic direction and growth; only then assess Cloudflare relevance.
