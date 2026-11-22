@@ -138,12 +138,14 @@ async function searchWeb(
   const domain = (() => { try { return new URL(company.website || "").hostname.replace(/^www\./, ""); } catch { return ""; } })();
   const tokens = company.name.toLowerCase().split(/[^a-z0-9]+/).filter(t => t.length >= 4);
   // Research the BUSINESS before looking for Cloudflare/AI workloads.
-  // Four targeted searches are deliberately capped to control API spending.
+  // Six targeted searches balance financial grounding, AI launches and infrastructure evidence against API spending.
   const identity = '"' + company.name + '"' + (domain ? ' "' + domain + '"' : '');
   const queries = [
     '"' + company.name + '" official company website products platform customers',
     '"' + company.name + '" funding expansion partnerships product announcements',
     '"' + company.name + '" engineering infrastructure API security cloud architecture',
+    '"' + company.name + '" AI agent MCP product launch model gateway security architecture',
+    '"' + company.name + '" annual revenue turnover financial statements Companies House',
     '"' + company.name + '" careers engineering AI product hiring'
   ];
   console.log("Tavily searches started:", company.id);
@@ -811,6 +813,15 @@ article is not a customer infrastructure or purchasing signal.
 If evidence does not support a claim, leave it unknown rather than speculate.
 Distinguish independently sourced company facts, technical indicators and
 hypotheses that must be validated in discovery.
+
+REQUIRED EVIDENCE-TO-OPPORTUNITY WORKFLOW (do this before producing JSON):
+1. Scan ALL supplied [S#] excerpts, not only the first few. Build an internal evidence ledger of up to 10 concrete company-specific facts: product launches (including AI agents/MCP), named customer deployments, transaction/API scale, financing, geographic growth, architecture, named incumbent vendors, security tools, and dated engineering hires. Prioritize recent official product/engineering pages and company announcements. A later source can contain the decisive signal.
+2. For EACH credible AI product, AI-assisted internal engineering tool, agent interface, public API, or new customer-facing integration, explicitly consider whether it supports a narrowly scoped Protect or Build discovery hypothesis. Existing mature controls and missing budget are limitations, NOT reasons to ignore a well-cited event. An AI-enabled vulnerability patching tool is evidence of AI application activity, not automatically model inference or a security gap.
+3. For EACH candidate opportunity, use this causal chain: observed specific [S#] fact -> operational/commercial consequence IF a relevant gap exists -> exact Cloudflare service/workload -> strongest incumbent or counter-evidence -> buyer role -> falsifiable discovery question. Omit only when no meaningful workload connection can be articulated. A high-volume API is evidence of scale, not proof of API security weakness.
+4. Keep source coverage consistent: if the company overview, priority, or AI signal mentions a named launch, it must also appear in technical_signals or growth_signals as appropriate. Conversely, do not output 'No specific evidenced opportunity' if a cited AI/API launch creates a concrete conditional discovery angle; assess it first.
+5. Treat revenue and AI budgets as unknown unless supported by an actual source. Never equate funding, valuation, payment volume or headcount with reported annual revenue. Research text must explicitly identify when financial information is unavailable; do not invent TAS amounts.
+6. Avoid shallow summaries ('product development', 'security and resilience') when the sources name the actual launch, customer, technology, architecture or target market. Name the event and explain why it matters. Distinguish attractiveness from purchase readiness; a technically compelling account can still have low readiness.
+7. Quality gate before final JSON: identify at least one credible counterargument for each proposed opportunity, include [S#] in its signal and evidence, and ensure every meaningful company-specific AI event has been evaluated in ai_signals. Do not raise scores or invent opportunities to meet a quota.
 
 Analyze this company using ONLY the supplied company
 data and public search snippets.
