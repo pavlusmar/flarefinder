@@ -1,5 +1,10 @@
 # FlareFinder — 131-company Crunchbase research universe
 
+## Curated import shortlist (22 November 2026)
+
+The **active bundled import** contains **106** manually screened digital-native or software-led candidates. **167** entries were excluded (including clear non-digital-native businesses) and **5** ambiguous entries were held back for review. The full original 278-company combined dataset is preserved in Git history (PR #21); exclusions and review items are retained in `data/digital-native-curation-audit.csv`. This is a pragmatic manual pre-screen, **not verified technical due diligence**: some companies may be borderline, and some valid prospects may be held back. The import remains an upsert and does not delete previously imported companies from the live D1 database. No paid research is triggered by this change.
+
+
 ## Combined discovery universe (22 November 2026)
 
 The bundled import CSV now contains **278 unique companies**: 131 from the original Crunchbase cohort, 150 names extracted from the user's Dealroom Early Stage + Breakout interactive map (4 overlaps; 146 additions), and ElevenLabs as a separately labelled strategic AI-native watchlist company. The Dealroom extraction preserved company names, UUIDs and the map's **hot / still early-stage** indicator, but did **not** establish a separate Early Stage versus Breakout classification for every company. Do not infer that a company is digital-native merely from its appearance on the map. Dealroom-only entries have blank funding, website and employee fields until enriched; they are **unqualified discovery candidates**, not verified prospects. The combined CSV includes source, Dealroom UUID, map cohort, hot flag and account segment columns. Existing Crunchbase enrichment is preserved. Importing upserts records and does not delete prior D1 research; the deployed database must be imported separately using the dashboard and admin token. Research is not automatically triggered by this commit.
