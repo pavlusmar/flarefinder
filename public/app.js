@@ -293,7 +293,7 @@ async function detail(id, silent = false) {
       <div class="info">${esc(statusMessage)}</div>
 
       <button class="primary research-btn" id="researchOne"
-        ${c.status === "running" || c.status === "pending"
+        ${c.status === "running"
           ? "disabled"
           : ""}>
         ${researchButtonText(c.status)}
