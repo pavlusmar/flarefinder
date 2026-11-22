@@ -198,13 +198,15 @@ function tasIndustryBaseline(sector) {
 }
 function tasSection(c) {
   const baseline = tasIndustryBaseline(c.sector);
+  const poly = /^polyai$/i.test(c.name || "");
   return `<section class="brief-tas">
     <h3>Commercial potential · TAS scenario</h3>
     <p class="meta">Planning scenario only — not a Cloudflare quote, verified budget, forecast or quota.</p>
     <div class="brief-signal">
       <label>Annual revenue (USD millions; verify source)
-        <input id="tasRevenue" type="number" min="0" step="0.1" placeholder="Unknown — enter researched revenue" style="width:100%;margin-top:5px">
+        <input id="tasRevenue" type="number" min="0" step="0.1" placeholder="Unknown — enter researched revenue" style="width:100%;margin-top:5px" ${poly ? 'value="23.27"' : ''}>
       </label>
+      ${poly ? '<p class="meta"><strong>PolyAI provisional input:</strong> £17.9M reported FY ended 31 Jan 2026 turnover × <strong>illustrative, unverified FX 1.30 USD/GBP</strong> = $23.27M. This is a scenario assumption, not a validated USD financial statement. <a href="https://find-and-update.company-information.service.gov.uk/company/11048129/filing-history" target="_blank" rel="noopener noreferrer">Companies House group accounts ↗</a>. Verify the exact turnover against the filing and update FX before presenting.</p>' : ''}
       <p class="meta">Industry proxy: ${esc(baseline.label)}. Broad technology-spend baseline ${baseline.pct}% of revenue (editable; not a company fact).</p>
       <label>Technology spend % <input id="tasIT" type="number" min="0" max="100" step="0.1" value="${baseline.pct}" style="width:85px"></label>
       <p class="meta">Illustrative addressable share of technology spend — not verified Cloudflare pricing. Adjust based on actual workloads and vendors.</p>
