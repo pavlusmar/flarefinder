@@ -1,5 +1,14 @@
 # FlareFinder — 106-company curated Crunchbase + Dealroom research universe
 
+## Form3 analyst-curated research example (November 2026)
+
+The **Load Form3 research example** button (admin token required) replaces Form3's saved research only after explicit confirmation. It does **not** trigger Tavily/Workers AI or modify the 106-company shortlist. It refuses to overwrite queued/running research. The example includes a manually scored 74/100 pursuit assessment, cited technical/business evidence, Cloudflare hypotheses, counter-evidence, AI signals and discovery questions. It is an **illustrative analyst-curated reference**, not a validated Clef output or confirmed opportunity.
+
+Form3's TAS calculator uses FY2026 reported £26.7m revenue with an illustrative 1.30 USD/GBP conversion ($34.71m), the existing 5.5% financial-services technology-budget assumption, 1–5% overall addressable share, and 15% AI allocation with 2–10% AI-addressable share. Result: approximately $19.1k–$95.5k annual overall TAS (midpoint $57.3k) and $5.7k–$28.6k AI TAS (midpoint $17.2k). **AI TAS is included within overall TAS, not additive.** These are editable scenario assumptions, not verified Form3 spending or official Cloudflare forecasts.
+
+Sources: [Form3 September 2026 AI/MCP announcement](https://www.form3.tech/resources/press-releases/this-launch-marks-the-evolution-of-form3-from-clou), [CNCF Form3/Cilium case study](https://www.cncf.io/case-studies/form3/), [Form3 engineering stack](https://www.form3.tech/engineering), [Form3 technical ecosystem](https://www.form3.tech/partnerships/technical-ecosystem), and FY2026 Form3 Group statutory accounts.
+
+
 ## Curated import shortlist (22 November 2026)
 
 The **active bundled import** contains **106** manually screened digital-native or software-led candidates. **167** entries were excluded (including clear non-digital-native businesses) and **5** ambiguous entries were held back for review. The full original 278-company combined dataset is preserved in Git history (PR #21); exclusions and review items are retained in `data/digital-native-curation-audit.csv`. This is a pragmatic manual pre-screen, **not verified technical due diligence**: some companies may be borderline, and some valid prospects may be held back. The new **Sync exactly 106 companies** action imports the canonical combined shortlist and, after preview and confirmation, removes out-of-scope accounts and associated research from D1. The regular import remains an upsert. No paid research is triggered by this change.
