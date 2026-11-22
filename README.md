@@ -1,8 +1,8 @@
-# FlareFinder — 131-company Crunchbase research universe
+# FlareFinder — 106-company curated Crunchbase + Dealroom research universe
 
 ## Curated import shortlist (22 November 2026)
 
-The **active bundled import** contains **106** manually screened digital-native or software-led candidates. **167** entries were excluded (including clear non-digital-native businesses) and **5** ambiguous entries were held back for review. The full original 278-company combined dataset is preserved in Git history (PR #21); exclusions and review items are retained in `data/digital-native-curation-audit.csv`. This is a pragmatic manual pre-screen, **not verified technical due diligence**: some companies may be borderline, and some valid prospects may be held back. The import remains an upsert and does not delete previously imported companies from the live D1 database. No paid research is triggered by this change.
+The **active bundled import** contains **106** manually screened digital-native or software-led candidates. **167** entries were excluded (including clear non-digital-native businesses) and **5** ambiguous entries were held back for review. The full original 278-company combined dataset is preserved in Git history (PR #21); exclusions and review items are retained in `data/digital-native-curation-audit.csv`. This is a pragmatic manual pre-screen, **not verified technical due diligence**: some companies may be borderline, and some valid prospects may be held back. The new **Sync exactly 106 companies** action imports the canonical combined shortlist and, after preview and confirmation, removes out-of-scope accounts and associated research from D1. The regular import remains an upsert. No paid research is triggered by this change.
 
 
 ## Combined discovery universe (22 November 2026)
