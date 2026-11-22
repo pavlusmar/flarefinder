@@ -583,7 +583,14 @@ ${JSON.stringify(sources.map((source, i) => ({ id: `S${i+1}`, ...source })))}
       report.growth_signals = report.growth_signals.filter(validCitations);
       report.technical_signals = report.technical_signals.filter(validCitations);
       report.cloudflare_opportunities = report.cloudflare_opportunities.filter(o => validCitations(o.evidence));
-      report.hiring_signals = report.hiring_signals.filter(h => validCitations(h.evidence));
+      report.hiring_signals = report.hiring_signals.filter(h => {
+        if (!validCitations(h.evidence)) return false;
+        const refs = [...h.evidence.matchAll(/\[S(\d+)\]/g)];
+        return refs.some(m => {
+          const source = sources[Number(m[1]) - 1];
+          return source && /\b(job|careers|hiring|vacancy|apply|engineer|developer|architect|scientist)\b/i.test(source.title + " " + source.url);
+        });
+      });
 
       console.log("AI generation completed:", company.id);
       return report;
@@ -659,7 +666,12 @@ async function researchCompany(env: Env, id: string) {
     for (const hiring of report.hiring_signals) {
       for (const match of hiring.evidence.matchAll(/\[S(\d+)\]/g)) {
         const source = sources[Number(match[1]) - 1];
-        if (source) (source.hiring_signals ||= []).push(hiring);
+        if (source && /\b(job|careers|hiring|vacancy|apply|engineer|developer|architect|scientist)\b/i.test(source.title + " " + source.url)) {
+          const domain = (() => { try { return new URL(company.website || "").hostname.replace(/^www\./, ""); } catch { return ""; } })();
+          const host = new URL(source.url).hostname.replace(/^www\./, "");
+          hiring.confidence = domain && (host === domain || host.endsWith("." + domain)) ? "high" : "medium";
+          (source.hiring_signals ||= []).push(hiring);
+        }
       }
     }
 
