@@ -46,7 +46,8 @@ type AiSignal = { theme: "Build & Scale AI Applications" | "Secure AI Applicatio
 type CustomerPriority = { priority: string; basis: "stated" | "inferred"; evidence: string; why_it_matters: string };
 type CustomerPerspective = { mission: string; priorities: CustomerPriority[]; business_tension: string };
 
-type PursuitScore = { status: "scored" | "unavailable"; total: number | null; tier: string; dimensions: Array<{ key: string; label: string; score: number; weight: number }>; opportunity_size: string; primary_pillar: string; rationale: string; caveat: string; model: string };
+type ScoreAxis = { total: number; tier: string; dimensions: Array<{key:string; label:string; score:number; weight:number}> };
+type PursuitScore = { account?: ScoreAxis; readiness?: ScoreAxis; next_action?: string; status: "scored" | "unavailable"; total: number | null; tier: string; dimensions: Array<{ key: string; label: string; score: number; weight: number }>; opportunity_size: string; primary_pillar: string; rationale: string; caveat: string; model: string };
 
 type Report = {
   customer_perspective: CustomerPerspective;
@@ -162,7 +163,7 @@ async function searchWeb(
       seen.add(url);
       return [{ title, url, snippet, searchIndex: r.searchIndex, jobLike: official ? jobLike : specificJob }];
     })
-    .sort((a, b) => Number(b.jobLike) - Number(a.jobLike) || a.searchIndex - b.searchIndex)
+    .sort((a, b) => Number(new URL(b.url).hostname.replace(/^www\./,"") === domain) - Number(new URL(a.url).hostname.replace(/^www\\./,"") === domain) || a.searchIndex - b.searchIndex || Number(b.jobLike) - Number(a.jobLike))
     .slice(0, 8)
     .map(({ title, url, snippet }) => ({ title, url, snippet }));
 
@@ -457,12 +458,18 @@ async function classifyDigitalNative(env: Env, company: Company, sources: Source
 }
 
 
-const PURSUIT_DIMENSIONS = [
-  { key: "opportunity_fit", label: "Cloudflare opportunity fit", weight: 30, instructions: "How directly do specific evidence-backed Connect, Protect or Build use cases match the company? No evidenced use case means 0." },
-  { key: "commercial_potential", label: "Commercial potential", weight: 25, instructions: "How large might the relative opportunity be given verified company scale, digital footprint and relevant workloads? Never assume ARR, budget or spend." },
-  { key: "urgency_triggers", label: "Business urgency & triggers", weight: 20, instructions: "How strong and recent are company-specific verified changes that could motivate action? Do not infer an active buying cycle." },
-  { key: "strategic_fit", label: "Strategic account fit", weight: 15, instructions: "How well does the company fit Cloudflare digital-native targeting and relevant product areas?" },
-  { key: "evidence_quality", label: "Evidence quality", weight: 10, instructions: "How specific, credible and recent are the supporting company-specific sources? Generic or ambiguous sources score poorly." }
+const ATTRACTIVENESS_DIMENSIONS = [
+  { key:"digital_native_fit", label:"Digital-native and strategic fit", weight:25, instructions:"Score evidence that the business primarily creates digital products or platforms and fits a digital-native territory. A verified AI-native, developer, fintech or security software product is strong evidence of fit even if its cloud stack is unknown. Do not require an identified Cloudflare need." },
+  { key:"commercial_scale", label:"Commercial scale and growth potential", weight:25, instructions:"Consider verified customers, funding, employee scale, market reach and digital product adoption. Funding alone does not establish budget or spend." },
+  { key:"momentum", label:"Growth momentum and triggers", weight:25, instructions:"Consider dated funding, new products, expansion, partnerships and company-specific hiring. These indicate reasons to start discovery, not buying intent." },
+  { key:"product_relevance", label:"Product and workload relevance", weight:15, instructions:"Consider the relevance of the company's real digital product and business model to Connect, Protect, Build and AI themes. This is potential strategic relevance, NOT proof of pain or a deployable Cloudflare opportunity." },
+  { key:"research_quality", label:"Research evidence quality", weight:10, instructions:"Assess quality and specificity of corroborating employer-specific sources. Discount generic job aggregators and unsourced claims." }
+] as const;
+const READINESS_DIMENSIONS = [
+  { key:"validated_need", label:"Verified customer need", weight:35, instructions:"Only reward directly evidenced unmet customer problems, initiatives or stated technical requirements. A plausible hypothesis alone is 0 or 1." },
+  { key:"solution_evidence", label:"Cloudflare solution fit evidence", weight:30, instructions:"Reward credible specific technical evidence that maps to Connect, Protect or Build. A known product or workload without verified architecture can support exploratory fit but not high confidence." },
+  { key:"timing", label:"Technical timing and initiative", weight:20, instructions:"Reward specific verified projects or timing relevant to infrastructure, security or application delivery. General funding alone is not an active purchase." },
+  { key:"stakeholders", label:"Access and buying process", weight:15, instructions:"Reward verified stakeholders, access or buying process. If unknown score zero. Do not infer contacts or budget." }
 ] as const;
 
 function clefChoice(answer: unknown): number | null {
@@ -477,62 +484,66 @@ function clefChoice(answer: unknown): number | null {
 
 async function scorePursuitWithClef(env: Env, company: Company, report: Report, sources: Source[]): Promise<PursuitScore> {
   const unavailable = (caveat: string): PursuitScore => ({
-    status: "unavailable", total: null, tier: "Not evaluated", dimensions: [],
-    opportunity_size: "Unknown", primary_pillar: "Not evaluated",
-    rationale: "Clef assessment was unavailable. No substitute score was generated.",
-    caveat, model: DECISION_MODEL
+    status:"unavailable", total:null, tier:"Not evaluated", dimensions:[],
+    opportunity_size:"Unknown", primary_pillar:"Not evaluated",
+    rationale:"Clef assessment unavailable.", caveat, model:DECISION_MODEL
   });
+  const allDimensions = [...ATTRACTIVENESS_DIMENSIONS, ...READINESS_DIMENSIONS];
   try {
-    const questions = Object.fromEntries(PURSUIT_DIMENSIONS.map(d => [d.key, {
-      type: "choice",
-      instructions: d.instructions + " Assess only the supplied evidence, not imagined customer pain. Use 0 if unsupported. 4 requires exceptionally strong evidence.",
-      criteria: {
-        "0": "No relevant or credible evidence",
-        "1": "Weak or indirect indicators",
-        "2": "Some credible indicators, material unknowns",
-        "3": "Strong, specific indicators with some unknowns",
-        "4": "Exceptional, corroborated evidence of high relevance"
+    const questions = Object.fromEntries(allDimensions.map(d => [d.key, {
+      type:"choice",
+      instructions:d.instructions + " Use only supplied company-specific evidence. Unknown is not negative for account attractiveness, but cannot count as a verified opportunity. Do not infer budget, technical stack or buying intent.",
+      criteria:{
+        "0":"No relevant evidence for this dimension",
+        "1":"Weak or indirect evidence",
+        "2":"Credible evidence with important unknowns",
+        "3":"Strong and specific evidence",
+        "4":"Exceptional, corroborated and directly relevant evidence"
       }
     }]));
     const result = await env.AI.run(DECISION_MODEL as Parameters<Ai["run"]>[0], {
-      model: "clef-flash",
-      state: JSON.stringify({
-        company: { name: company.name, sector: company.sector, description: company.description, employees: company.employees, funding_usd: company.funding_usd, growth_score: company.growth_score },
-        research: {
-          digital_native: report.digital_native,
-          summary: report.summary,
-          priorities: report.customer_perspective.priorities,
-          growth_signals: report.growth_signals,
-          technical_signals: report.technical_signals,
-          opportunities: report.cloudflare_opportunities,
-          ai_signals: report.ai_signals,
-          hiring: report.hiring_signals
-        },
-        sources: sources.map((source, i) => ({ ref: "S" + (i + 1), title: source.title, snippet: source.snippet, url: source.url }))
+      model:"clef-flash",
+      state:JSON.stringify({
+        company:{name:company.name, sector:company.sector, description:company.description,
+          employees:company.employees, funding_usd:company.funding_usd, growth_score:company.growth_score,
+          last_funding_date:company.last_funding_date, growth_prediction:company.growth_prediction},
+        research:{digital_native:report.digital_native, summary:report.summary,
+          priorities:report.customer_perspective.priorities, growth_signals:report.growth_signals,
+          technical_signals:report.technical_signals, opportunities:report.cloudflare_opportunities,
+          ai_signals:report.ai_signals, hiring:report.hiring_signals},
+        sources:sources.map((source,i)=>({ref:"S"+(i+1),title:source.title,snippet:source.snippet,url:source.url}))
       }),
       questions
-    } as never) as Record<string, unknown>;
-    const answers = result.answers as Record<string, unknown> | undefined;
+    } as never) as Record<string,unknown>;
+    const answers = result.answers as Record<string,unknown> | undefined;
     if (!answers) return unavailable("Clef returned no scoring answers.");
-    const dimensions = PURSUIT_DIMENSIONS.map(d => ({
-      key: d.key, label: d.label, weight: d.weight, score: clefChoice(answers[d.key])
-    }));
-    if (dimensions.some(d => d.score === null)) return unavailable("Clef did not return all five valid rubric choices.");
-    const complete = dimensions as Array<{ key: string; label: string; weight: number; score: number }>;
-    const total = Math.round(complete.reduce((sum, d) => sum + d.score / 4 * d.weight, 0));
-    const tier = total >= 80 ? "T1 · Pursue actively" : total >= 60 ? "T2 · Develop" : total >= 40 ? "T3 · Monitor" : "T4 · Deprioritize";
-    const opportunity_size = complete.find(d => d.key === "commercial_potential")!.score >= 3 ? "Potentially large (unverified)" : complete.find(d => d.key === "commercial_potential")!.score === 2 ? "Potentially medium (unverified)" : "Unknown / limited evidence";
-    const sorted = [...report.cloudflare_opportunities].sort((a, b) => ({high:3,medium:2,low:1}[b.confidence] - {high:3,medium:2,low:1}[a.confidence]));
-    const primary_pillar = sorted[0]?.pillar || "Not established";
-    return {
-      status: "scored", total, tier, dimensions: complete, opportunity_size, primary_pillar,
-      rationale: "Weighted assessment of researched fit, potential scale, urgency, strategic relevance and source quality.",
-      caveat: "Model-assisted prioritization, not a revenue forecast or proof of buying intent. Validate with discovery.",
-      model: DECISION_MODEL
+    const scoreAxis = (defs: typeof ATTRACTIVENESS_DIMENSIONS | typeof READINESS_DIMENSIONS): ScoreAxis | null => {
+      const dimensions = defs.map(d=>({key:d.key,label:d.label,weight:d.weight,score:clefChoice(answers[d.key])}));
+      if (dimensions.some(d=>d.score===null)) return null;
+      const complete = dimensions as Array<{key:string;label:string;weight:number;score:number}>;
+      const total = Math.round(complete.reduce((sum,d)=>sum+d.score/4*d.weight,0));
+      return {total,tier:total>=75?"High":total>=50?"Moderate":"Low",dimensions:complete};
     };
-  } catch (e) {
-    console.warn("Clef pursuit scoring unavailable:", company.id, e instanceof Error ? e.message : String(e));
-    return unavailable("Clef scoring call failed; retry research to evaluate.");
+    const account=scoreAxis(ATTRACTIVENESS_DIMENSIONS);
+    const readiness=scoreAxis(READINESS_DIMENSIONS);
+    if (!account || !readiness) return unavailable("Clef did not return all valid scoring choices.");
+    const tier=account.total>=75?"T1 · Prioritize discovery":account.total>=50?"T2 · Qualify":"T3 · Monitor";
+    const next_action=account.total>=75 && readiness.total<50
+      ?"High-potential account; opportunity unverified. Prioritize discovery to validate architecture, needs and timing."
+      :account.total>=50 && readiness.total<50
+      ?"Qualify business priorities and explore technical hypotheses before proposing a solution."
+      :readiness.total>=50
+      ?"Advance discovery with the SE to validate the evidenced opportunity and stakeholders."
+      :"Monitor verified triggers and reassess when new evidence emerges.";
+    const sorted=[...report.cloudflare_opportunities].sort((a,b)=>({high:3,medium:2,low:1}[b.confidence]-{high:3,medium:2,low:1}[a.confidence]));
+    return {status:"scored",total:account.total,tier,account,readiness,next_action,
+      dimensions:account.dimensions,opportunity_size:"Not estimated",primary_pillar:sorted[0]?.pillar||"Not established",
+      rationale:"Account attractiveness and opportunity readiness assessed independently.",
+      caveat:"Attractiveness is not proof of a Cloudflare need. Readiness measures available evidence, not actual buying intent.",
+      model:DECISION_MODEL};
+  } catch(e) {
+    console.warn("Clef pursuit scoring unavailable:",company.id,e instanceof Error?e.message:String(e));
+    return unavailable("Clef scoring call failed; retry research.");
   }
 }
 
@@ -572,7 +583,7 @@ make every sentence about that company. Reject generic job-search pages, directo
 Company-specific job postings ARE valuable hiring signals, but requirements
 are not proof that a technology is already deployed.
 Prioritize official company pages, company-specific announcements and credible
-reporting. Only extract hiring signals from identifiable roles tied to THIS employer.
+reporting. Only extract hiring signals from identifiable roles tied to THIS employer. Capture up to three distinct company-specific roles when available, including engineering and commercial expansion roles; do not drop all but one.
 Company-specific hiring sources may identify a role without proving the underlying technology is deployed. Extract roles explicitly tied to the employer even when the source does not specify technologies. Do not infer posting dates.
 Official company career postings are high-confidence sources; employer-specific
 third-party listings are medium-confidence; ambiguous listings are excluded.
@@ -581,7 +592,7 @@ Never describe a listed skill as a deployed technology without other evidence.
 For growth signals, prioritize dated company-specific launches, financing,
 customer adoption, geographic expansion, partnerships or hiring. Do not
 repeat Crunchbase growth scores or funding totals as independent signals.
-If there are no verified recent triggers, return an empty growth_signals array.
+If there are no verified recent triggers, return an empty growth_signals array. Include cited company-specific launches, product releases, partnerships and geographic expansion as business triggers even when no infrastructure need is known.
 IMPORTANT: If the overview or strategic priorities mention a dated, cited funding round, launch, customer adoption or expansion, include the SAME factual event in growth_signals with its citation. Do not contradict your own overview.
 Technical signals can include VERIFIED product capabilities (e.g. an AI application launch), explicitly labeled product activity; do not confuse product activity with deployed infrastructure. Include cited product activity when known, even if hosting, APIs and cloud vendors are unknown.
 Use concise source references such as [S1] for every factual growth or technical
@@ -606,7 +617,7 @@ Identify up to three strategic priorities, distinguishing stated company goals
 from inferred priorities. Every priority requires an exact [S#] reference.
 Do not invent executive quotes, motivations, urgency or customer pain.
 Business tension is a cautious question or tradeoff, not a confirmed problem.
-If priorities cannot be substantiated, leave them empty.
+If priorities cannot be substantiated, leave them empty. However, an official company statement of AI-first engineering, a named product launch, an announced partnership, or an expansion plan IS evidence of a strategic direction; include it with its citation rather than leaving priorities empty.
 For every Cloudflare opportunity distinguish: (1) verified customer fact [S#], (2) an explicit conditional discovery hypothesis, (3) unknown infrastructure, provider, buying intent or pain. A new AI application can justify a cautious Build or Protect discovery angle, but NEVER claim the company needs Cloudflare or has a specific problem. Prefer no opportunity over an unsupported low-latency or WAN claim.
 Only suggest opportunities supported by the evidence.
 Use empty arrays where evidence is insufficient.
