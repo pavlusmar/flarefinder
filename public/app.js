@@ -186,6 +186,53 @@ function relevantCaseStudies(opportunities, signals) {
   }).filter(story => story.reasons.length).slice(0, 3);
 }
 
+
+function tasIndustryBaseline(sector) {
+  const s = String(sector || "").toLowerCase();
+  if (/bank|financ|fintech|insur/.test(s)) return {pct:5.5, label:"Financial services"};
+  if (/retail|commerce|marketplace/.test(s)) return {pct:5, label:"Retail / commerce"};
+  if (/manufactur|industrial/.test(s)) return {pct:2, label:"Manufacturing"};
+  if (/health|medical/.test(s)) return {pct:4.1, label:"Healthcare"};
+  if (/consult|it service/.test(s)) return {pct:10.5, label:"IT services"};
+  return {pct:8.6, label:"Software / technology proxy"};
+}
+function tasSection(c) {
+  const baseline = tasIndustryBaseline(c.sector);
+  return `<section class="brief-tas">
+    <h3>Commercial potential · TAS scenario</h3>
+    <p class="meta">Planning scenario only — not a Cloudflare quote, verified budget, forecast or quota.</p>
+    <div class="brief-signal">
+      <label>Annual revenue (USD millions; verify source)
+        <input id="tasRevenue" type="number" min="0" step="0.1" placeholder="Unknown — enter researched revenue" style="width:100%;margin-top:5px">
+      </label>
+      <p class="meta">Industry proxy: ${esc(baseline.label)}. Broad technology-spend baseline ${baseline.pct}% of revenue (editable; not a company fact).</p>
+      <label>Technology spend % <input id="tasIT" type="number" min="0" max="100" step="0.1" value="${baseline.pct}" style="width:85px"></label>
+      <p class="meta">Illustrative addressable share of technology spend — not verified Cloudflare pricing. Adjust based on actual workloads and vendors.</p>
+      <label>Low % <input id="tasLow" type="number" min="0" max="100" step="0.1" value="1" style="width:75px"></label>
+      <label>High % <input id="tasHigh" type="number" min="0" max="100" step="0.1" value="5" style="width:75px"></label>
+      <div id="tasResult" class="info">TAS not estimated: annual revenue is unknown.</div>
+      <p class="meta">Formula: revenue × technology-spend ratio × Cloudflare-addressable share. Default 1–5% is a hypothetical sensitivity range, not an industry statistic. AI infrastructure is included, not added twice. Replace with workload-based estimates when known.</p>
+    </div>
+  </section>`;
+}
+function wireTas() {
+  const inputs = ["tasRevenue","tasIT","tasLow","tasHigh"].map(id => $(id));
+  if (inputs.some(x => !x)) return;
+  const update = () => {
+    const [revenue,it,low,high] = inputs.map(x => x.value === "" ? NaN : Number(x.value));
+    const out = $("tasResult");
+    if (![revenue,it,low,high].every(Number.isFinite) || revenue <= 0 || it < 0 || it > 100 || low < 0 || high > 100 || high < low) {
+      out.textContent = "TAS not estimated: enter valid revenue and percentage assumptions (high ≥ low).";
+      return;
+    }
+    const tech = revenue * 1e6 * it / 100;
+    const fmt = n => "$" + Math.round(n).toLocaleString("en-US");
+    out.textContent = "Estimated technology spend: " + fmt(tech) + "/yr · Illustrative Cloudflare TAS: " + fmt(tech * low / 100) + "–" + fmt(tech * high / 100) + "/yr (unvalidated)";
+  };
+  inputs.forEach(x => x.addEventListener("input", update));
+  update();
+}
+
 // --------------------------------------------------
 // RESEARCH DISPLAY
 // --------------------------------------------------
@@ -308,6 +355,7 @@ async function detail(id, silent = false) {
         <p><strong>Why this account:</strong> ${cite(reason)}</p>
         <p class="meta">Territory rank: ${rankedTerritory().find(x => x.id === c.id)?.rank ?? "Unranked"} · ${esc(priority.quality)} · Absolute score determines priority; rank compares researched accounts.</p>
       </div>
+      ${tasSection(c)}
       <div class="brief-stats"><span>Research: <strong>${esc(c.confidence || "unknown")} confidence</strong></span><span>Readiness: <strong>${esc(pursuit?.readiness?.tier || "unknown")}</strong></span></div>
       <section class="brief-priorities">
         <h3>Company priorities &amp; strategic direction</h3>
@@ -427,6 +475,7 @@ async function detail(id, silent = false) {
       </div>
     `;
 
+    wireTas();
     const button = $("researchOne");
     const feedback = message => { const el = $("researchFeedback"); if (el) el.textContent = message; };
 
