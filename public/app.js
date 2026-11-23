@@ -571,7 +571,6 @@ async function detail(id, silent = false) {
           </div>`).join("") : '<p class="meta">No sufficiently evidenced strategic priorities identified yet.</p>'}
         ${!compact && perspective.business_tension ? '<p class="meta"><strong>Potential business tradeoff:</strong> ' + cite(perspective.business_tension) + '</p>' : ''}
       </section>
-      ${compact ? "" : `<h3>Other business signals</h3>${list(c.growth_signals).length ? listHtml(c.growth_signals) : '<p class="meta">No additional structured growth signals found. Review the cited company announcements below.</p>'}`}
       <h3>Cloudflare opportunities</h3>
       <p class="meta">Outside-in hypotheses, not verified customer problems.</p>
       ${pillars.map(p => {
