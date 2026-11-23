@@ -1,7 +1,7 @@
 name: Offline research validation
 on:
   push:
-    branches: [fix/evidence-rubric-validation, fix/opportunity-recovery-9fin, fix/evidence-pipeline-audit]
+    branches: [fix/evidence-rubric-validation, fix/opportunity-recovery-9fin, fix/evidence-pipeline-audit, fix/brief-commercial-narrative]
   pull_request:
 jobs:
   verify:
@@ -15,4 +15,5 @@ jobs:
           node-version: '22'
       - run: npm install --legacy-peer-deps --no-audit --no-fund
       - run: npm run typecheck
+      - run: node --check public/app.js
       - run: node --test tests/evidence.test.cjs
