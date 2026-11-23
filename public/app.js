@@ -531,7 +531,7 @@ async function detail(id, silent = false) {
       <h3>Cloudflare opportunities</h3>
       <p class="meta">Outside-in hypotheses, not verified customer problems.</p>
       ${pillars.map(p => {
-        const matches = opportunities.filter(o => o.pillar === p && /\\[S\\d+\\]/.test(o.evidence || ""));
+        const matches = opportunities.filter(o => o.pillar === p && /\[S\d+\]/.test(o.evidence || ""));
         return '<div class="brief-signal"><strong>' + p + '</strong>' +
           (matches.length ? matches.slice(0, 2).map(o =>
             '<p><strong>Opportunity:</strong> ' + cite(o.hypothesis) + '</p>' +
@@ -540,7 +540,7 @@ async function detail(id, silent = false) {
       }).join("")}
       <details class="brief-details"><summary>Detailed opportunity research · signals, evidence, discovery and outreach</summary>
       ${pillars.map(p => {
-        const matches = opportunities.filter(o => o.pillar === p && /\\[S\\d+\\]/.test(o.evidence || ""));
+        const matches = opportunities.filter(o => o.pillar === p && /\[S\d+\]/.test(o.evidence || ""));
         return '<div class="brief-signal"><strong>' + p + '</strong>' +
           (matches.length ? matches.map(o =>
             '<p><strong>Research signal:</strong> ' + cite(o.signal || o.evidence) + '</p>' +
