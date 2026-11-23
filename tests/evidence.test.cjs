@@ -253,3 +253,15 @@ test('brief UI displays a sourced business-to-technical-to-Cloudflare reasoning 
   assert.ok(ui.includes('Saved Clef score predates this evidence re-analysis'));
   assert.ok(!ui.includes('opportunities.find(o => o.confidence !== "low" && /\\[S\\d+\\]/.test(o.evidence || ""))?.hypothesis'));
 });
+
+test('compact account brief shows only three primary sections; detailed reasoning is collapsed',()=>{
+  const ui=fs.readFileSync(path.join(__dirname,'../public/app.js'),'utf8');
+  assert.ok(ui.includes('<summary>Supporting commercial reasoning</summary>'));
+  assert.ok(ui.includes('<summary>Discovery questions</summary>'));
+  assert.ok(ui.includes('Company priorities &amp; strategic direction'));
+  assert.ok(ui.includes('<h3>Cloudflare opportunities</h3>'));
+  assert.ok(ui.includes('<h3>AI opportunity signals</h3>'));
+  assert.ok(!ui.includes('<h3>Other business signals</h3>'));
+  assert.ok(ui.includes('Six-month AI agent delivery milestone'));
+  assert.ok(ui.includes('Planned engineering work, not a confirmed vendor evaluation.'));
+});
