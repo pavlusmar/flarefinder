@@ -283,7 +283,7 @@ function tasSection(c) {
         <p class="meta">Technology budget = annual revenue × technology spend %. Overall TAS = technology budget × 1–5% addressable share. AI budget = technology budget × 15% AI allocation. AI TAS = AI budget × 2–10% addressable share. Displayed central estimates are arithmetic midpoints of each range, not forecasts. AI TAS is already part of overall TAS and must not be added to it. All percentages are editable, illustrative planning assumptions; no validated AI budget, pricing, spend or official Cloudflare sizing methodology is implied. Funding is never treated as revenue. Revenue is only prefilled when an explicit USD annual-revenue statement is found in the research sources; otherwise enter a verified value.</p>
       </details>
     </div>
-  </section>`;
+  </details>`;
 }
 function wireTas() {
   const ids = ["tasRevenue","tasIT","tasLow","tasHigh","tasAIShare","tasAILow","tasAIHigh"];
