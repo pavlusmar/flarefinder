@@ -625,9 +625,9 @@ function validateOpportunityEvidence(report: Report, sources: Source[]): void {
     if (a.theme === "Multi-Model Operations" && a.signal === "strong") {
       // Routing or gateway ownership is a plausible theme, but not proof that
       // two named model providers are already used in production.
-      const named = [ /\\b(?:OpenAI|GPT[- ]?\\d)\\b/i, /\\b(?:Anthropic|Claude)\\b/i,
-        /\\b(?:Google Gemini|Gemini)\\b/i, /\\b(?:Mistral)\\b/i,
-        /\\b(?:Cohere)\\b/i, /\\b(?:Llama)\\b/i ].filter(re => re.test(text)).length;
+      const named = [ /\b(?:OpenAI|GPT[- ]?\d)\b/i, /\b(?:Anthropic|Claude)\b/i,
+        /\b(?:Google Gemini|Gemini)\b/i, /\b(?:Mistral)\b/i,
+        /\b(?:Cohere)\b/i, /\b(?:Llama)\b/i ].filter(re => re.test(text)).length;
       if (named < 2) return {...a, signal:"possible" as const, confidence:"medium" as const};
     }
     return a;
