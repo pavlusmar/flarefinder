@@ -715,7 +715,7 @@ function recoverEvidenceBackedOpportunities(report: Report, sources: Source[]): 
     if (/\b(authenticat|authori[sz]|service boundary|monolith|engineering|architecture)\b/i.test(title)) return 70;
     return o.confidence === "high" ? 60 : 35;
   };
-  const combined = [...accepted.map(o => ({opportunity:o, priority:priority(o), kind:"model"})),...candidates];
+  const combined = [...accepted.filter(o => priority(o) > 10).map(o => ({opportunity:o, priority:priority(o), kind:"model"})),...candidates];
   combined.sort((a,b) => b.priority-a.priority);
   const selected: Opportunity[] = [];
   for (const candidate of combined) {
@@ -764,6 +764,30 @@ function evidenceGrounded(report: Report, sources: Source[]): Report {
     .slice(0,4);
   report.questions = report.cloudflare_opportunities.length
     ? report.cloudflare_opportunities.map(o => o.discovery_question || "").filter(Boolean).slice(0,4)
+    : ["Which current technical initiative has an owner and timeline?", "Which incumbent providers already address this workload?"];
+  return report;
+}
+
+
+function finalizeEvidenceReport(report: Report, sources: Source[]): Report {
+  // Same validation and reconciliation for live research and saved-source replay.
+  evidenceGrounded(report, sources);
+  validateOpportunityEvidence(report, sources);
+  recoverEvidenceBackedOpportunities(report, sources);
+  evidenceGrounded(report, sources);
+  validateOpportunityEvidence(report, sources);
+  // The final ordering is by source specificity, not LLM confidence alone.
+  const priority = (o: Opportunity) => {
+    const match = /\[S(\d+)\]/.exec(o.evidence);
+    const title = match ? sources[Number(match[1])-1]?.title || "" : "";
+    if (/\b(ai platform engineer|ai engineering|ai infrastructure)\b/i.test(title)) return 95;
+    if (/\b(authenticat|authori[sz]|service boundary|monolith|engineering|architecture)\b/i.test(title)) return 75;
+    if (/\b(raises?|funding|series [a-f]|investment|valuation|pymnts|prnewswire)\b/i.test(title)) return 10;
+    return o.confidence === "high" ? 65 : 35;
+  };
+  report.cloudflare_opportunities.sort((a,b)=>priority(b)-priority(a));
+  report.questions = report.cloudflare_opportunities.length
+    ? report.cloudflare_opportunities.map(o=>o.discovery_question || "").filter(Boolean).slice(0,4)
     : ["Which current technical initiative has an owner and timeline?", "Which incumbent providers already address this workload?"];
   return report;
 }
@@ -1179,12 +1203,7 @@ ${JSON.stringify(sources.map((source, i) => ({ id: `S${i+1}`, ...source })))}
         });
       });
 
-      evidenceGrounded(report, sources);
-      validateOpportunityEvidence(report, sources);
-      recoverEvidenceBackedOpportunities(report, sources);
-      // Apply the same citation and pillar checks to recovered opportunities.
-      evidenceGrounded(report, sources);
-      validateOpportunityEvidence(report, sources);
+      finalizeEvidenceReport(report, sources);
       console.log("Opportunity validation:", company.id, { count: report.cloudflare_opportunities.length, pillars: report.cloudflare_opportunities.map(o => o.pillar) });
       console.log("AI generation completed:", company.id);
       return report;
@@ -1485,11 +1504,7 @@ async function route(
         questions: parseArray(stored.questions).filter((x): x is string => typeof x === "string"),
         confidence: stored.confidence === "high" || stored.confidence === "medium" ? stored.confidence : "low"
       };
-      evidenceGrounded(report, sources);
-      validateOpportunityEvidence(report, sources);
-      recoverEvidenceBackedOpportunities(report, sources);
-      evidenceGrounded(report, sources);
-      validateOpportunityEvidence(report, sources);
+      finalizeEvidenceReport(report, sources);
       stored.growth_signals = report.growth_signals;
       stored.technical_signals = report.technical_signals;
       stored.cloudflare_opportunities = report.cloudflare_opportunities;
