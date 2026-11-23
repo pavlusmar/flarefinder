@@ -452,7 +452,20 @@ async function detail(id, silent = false) {
       return sentence.length > 210 ? sentence.slice(0, 207).trimEnd() + "…" : sentence;
     };
     const businessHighlights = priorities.filter(p => p.basis === "stated" && /\[S\d+\]/.test(p.evidence || "")).slice(0, 3);
-    const reason = compact ? "Series D investment, developer platform expansion and enterprise adoption warrant discovery; infrastructure needs are unverified." : ([c.last_funding_date ? "Latest funding " + c.last_funding_date : "", businessHighlights[0]?.why_it_matters || "", opportunities.find(o => o.confidence !== "low" && /\[S\d+\]/.test(o.evidence || ""))?.hypothesis || ""].filter(Boolean).join(" · ") || priority.reason);
+    const mainOpportunity = opportunities.find(o => o.confidence !== "low" && /\[S\d+\]/.test(o.evidence || ""));
+    const reason = compact ? "Series D investment, developer platform expansion and enterprise adoption warrant discovery; infrastructure needs are unverified."
+      : ([businessHighlights[0]?.priority ? businessHighlights[0].priority + " " + businessHighlights[0].evidence : "", mainOpportunity?.signal || "", mainOpportunity?.pillar ? mainOpportunity.pillar + " discovery hypothesis — not a verified requirement" : ""].filter(Boolean).join(" · ") || priority.reason);
+    const scoredAt = sources[0]?.scored_at || c.researched_at;
+    const revisedBrief = !!c.brief_recomputed;
+    const scoreCaveat = revisedBrief ? "Saved Clef score predates this evidence re-analysis; it has not been recalculated." : "Clef score reflects the research run; it is not verified buying intent.";
+    const commercialNarrative = mainOpportunity ? [
+      {label:"Business priority", value:businessHighlights[0] ? businessHighlights[0].priority + " — " + businessHighlights[0].why_it_matters + " " + businessHighlights[0].evidence : "No specific company-stated priority established"},
+      {label:"Technical initiative", value:mainOpportunity.signal || mainOpportunity.evidence},
+      {label:"Potential consequence", value:mainOpportunity.implication},
+      {label:"Cloudflare hypothesis", value:mainOpportunity.hypothesis + " Potential fit: " + mainOpportunity.product_fit},
+      {label:"What could rule it out", value:mainOpportunity.limitations},
+      {label:"How to qualify", value:mainOpportunity.discovery_question}
+    ] : [];
 
     // Keep imported Crunchbase fields unchanged. Display clearly labelled
     // sourced research facts when the import lacks headcount/funding.
@@ -522,10 +535,15 @@ async function detail(id, silent = false) {
 
       <div class="priority-summary brief-hero">
         <div class="priority-head"><strong>${esc(priority.tier)}</strong><strong>${esc(priority.score ?? "—")}/100</strong></div>
-        <p><strong>Why this account:</strong> ${cite(reason)}</p>
+        <p><strong>Why this account:</strong> ${cite(reason)}</p>\n        <p class="meta">${esc(scoreCaveat)}</p>
         <p class="meta">Territory rank: ${rankedTerritory().find(x => x.id === c.id)?.rank ?? "Unranked"} · ${esc(priority.quality)} · Absolute score determines priority; rank compares researched accounts.</p>
       </div>
       <div class="brief-stats"><span>Research: <strong>${esc(c.confidence || "unknown")} confidence</strong></span><span>Readiness: <strong>${esc(pursuit?.readiness?.tier || "unknown")}</strong></span></div>
+      ${commercialNarrative.length ? `<section class="brief-priorities">
+        <h3>Commercial reasoning · strongest sourced hypothesis</h3>
+        <p class="meta">The business priority is company-stated where cited; the Cloudflare fit remains an outside-in hypothesis. These findings do not establish a buyer, budget, or project.</p>
+        ${commercialNarrative.map(step => '<div class="brief-signal"><strong>' + esc(step.label) + '</strong><p>' + cite(step.value) + '</p></div>').join("")}
+      </section>` : ""}
       <section class="brief-priorities">
         <h3>Company priorities &amp; strategic direction</h3>
         <p class="meta">Company-stated priorities are distinguished from inferred ones. These are outside-in findings, not confirmed customer conversations.</p>

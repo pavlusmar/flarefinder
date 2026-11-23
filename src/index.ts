@@ -1511,6 +1511,9 @@ async function route(
       stored.cloudflare_opportunities = report.cloudflare_opportunities;
       stored.ai_signals = report.ai_signals;
       stored.questions = report.questions;
+      // The original Clef score was calculated before the saved-source replay.
+      // Never present it as a score recalculated from this revised brief.
+      stored.brief_recomputed = true;
     }
     return json(stored);
   }
