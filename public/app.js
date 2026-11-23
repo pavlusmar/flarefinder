@@ -458,6 +458,22 @@ async function detail(id, silent = false) {
     const scoredAt = sources[0]?.scored_at || c.researched_at;
     const revisedBrief = !!c.brief_recomputed;
     const scoreCaveat = revisedBrief ? "Saved Clef score predates this evidence re-analysis; it has not been recalculated." : "Clef score reflects the research run; it is not verified buying intent.";
+    // Only surface details explicitly present in stored source excerpts.
+    const jobSources = sources.map((source,i)=>({source,ref:"[S"+(i+1)+"]"}))
+      .filter(x=>/\\b(ai platform engineer|ai infrastructure engineer|agent platform engineer)\\b/i.test(x.source.title || ""));
+    const jobInsights = jobSources.flatMap(({source,ref})=>{
+      const raw=String(source.snippet || "");
+      const details=[];
+      if (/\\b(six months|6 months|within (?:the )?first six months)\\b/i.test(raw) && /\\b(agent|platform|ship|production)\\b/i.test(raw))
+        details.push("Six-month AI agent delivery milestone " + ref);
+      if (/\\b(architectural decisions|architecture decisions|greenfield|from the ground up|still open)\\b/i.test(raw))
+        details.push("AI platform architecture still being defined " + ref);
+      if (/\\b(observability|tracing|evaluation|cost optimis|cost optimiz)\\b/i.test(raw))
+        details.push("Observability, tracing, evaluation and cost controls are in the platform remit " + ref);
+      if (/\\b(ai gateways?|model routing|model serving|orchestration)\\b/i.test(raw))
+        details.push("Model serving, gateway or orchestration capabilities feature in the platform remit " + ref);
+      return details;
+    }).filter((v,i,a)=>a.indexOf(v)===i).slice(0,4);
     const commercialNarrative = mainOpportunity ? [
       {label:"Business priority", value:businessHighlights[0] ? businessHighlights[0].priority + " — " + businessHighlights[0].why_it_matters + " " + businessHighlights[0].evidence : "No specific company-stated priority established"},
       {label:"Technical initiative", value:mainOpportunity.signal || mainOpportunity.evidence},
@@ -539,15 +555,14 @@ async function detail(id, silent = false) {
         <p class="meta">Territory rank: ${rankedTerritory().find(x => x.id === c.id)?.rank ?? "Unranked"} · ${esc(priority.quality)} · Absolute score determines priority; rank compares researched accounts.</p>
       </div>
       <div class="brief-stats"><span>Research: <strong>${esc(c.confidence || "unknown")} confidence</strong></span><span>Readiness: <strong>${esc(pursuit?.readiness?.tier || "unknown")}</strong></span></div>
-      ${commercialNarrative.length ? `<section class="brief-priorities">
-        <h3>Commercial reasoning · strongest sourced hypothesis</h3>
-        <p class="meta">The business priority is company-stated where cited; the Cloudflare fit remains an outside-in hypothesis. These findings do not establish a buyer, budget, or project.</p>
-        ${commercialNarrative.map(step => '<div class="brief-signal"><strong>' + esc(step.label) + '</strong><p>' + cite(step.value) + '</p></div>').join("")}
-      </section>` : ""}
       <section class="brief-priorities">
         <h3>Company priorities &amp; strategic direction</h3>
         <p class="meta">Company-stated priorities are distinguished from inferred ones. These are outside-in findings, not confirmed customer conversations.</p>
         ${!compact && perspective.mission ? '<p><strong>What they are working toward:</strong> ' + cite(perspective.mission) + '</p>' : ''}
+        ${jobInsights.length ? `<div class="brief-signal"><strong>Engineering hiring signal · AI platform</strong>
+          ${jobInsights.map(x=>'<p class="meta">' + cite(x) + '</p>').join("")}
+          <p class="meta">Planned engineering work, not a confirmed vendor evaluation.</p>
+        </div>` : ""}
         ${priorities.length ? (compact ? priorities.slice(0, 3) : priorities).map((p, i) => `
           <div class="brief-signal">
             <div class="signal-head"><strong>${i + 1}. ${esc(p.priority)}</strong><span class="mini-status">${esc(p.basis === "stated" ? "Company-stated" : "Inferred")}</span></div>
@@ -556,7 +571,6 @@ async function detail(id, silent = false) {
           </div>`).join("") : '<p class="meta">No sufficiently evidenced strategic priorities identified yet.</p>'}
         ${!compact && perspective.business_tension ? '<p class="meta"><strong>Potential business tradeoff:</strong> ' + cite(perspective.business_tension) + '</p>' : ''}
       </section>
-      ${compact ? "" : `<h3>Other business signals</h3>${list(c.growth_signals).length ? listHtml(c.growth_signals) : '<p class="meta">No additional structured growth signals found. Review the cited company announcements below.</p>'}`}
       <h3>Cloudflare opportunities</h3>
       <p class="meta">Outside-in hypotheses, not verified customer problems.</p>
       ${pillars.map(p => {
@@ -572,12 +586,15 @@ async function detail(id, silent = false) {
       <p class="meta">AI economics and multi-model signals are exploratory and not separately scored.</p>
       ${aiThemes.map(theme => {
         const signal = aiSignals.find(x => x.theme === theme);
-        return '<div class="brief-ai-row"><div class="signal-head"><strong>' + esc(theme) + '</strong>' + pill(signal?.signal || "insufficient") + '</div>' + (signal && signal.signal !== "insufficient" ? '<p class="meta"><strong>Source excerpt:</strong> ' + esc(aiSourceExcerpt(signal.evidence) || "No source excerpt available.") + ' ' + cite(signal.evidence) + '</p>' : '<p class="meta">Insufficient public evidence.</p>') + '</div>';
+        return '<div class="brief-ai-row"><div class="signal-head"><strong>' + esc(theme) + '</strong>' + pill(signal?.signal || "insufficient") + '</div>' + (signal && signal.signal !== "insufficient" ? '<p class="meta"><strong>Source excerpt:</strong> ' + cite(signal.hypothesis || aiSourceExcerpt(signal.evidence) || "Specific activity documented") + ' ' + cite(signal.evidence) + '</p>' : '<p class="meta">Insufficient public evidence.</p>') + '</div>';
       }).join("")}
       ${compact ? "</details>" : ""}
-      <h3>Discovery questions</h3>
+      <details class="brief-details"><summary>Discovery questions</summary>
       ${compact ? listHtml(list(c.questions).slice(0, 3)) : listHtml(c.questions)}
-      
+      </details>
+      <details class="brief-details"><summary>Supporting commercial reasoning</summary>
+      ${commercialNarrative.map(step => '<div class="brief-signal"><strong>' + esc(step.label) + '</strong><p>' + cite(step.value) + '</p></div>').join("")}
+      </details>
       <details class="brief-details"><summary>Detailed Clef scoring and readiness</summary>
       <h3>Account attractiveness · Clef Flash</h3>
       ${pursuit?.status === 'scored' && pursuit.account ? `
