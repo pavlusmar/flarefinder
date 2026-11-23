@@ -264,7 +264,7 @@ function formatTas(value) {
 function tasSection(c) {
   const baseline = tasIndustryBaseline(c.sector);
   const scenario = tasRevenueScenario(c);
-  return `<details class="brief-tas brief-details"><summary>Commercial potential · Annual TAS — ${formatTas(tasTableValue(c))} (scenario)</summary>
+  return `<section class="brief-tas"><h3>Commercial potential · Annual TAS — ${formatTas(tasTableValue(c))} (scenario)</h3>
     <h3>Commercial potential · Annual TAS</h3>
     <p class="meta">Calculated scenarios, not verified Cloudflare spend or sales forecasts. AI TAS is a subset of overall TAS; do not add the two.</p>
     <div class="brief-signal">
@@ -283,7 +283,7 @@ function tasSection(c) {
         <p class="meta">Technology budget = annual revenue × technology spend %. Overall TAS = technology budget × 1–5% addressable share. AI budget = technology budget × 15% AI allocation. AI TAS = AI budget × 2–10% addressable share. Displayed central estimates are arithmetic midpoints of each range, not forecasts. AI TAS is already part of overall TAS and must not be added to it. All percentages are editable, illustrative planning assumptions; no validated AI budget, pricing, spend or official Cloudflare sizing methodology is implied. Funding is never treated as revenue. Revenue is only prefilled when an explicit USD annual-revenue statement is found in the research sources; otherwise enter a verified value.</p>
       </details>
     </div>
-  </details>`;
+  </section>`;
 }
 function wireTas() {
   const ids = ["tasRevenue","tasIT","tasLow","tasHigh","tasAIShare","tasAILow","tasAIHigh"];
@@ -514,7 +514,6 @@ async function detail(id, silent = false) {
         <p><strong>Why this account:</strong> ${cite(reason)}</p>
         <p class="meta">Territory rank: ${rankedTerritory().find(x => x.id === c.id)?.rank ?? "Unranked"} · ${esc(priority.quality)} · Absolute score determines priority; rank compares researched accounts.</p>
       </div>
-      ${tasSection(c)}
       <div class="brief-stats"><span>Research: <strong>${esc(c.confidence || "unknown")} confidence</strong></span><span>Readiness: <strong>${esc(pursuit?.readiness?.tier || "unknown")}</strong></span></div>
       <section class="brief-priorities">
         <h3>Company priorities &amp; strategic direction</h3>
@@ -555,6 +554,7 @@ async function detail(id, silent = false) {
             '<div class="meta">Evidence: ' + cite(o.evidence) + ' · ' + esc(o.confidence || "unknown") + ' confidence</div>'
           ).join("") : '<p class="meta">No specific evidenced opportunity.</p>') + '</div>';
       }).join("")}
+      ${tasSection(c)}
       </details>
       ${compact ? `<details class="brief-details"><summary>AI opportunity signals</summary>` : ""}
       <h3>AI opportunity signals</h3>
