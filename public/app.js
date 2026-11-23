@@ -222,6 +222,18 @@ function tasRevenueScenario(c) {
     const source = sources[i];
     const snippet = String(source.snippet || "");
     const title = String(source.title || "");
+    // Company-profile feeds sometimes express USD revenue as "Annual revenue: 76.00M USD".
+    // Only trust that syntax on a page clearly about the account itself; syndicated
+    // news pages frequently include unrelated companies' financial figures.
+    const accountName = String(c.name || "").toLowerCase().trim();
+    if (accountName && title.toLowerCase().includes(accountName) &&
+        !/\b(?:news|jobs|careers|competitors|partnership)\b/i.test(title)) {
+      const profileRevenue = snippet.match(/\bannual revenue\s*:\s*(?:USD\s*)?\$?\s*([\d,.]+)\s*(billion|million|bn|m)\s*(?:USD|US dollars?)\b/i);
+      if (profileRevenue) {
+        const amount = Number(profileRevenue[1].replace(/,/g,"")) * (/billion|bn/i.test(profileRevenue[2])?1000:1);
+        if (amount>0 && amount<100000) candidates.push({millions:amount,ref:"[S"+(i+1)+"]",title,url:source.url||""});
+      }
+    }
     const lines = (title+" "+snippet).split(/(?<=[.!?])\s+|\n/);
     for (const line of lines) {
       const matches = [...line.matchAll(/(?:annual revenue|annual turnover|revenue (?:was|of|reached|is)|turnover (?:was|of|reached|is))[^$£€\d]{0,35}([$£€])\s*([\d,.]+)\s*(billion|million|bn|m)\b/gi)];
