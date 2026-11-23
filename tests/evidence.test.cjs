@@ -246,7 +246,7 @@ test('GET stored research replays evidence pipeline without Tavily, Workers AI o
 
 test('brief UI displays a sourced business-to-technical-to-Cloudflare reasoning chain', () => {
   const ui=fs.readFileSync(path.join(__dirname,'../public/app.js'),'utf8');
-  assert.ok(ui.includes('Commercial reasoning · strongest sourced hypothesis'));
+  assert.ok(ui.includes('<summary>Supporting commercial reasoning</summary>'));
   for (const label of ['Business priority','Technical initiative','Potential consequence','Cloudflare hypothesis','What could rule it out','How to qualify']) {
     assert.ok(ui.includes('label:"'+label+'"'),label);
   }
