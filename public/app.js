@@ -549,24 +549,6 @@ async function detail(id, silent = false) {
             '<p class="meta"><strong>Cloudflare fit:</strong> ' + esc(o.product_fit || "To qualify") + '</p>'
           ).join("") : '<p class="meta">No specific evidenced opportunity.</p>') + '</div>';
       }).join("")}
-      <details class="brief-details"><summary>Detailed opportunity research · signals, evidence, discovery and outreach</summary>
-      ${pillars.map(p => {
-        const matches = opportunities.filter(o => o.pillar === p && /\[S\d+\]/.test(o.evidence || ""));
-        return '<div class="brief-signal"><strong>' + p + '</strong>' +
-          (matches.length ? matches.map(o =>
-            '<p><strong>Research signal:</strong> ' + cite(o.signal || o.evidence) + '</p>' +
-            '<p><strong>Why it matters:</strong> ' + cite(o.implication || "Not established") + '</p>' +
-            '<p><strong>Hypothesis:</strong> ' + cite(o.hypothesis) + '</p>' +
-            '<p><strong>Potential fit:</strong> ' + esc(o.product_fit || "Not established") + '</p>' +
-            '<p><strong>What we do not know:</strong> ' + esc(o.limitations || "Not established") + '</p>' +
-            '<p><strong>Who to approach:</strong> ' + esc(o.stakeholder || "Not established") + '</p>' +
-            '<p><strong>Discovery:</strong> ' + esc(o.discovery_question || "Not established") + '</p>' +
-            '<p><strong>Outreach example:</strong> ' + esc(o.outreach || "Not established") + '</p>' +
-            '<div class="meta">Evidence: ' + cite(o.evidence) + ' · ' + esc(o.confidence || "unknown") + ' confidence</div>'
-          ).join("") : '<p class="meta">No specific evidenced opportunity.</p>') + '</div>';
-      }).join("")}
-      ${tasSection(c)}
-      </details>
       ${compact ? `<details class="brief-details"><summary>AI opportunity signals</summary>` : ""}
       <h3>AI opportunity signals</h3>
       <p class="meta">AI economics and multi-model signals are exploratory and not separately scored.</p>
@@ -632,7 +614,25 @@ async function detail(id, silent = false) {
       `).join('') : '<p class="meta">No verified employer-specific hiring signals found in the research sources.</p>'}
 
       </details>
-\n      <details class="brief-details" id="research-sources"><summary>Sources and excerpts (${sources.length})</summary>
+\n      <details class="brief-details"><summary>Detailed research &amp; TAS · ${formatTas(tasTableValue(c))}/yr scenario</summary>
+      ${pillars.map(p => {
+        const matches = opportunities.filter(o => o.pillar === p && /\[S\d+\]/.test(o.evidence || ""));
+        return '<div class="brief-signal"><strong>' + p + '</strong>' +
+          (matches.length ? matches.map(o =>
+            '<p><strong>Research signal:</strong> ' + cite(o.signal || o.evidence) + '</p>' +
+            '<p><strong>Why it matters:</strong> ' + cite(o.implication || "Not established") + '</p>' +
+            '<p><strong>Hypothesis:</strong> ' + cite(o.hypothesis) + '</p>' +
+            '<p><strong>Potential fit:</strong> ' + esc(o.product_fit || "Not established") + '</p>' +
+            '<p><strong>What we do not know:</strong> ' + esc(o.limitations || "Not established") + '</p>' +
+            '<p><strong>Who to approach:</strong> ' + esc(o.stakeholder || "Not established") + '</p>' +
+            '<p><strong>Discovery:</strong> ' + esc(o.discovery_question || "Not established") + '</p>' +
+            '<p><strong>Outreach example:</strong> ' + esc(o.outreach || "Not established") + '</p>' +
+            '<div class="meta">Evidence: ' + cite(o.evidence) + ' · ' + esc(o.confidence || "unknown") + ' confidence</div>'
+          ).join("") : '<p class="meta">No specific evidenced opportunity.</p>') + '</div>';
+      }).join("")}
+      ${tasSection(c)}
+      </details>
+      <details class="brief-details" id="research-sources"><summary>Sources and excerpts (${sources.length})</summary>
       <p class="meta">Numbered citations link to the corresponding source excerpt. Open the original page to verify context.</p>
       ${sources.map((s, i) => {
         const u = validLink(s.url);
