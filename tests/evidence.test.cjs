@@ -8,12 +8,12 @@ const ts = require('typescript');
 const path = require('node:path');
 
 const source = fs.readFileSync(path.join(__dirname, '../src/index.ts'), 'utf8');
-const compiled = ts.transpileModule(source + '\nexports.__test = { validateOpportunityEvidence, evidenceGrounded, citedSourceText };', {
+const compiled = ts.transpileModule(source + '\nexports.__test = { validateOpportunityEvidence, evidenceGrounded, citedSourceText, scorePursuitWithClef };', {
   compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 }
 });
 const sandbox = { exports: {}, console, URL, Response, Request, Headers, TextEncoder, TextDecoder };
 vm.runInNewContext(compiled.outputText, sandbox, { filename: 'index.transpiled.cjs' });
-const { validateOpportunityEvidence, evidenceGrounded } = sandbox.exports.__test;
+const { validateOpportunityEvidence, evidenceGrounded, scorePursuitWithClef } = sandbox.exports.__test;
 const sourceItem = snippet => ({ title: 'Company engineering announcement', snippet, url: 'https://example.com/company' });
 const opportunity = (pillar, product_fit) => ({
   pillar, product_fit, confidence: 'medium',
@@ -73,4 +73,28 @@ test('invalid citations cannot pass the opportunity filter', () => {
   r.cloudflare_opportunities[0].signal='Company initiative [S500]';
   evidenceGrounded(r,[sourceItem('AI gateway engineering')]);
   assert.equal(r.cloudflare_opportunities.length,0);
+});
+
+const mockCompany = {id:'9fin',name:'9fin',description:'Debt intelligence software',sector:'Fintech',website:'https://9fin.com',employees:null,funding_usd:null,growth_score:null,last_funding_date:null,growth_prediction:null};
+function mockScoring(answers) {
+  return { AI: { run: async () => ({answers}) } };
+}
+const scoreKeys=['digital_native_fit','commercial_scale','momentum','product_relevance','research_quality','validated_need','solution_evidence','timing','stakeholders'];
+test('scoring: generic AI hiring cannot create verified buyer need or stakeholder access', async () => {
+  const answers=Object.fromEntries(scoreKeys.map(key=>[key,{value:'4'}]));
+  const r=report([opportunity('Build','AI Gateway')]);
+  r.cloudflare_opportunities[0].confidence='high';
+  const score=await scorePursuitWithClef(mockScoring(answers),mockCompany,r,[sourceItem('Hiring AI platform engineer to work on model routing')]);
+  assert.equal(score.status,'scored');
+  assert.equal(score.readiness.dimensions.find(x=>x.key==='validated_need').score,1);
+  assert.equal(score.readiness.dimensions.find(x=>x.key==='stakeholders').score,0);
+});
+test('scoring: a documented RFP and explicit need can preserve scored readiness', async () => {
+  const answers=Object.fromEntries(scoreKeys.map(key=>[key,{value:'3'}]));
+  const r=report([opportunity('Build','AI Gateway')]);
+  r.cloudflare_opportunities[0].confidence='high';
+  const score=await scorePursuitWithClef(mockScoring(answers),mockCompany,r,[sourceItem('We need an AI gateway. RFP issued for vendor selection underway.')]);
+  assert.equal(score.status,'scored');
+  assert.equal(score.readiness.dimensions.find(x=>x.key==='validated_need').score,3);
+  assert.equal(score.readiness.dimensions.find(x=>x.key==='stakeholders').score,3);
 });
