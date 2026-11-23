@@ -652,9 +652,9 @@ function recoverEvidenceBackedOpportunities(report: Report, sources: Source[]): 
   sources.forEach((source, i) => {
     const text = source.title + " " + source.snippet;
     // A real security architecture change, not merely a mention of APIs or JWT.
-    if (/\b(authenticat|authori[sz]|service.to.service|api.first)\b/i.test(text) &&
+    if (/\b(authenticat\w*|authori[sz]\w*|service.to.service|api.first)\b/i.test(text) &&
         /\b(jwt|token service|service.to.service|api.first|access control)\b/i.test(text) &&
-        /\b(migrat|moderni[sz]|rebuild|introduc|implement|needed to fix|architecture grew|moving|move more data)\b/i.test(text)) {
+        /\b(migrat\w*|moderni[sz]\w*|rebuild\w*|introduc\w*|implement\w*|needed to fix|architecture grew|moving|move more data)\b/i.test(text)) {
       add(source, i, "Protect", "API Shield — assess API endpoint discovery, JWT validation or mTLS only for compatible externally routed APIs",
         "Determine whether the documented API identity modernisation creates any unmet requirement for customer-facing API protection or traffic-level controls.",
         "API-first expansion can increase the importance of consistent endpoint protection; this is not evidence of a vulnerability.",
@@ -665,7 +665,7 @@ function recoverEvidenceBackedOpportunities(report: Report, sources: Source[]): 
     }
     // Require explicit shared AI platform construction, not generic AI marketing or funding.
     if (/\b(ai platform|generative ai|agentic ai|autonomous ai agents|ai infrastructure)\b/i.test(text) &&
-        /\b(build|building|design|architect|platform engineer|shared platform|reusable infrastructure)\b/i.test(text) &&
+        /\b(build\w*|design\w*|architect\w*|platform engineer|shared platform|reusable infrastructure)\b/i.test(text) &&
         /\b(engineer|platform|infrastructure|architecture|runtime|services)\b/i.test(text)) {
       add(source, i, "Build", "AI Gateway — evaluate supported third-party model calls; Workers/Workflows only for suitable peripheral APIs and orchestration",
         "Explore whether the emerging shared AI platform needs cross-provider request visibility, controls or supporting application workflows that existing infrastructure does not provide.",
