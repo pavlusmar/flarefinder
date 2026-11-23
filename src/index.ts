@@ -577,38 +577,6 @@ function sourceGroundedOpportunities(sources: Source[]): Opportunity[] {
   return result;
 }
 
-function recoverSourceFacts(report: Report, sources: Source[]): void {
-  // Disabled: legacy PolyAI-specific recovery must never modify other accounts.
-  return;
-  const facts = sources.map((s,i)=>({text:s.title+" "+s.snippet, ref:"[S"+(i+1)+"]",url:s.url}));
-  const first=(re:RegExp)=>facts.find(f=>re.test(f.text));
-  const add=(target:string[],value:string)=>{if(!target.some(v=>v.toLowerCase().replace(/\[s\d+\]/gi,"").trim()===value.toLowerCase().replace(/\[s\d+\]/gi,"").trim()))target.push(value);};
-  // Recovery of explicit events is deterministic, rather than trusting the
-  // large report model to repeat facts it already included elsewhere.
-  // Match the round amount to the Series D announcement itself, not the
-  // first dollar figure on a mixed aggregator page.
-  const financing = facts.find(f => /\b(?:series d|funding round)\b/i.test(f.text) &&
-    /\b(?:raised|raises|raise)\s+\$\s?86\s?(?:million|m)\b/i.test(f.text) &&
-    /(?:poly\.ai|prnewswire\.com)/i.test(f.url)) ||
-    facts.find(f => /\bseries d\b/i.test(f.text) && /\b(?:raised|raises|raise)\s+\$\s?86\s?(?:million|m)\b/i.test(f.text));
-  report.growth_signals = report.growth_signals.filter(x =>
-    !/\breported financing round\b/i.test(x) &&
-    !/\b(?:series d|funding round)\b/i.test(x) || /\b\$86(?:\.0)?\s?m\b/i.test(x));
-  if (financing) add(report.growth_signals,"PolyAI announced an $86M Series D financing round "+financing.ref);
-  const hiring=first(/\b(?:VP of Engineering|Head of Engineering)\b/i);
-  if(hiring)add(report.growth_signals,"Engineering leadership recruitment "+hiring.ref);
-  const adoption=first(/\b(?:\d[\d,]*\+?\s+(?:enterprise customers|enterprises|live deployments)|\d[\d,]*\s+countries)\b/i);
-  if(adoption)add(report.growth_signals,"Publicly reported customer or deployment scale "+adoption.ref);
-  const platform=first(/\b(?:agent studio|agent development kit|developer APIs|inference runtime)\b/i);
-  if(platform)add(report.technical_signals,"Documented software platform or developer capabilities "+platform.ref);
-  const models=first(/\b(?:Claude|Gemini|GPT[- ]?\d)\b/i);
-  if(models && (models.text.match(/\b(?:Claude|Gemini|GPT[- ]?\d)\b/gi)||[]).length>=2){
-    const theme=report.ai_signals.find(x=>x.theme==="Multi-Model Operations");
-    if(theme){theme.signal="strong";theme.evidence="Multiple named model families referenced "+models.ref;theme.hypothesis="Validate existing model-provider observability and policy controls; no gap is assumed.";theme.confidence="medium";}
-  }
-}
-
-
 // Evidence rules are deliberately conservative. A source mention qualifies a
 // discovery angle, never establishes an unmet need, vendor displacement or budget.
 const EVIDENCE_RULES = {
@@ -653,6 +621,14 @@ function validateOpportunityEvidence(report: Report, sources: Source[]): void {
     if (a.theme === "AI Cost & Inference Economics" &&
         !/\b(inference cost|model cost|token cost|compute cost|ai spend|llm cost|cost optimization|cost optimisation|cost tracking|cost observability)\b/i.test(text)) {
       return {...a,signal:"insufficient" as const,confidence:"low" as const,hypothesis:""};
+    }
+    if (a.theme === "Multi-Model Operations" && a.signal === "strong") {
+      // Routing or gateway ownership is a plausible theme, but not proof that
+      // two named model providers are already used in production.
+      const named = [ /\\b(?:OpenAI|GPT[- ]?\\d)\\b/i, /\\b(?:Anthropic|Claude)\\b/i,
+        /\\b(?:Google Gemini|Gemini)\\b/i, /\\b(?:Mistral)\\b/i,
+        /\\b(?:Cohere)\\b/i, /\\b(?:Llama)\\b/i ].filter(re => re.test(text)).length;
+      if (named < 2) return {...a, signal:"possible" as const, confidence:"medium" as const};
     }
     return a;
   });
@@ -797,11 +773,15 @@ async function scorePursuitWithClef(env: Env, company: Company, report: Report, 
     if (readiness) {
       const evidencedOpportunity = report.cloudflare_opportunities.some(o =>
         o.confidence === "high" && !!citedSourceText(o.evidence, sources));
+      // A high-confidence hypothesis is not evidence of an unmet customer need.
+      // Direct customer statements are required before granting need > 1.
+      const explicitNeed = sources.some(source =>
+        /\b(we (need|struggle|are looking for|plan to replace)|seeking (a|an) (vendor|solution)|request for proposal|rfp issued|currently evaluating|pain point|technical challenge)\b/i.test(source.title + " " + source.snippet));
       const hasBuyerEvidence = sources.some(source =>
-        /\b(evaluation|request for proposal|rfp|procurement|vendor selection|buying process|budget approved)\b/i.test(source.title + " " + source.snippet));
+        /\b(request for proposal|rfp issued|vendor selection underway|buying process|budget approved|currently evaluating vendors)\b/i.test(source.title + " " + source.snippet));
       readiness.dimensions = readiness.dimensions.map(d => ({
         ...d,
-        score: d.key === "validated_need" && !evidencedOpportunity ? Math.min(d.score, 1)
+        score: d.key === "validated_need" && (!evidencedOpportunity || !explicitNeed) ? Math.min(d.score, 1)
           : d.key === "stakeholders" && !hasBuyerEvidence ? 0 : d.score
       }));
       readiness.total = Math.round(readiness.dimensions.reduce((sum,d) => sum + d.score / 4 * d.weight,0));
