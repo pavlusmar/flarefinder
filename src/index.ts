@@ -792,6 +792,21 @@ async function scorePursuitWithClef(env: Env, company: Company, report: Report, 
     };
     const account=scoreAxis(ATTRACTIVENESS_DIMENSIONS);
     const readiness=scoreAxis(READINESS_DIMENSIONS);
+    // Scores are ordinal model judgments, not verified account facts. Prevent
+    // high readiness from unsupported opportunities or absent buyer evidence.
+    if (readiness) {
+      const evidencedOpportunity = report.cloudflare_opportunities.some(o =>
+        o.confidence === "high" && !!citedSourceText(o.evidence, sources));
+      const hasBuyerEvidence = sources.some(source =>
+        /\b(evaluation|request for proposal|rfp|procurement|vendor selection|buying process|budget approved)\b/i.test(source.title + " " + source.snippet));
+      readiness.dimensions = readiness.dimensions.map(d => ({
+        ...d,
+        score: d.key === "validated_need" && !evidencedOpportunity ? Math.min(d.score, 1)
+          : d.key === "stakeholders" && !hasBuyerEvidence ? 0 : d.score
+      }));
+      readiness.total = Math.round(readiness.dimensions.reduce((sum,d) => sum + d.score / 4 * d.weight,0));
+      readiness.tier = readiness.total >= 75 ? "High" : readiness.total >= 50 ? "Moderate" : "Low";
+    }
     if (!account || !readiness) return unavailable("Clef did not return all valid scoring choices.");
     const tier=account.total>=75?"T1 · Prioritize discovery":account.total>=50?"T2 · Qualify":"T3 · Monitor";
     const next_action=account.total>=75 && readiness.total<50
