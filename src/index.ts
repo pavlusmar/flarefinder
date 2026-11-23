@@ -620,122 +620,14 @@ function evidenceGrounded(report: Report, sources: Source[]): Report {
     if (/\b(performance|latency|scalability)\b/i.test(o.hypothesis) && /\b(sub.300ms|<300ms|99\.994% uptime)\b/i.test(evidence) && !/\b(existing|already|reported|claims|verify|whether|if)\b/i.test(o.hypothesis)) return false;
     return true;
   });
-  // Deterministic evidence recovery: prospect-owned API workloads are relevant even
-  // when the report model emits no opportunities. This is a discovery hypothesis,
-  // NOT evidence of a security problem or buying intent.
-  const apiEvidence = sources.map((source,i)=>({source,ref:"[S"+(i+1)+"]",text:source.title+" "+source.snippet}))
-    .find(x => /\b(?:single API|customer-facing API|public API|API-first|API platform|API-based|API endpoint|API integrations?)\b/i.test(x.text) &&
-      /\b(?:customers?|payments?|transactions?|developers?|financial institutions|integrations?|platform)\b/i.test(x.text) &&
-      !/\b(?:job board|competitor comparison|pricing comparison)\b/i.test(x.source.title));
-  if (apiEvidence) {
-    const fact = "Documented customer-facing API workload "+apiEvidence.ref;
-    if (!report.technical_signals.some(x=>x.includes(apiEvidence.ref)&&/\bAPI\b/i.test(x)))
-      report.technical_signals.push(fact);
-    if (!report.cloudflare_opportunities.some(o=>/API Shield/i.test(o.product_fit||""))) {
-      report.cloudflare_opportunities.push({pillar:"Protect",evidence:apiEvidence.ref,signal:fact,
-        hypothesis:"Assess whether the documented customer-facing API has an unmet API discovery, authentication, schema-validation or abuse-protection requirement; no weakness is assumed.",
-        implication:"The documented API is a concrete workload for qualification, not evidence that current controls are inadequate.",
-        product_fit:"API Shield — assess endpoint discovery, schema validation, authentication and abuse protection only where relevant.",
-        limitations:"Existing API gateway, WAF, security controls and procurement plans are unknown; do not assume replacement or migration.",
-        stakeholder:"API platform owner or security engineering lead",
-        discovery_question:"How are the documented customer-facing APIs protected today, and are any API visibility, authentication or abuse-control gaps unresolved?",
-        outreach:"Your published platform describes a customer-facing API "+apiEvidence.ref+". I'm interested in how your team handles API visibility and protection today, and whether any requirements remain unaddressed.",confidence:"low"});
-    }
-  }
-  // Evidence-led Connect: product-owned video delivery is a workload, not proof of CDN gaps.
-  const videoDelivery = sources.map((source,i)=>({source,ref:"[S"+(i+1)+"]",text:source.title+" "+source.snippet}))
-    .find(x=>/\b(?:video|avatar|dubbing|streaming)\b/i.test(x.text) &&
-      /\b(?:API|real.time|render|download|delivery|platform)\b/i.test(x.text) &&
-      /\b(?:developer|API|platform|product)\b/i.test(x.source.title) &&
-      !/\b(?:reviews|jobs|careers|competitors)\b/i.test(x.source.title));
-  if (videoDelivery && !report.cloudflare_opportunities.some(o=>o.pillar==="Connect")) {
-    report.cloudflare_opportunities.push({pillar:"Connect",evidence:videoDelivery.ref,
-      signal:"Company documents customer-facing video or interactive media delivery "+videoDelivery.ref,
-      hypothesis:"Qualify whether geographic delivery, caching, bandwidth or interactive session performance is an active priority for this media workload.",
-      implication:"Media and real-time interfaces create concrete delivery requirements, but do not establish any current latency or cost gap.",
-      product_fit:"Cloudflare CDN and network delivery services, subject to cacheability, streaming architecture and incumbent validation.",
-      limitations:"Existing CDN, delivery architecture, media cacheability and performance are unknown; dynamic video generation may not be CDN-cacheable.",
-      stakeholder:"Media platform or infrastructure engineering lead",
-      discovery_question:"How do you deliver generated and interactive video globally today, and where, if anywhere, are performance or delivery costs creating trade-offs?",
-      outreach:"Your developer platform documents video delivery and interactive media "+videoDelivery.ref+". I'm curious how your team approaches global delivery and whether any requirements remain unresolved.",confidence:"low"});
-  }
-  // Developer-owned external APIs qualify for API security discovery even without the phrase 'single API'.
-  const developerApi = sources.map((source,i)=>({source,ref:"[S"+(i+1)+"]",text:source.title+" "+source.snippet}))
-    .find(x=>/\bAPI\b/i.test(x.source.title) && /\b(?:developer|platform|integration)\b/i.test(x.source.title) &&
-      /\b(?:key|webhook|request|authentication|enterprise|customer|render)\b/i.test(x.text));
-  if (developerApi && !report.cloudflare_opportunities.some(o=>o.pillar==="Protect")) {
-    report.cloudflare_opportunities.push({pillar:"Protect",evidence:developerApi.ref,
-      signal:"Company documents externally consumed developer APIs "+developerApi.ref,
-      hypothesis:"Explore whether API discovery, abuse protection, schema validation or bot management has an unmet requirement.",
-      implication:"External APIs are a concrete attack surface to assess, not evidence that the company's controls are deficient.",
-      product_fit:"API Shield and WAF where compatible with existing API architecture and security controls.",
-      limitations:"Existing API gateway, WAF, authentication and abuse controls are unknown; no replacement or vulnerability is assumed.",
-      stakeholder:"API security lead or platform engineering lead",
-      discovery_question:"How are your external developer APIs protected today, and what API visibility or abuse-prevention requirements, if any, remain open?",
-      outreach:"Your published developer APIs "+developerApi.ref+" caught my attention. How is your team thinking about API security as usage expands?",confidence:"low"});
-  }
-  const namedAi = sources.map((source,i)=>({text:source.title+" "+source.snippet,ref:"[S"+(i+1)+"]"}))
-    .find(x=>/\b(?:AI-assisted operations|AI-assisted engineering|AI-enabled engineering|agentic AI infrastructure|AI agents?)\b/i.test(x.text));
-  if (namedAi && !report.technical_signals.some(x=>x.includes(namedAi.ref)&&/\bAI\b/i.test(x)))
-    report.technical_signals.push("Documented AI-related engineering or product activity (not evidence of model inference spend) "+namedAi.ref);
-  // A named AI-assisted internal tool is evidence of an AI engineering workflow,
-  // not proof of third-party inference, cloud spend, or an unsolved problem.
-  const aiTool = sources.map((source,i)=>({text:source.title+" "+source.snippet,ref:"[S"+(i+1)+"]",title:source.title}))
-    .find(x=>/\b(?:AI-assisted operations|AI-assisted engineering|AI-enabled engineering|agentic AI infrastructure|AI agents?)\b/i.test(x.text) &&
-      /\b(?:engineering|security|patch|vulnerabilit|platform|application|software|agent)\b/i.test(x.text) &&
-      !/\b(?:funding round-up|company profile|competitors)\b/i.test(x.title));
-  if (aiTool && !report.cloudflare_opportunities.some(o=>o.pillar==="Build" && /AI Gateway|Workers AI|Workers/i.test(o.product_fit||""))) {
-    report.cloudflare_opportunities.push({pillar:"Build",evidence:aiTool.ref,
-      signal:"Company documents an AI-assisted engineering or application workflow "+aiTool.ref,
-      hypothesis:"Explore whether the documented AI-assisted workflow uses external inference endpoints and whether deployment, request visibility or governance requirements are unmet.",
-      implication:"A real AI engineering workflow merits architecture discovery, but does not establish third-party model usage or a need to change its current stack.",
-      product_fit:"AI Gateway for compatible third-party model requests, or Workers for a discrete supporting service, only if the actual architecture warrants it.",
-      limitations:"Model providers, hosting location, inference traffic, existing controls and costs are unknown. The tool may be entirely self-hosted; Cloudflare may offer no incremental value.",
-      stakeholder:"AI platform engineering lead or engineering security lead",
-      discovery_question:"For your documented AI-assisted engineering workflow, where does inference run today, and how are model requests, access controls and operational visibility managed?",
-      outreach:"I saw your team's published AI-assisted engineering work "+aiTool.ref+". I'd be interested in how you approach model infrastructure and governance, and whether your existing approach already meets your needs.",
-      confidence:"low"});
-  }
-  // Add conservative, source-specific opportunities when the LLM missed
-  // concrete model-provider or engineering signals. Never replace a better
-  // model answer with a generic pitch.
-  for (const candidate of sourceGroundedOpportunities(sources)) {
-    if (!report.cloudflare_opportunities.some(o => o.evidence === candidate.evidence && o.product_fit?.split(" ")[0] === candidate.product_fit?.split(" ")[0])) {
-      report.cloudflare_opportunities.push(candidate);
-    }
-  }
-  // Preserve at least one source-grounded opportunity per pillar before filling remaining slots.
-  const quality = (o: Opportunity) => Number(/\[S\d+\]/.test(o.signal || "")) +
-    Number(/\b(AI Gateway|API Shield|Workers|Zero Trust|R2|D1|CDN|WAF)\b/i.test(o.product_fit || "")) +
-    Number(/\b(existing|unknown|already|incumbent|not established|not assumed)\b/i.test(o.limitations || ""));
-  report.cloudflare_opportunities.sort((a,b)=>quality(b)-quality(a));
-  const selected: Opportunity[] = [];
-  for (const pillar of ["Connect","Protect","Build"]) {
-    const match = report.cloudflare_opportunities.find(o=>o.pillar===pillar);
-    if (match) selected.push(match);
-  }
-  for (const candidate of report.cloudflare_opportunities) {
-    if (selected.length>=4) break;
-    if (!selected.includes(candidate)) selected.push(candidate);
-  }
-  report.cloudflare_opportunities = selected;
-  recoverSourceFacts(report, sources);
-  report.customer_perspective.priorities = report.customer_perspective.priorities.filter(p => valid(p.evidence));
-  report.growth_signals = report.growth_signals.filter(valid);
-  report.technical_signals = report.technical_signals.filter(valid);
-  report.ai_signals = report.ai_signals.map(a => valid(a.evidence) ? a : { ...a, signal:"insufficient" as const, evidence:"No specific public evidence identified.", hypothesis:"", confidence:"low" as const });
-  // Customer savings/ROI are not evidence of the vendor's model-serving cost.
-  report.ai_signals = report.ai_signals.map(a => {
-    if (a.theme !== "AI Cost & Inference Economics" || a.signal === "insufficient") return a;
-    const cited = refs(a.evidence).map(i => sources[i]?.title + " " + sources[i]?.snippet).join(" ");
-    const vendorEconomics = /\b(?:inference costs?|model serving costs?|token costs?|gpu costs?|compute costs?)\b/i.test(cited);
-    const savingsOnly = /\b(?:customer(?:s)?|clients?|roi|return on investment|labor savings|labour savings|call routing)\b/i.test(cited);
-    return !vendorEconomics || savingsOnly
-      ? { ...a, signal:"insufficient" as const, evidence:"No cited evidence of PolyAI's own inference costs.", hypothesis:"", confidence:"low" as const }
-      : a;
-  });
-  if (report.cloudflare_opportunities.length) report.questions = report.cloudflare_opportunities.map(o => o.discovery_question!).filter(Boolean).slice(0,4);
-  else report.questions = ["Which announced product or engineering priority creates the most operational complexity today?", "What does your current infrastructure already handle well, and what remains unresolved?"];
+  // Keep model judgment; no synthetic keyword opportunities or pillar quotas.
+  report.cloudflare_opportunities = report.cloudflare_opportunities
+    .filter(o => /\[S\d+\]/.test(o.evidence) && /\[S\d+\]/.test(o.signal || ""))
+    .sort((a,b) => ({high:3,medium:2,low:1}[b.confidence] - {high:3,medium:2,low:1}[a.confidence]))
+    .slice(0,4);
+  report.questions = report.cloudflare_opportunities.length
+    ? report.cloudflare_opportunities.map(o => o.discovery_question || "").filter(Boolean).slice(0,4)
+    : ["Which current technical initiative has an owner and timeline?", "Which incumbent providers already address this workload?"];
   return report;
 }
 
@@ -906,6 +798,13 @@ QUALITY CHECK: each recommended opportunity must show company-specific evidence,
 
   const prompt = `
 ${researchQualityExample}
+PRIMARY TASK: CLASSIFY COMMERCIAL BUYING SIGNALS, NOT JUST WORKLOAD RELEVANCE.
+For every material source-backed event distinguish observed trigger, established customer initiative, plausible UNVERIFIED Cloudflare-addressable requirement, and counterargument including incumbent vendors.
+Prioritize documented operational issues, technical investments, migrations, vendor evaluations and hiring for named projects. Funding, AI launches, multi-model support and generic API usage alone are NOT buying signals.
+Only create cloudflare_opportunities if a specific active company initiative gives a credible, product-specific reason to investigate. Otherwise put the event in growth_signals, technical_signals or ai_signals; return [] for opportunities.
+Confidence means COMMERCIAL SIGNAL STRENGTH: high = explicit relevant requirement, evaluation, migration or documented operational issue with plausible Cloudflare fit; medium = concrete recent initiative with causal product-specific hypothesis and unknowns; low = exploratory connection, omit unless there is a dated technical initiative beyond generic product activity.
+An attractive company may have no actionable buying signal. Rank strongest first; do not fill pillar quotas. Explicitly describe incumbent partnerships and why they could prevent displacement.
+
 You are a rigorous B2B account researcher for a Cloudflare seller.
 First understand the company's actual products, business model, customers,
 strategic direction and growth; only then assess Cloudflare relevance.
@@ -919,8 +818,8 @@ hypotheses that must be validated in discovery.
 REQUIRED EVIDENCE-TO-OPPORTUNITY WORKFLOW (do this before producing JSON):
 1. Scan ALL supplied [S#] excerpts, not only the first few. Build an internal evidence ledger of up to 10 concrete company-specific facts: product launches (including AI agents/MCP), named customer deployments, transaction/API scale, financing, geographic growth, architecture, named incumbent vendors, security tools, and dated engineering hires. Prioritize recent official product/engineering pages and company announcements. A later source can contain the decisive signal.
 2. For EACH credible AI product, AI-assisted internal engineering tool, agent interface, public API, or new customer-facing integration, explicitly consider whether it supports a narrowly scoped Protect or Build discovery hypothesis. Existing mature controls and missing budget are limitations, NOT reasons to ignore a well-cited event. An AI-enabled vulnerability patching tool is evidence of AI application activity, not automatically model inference or a security gap.
-3. For EACH candidate opportunity, use this causal chain: observed specific [S#] fact -> operational/commercial consequence IF a relevant gap exists -> exact Cloudflare service/workload -> strongest incumbent or counter-evidence -> buyer role -> falsifiable discovery question. Omit only when no meaningful workload connection can be articulated. A high-volume API is evidence of scale, not proof of API security weakness.
-4. Keep source coverage consistent: if the company overview, priority, or AI signal mentions a named launch, it must also appear in technical_signals or growth_signals as appropriate. Conversely, do not output 'No specific evidenced opportunity' if a cited AI/API launch creates a concrete conditional discovery angle; assess it first.
+3. For EACH candidate opportunity, use this causal chain: observed specific [S#] fact -> operational/commercial consequence IF a relevant gap exists -> exact Cloudflare service/workload -> strongest incumbent or counter-evidence -> buyer role -> falsifiable discovery question. Omit when only workload relevance is established without a concrete buying trigger. A high-volume API is evidence of scale, not proof of API security weakness.
+4. Keep source coverage consistent: if the company overview, priority, or AI signal mentions a named launch, it must also appear in technical_signals or growth_signals as appropriate. A cited AI/API launch is not by itself a buying signal; assess its commercial significance and return no opportunity if no active requirement is supported.
 5. Treat revenue and AI budgets as unknown unless supported by an actual source. Never equate funding, valuation, payment volume or headcount with reported annual revenue. Research text must explicitly identify when financial information is unavailable; do not invent TAS amounts.
 6. Avoid shallow summaries ('product development', 'security and resilience') when the sources name the actual launch, customer, technology, architecture or target market. Name the event and explain why it matters. Distinguish attractiveness from purchase readiness; a technically compelling account can still have low readiness.
 7. Quality gate before final JSON: identify at least one credible counterargument for each proposed opportunity, include [S#] in its signal and evidence, and ensure every meaningful company-specific AI event has been evaluated in ai_signals. Do not raise scores or invent opportunities to meet a quota.
