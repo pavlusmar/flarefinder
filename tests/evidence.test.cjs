@@ -241,4 +241,15 @@ test('GET stored research replays evidence pipeline without Tavily, Workers AI o
   assert.equal(data.cloudflare_opportunities[0].evidence,'[S3]');
   assert.equal(data.ai_signals[0].signal,'strong');
   assert.equal(writes,0);
+  assert.equal(data.brief_recomputed,true);
+});
+
+test('brief UI displays a sourced business-to-technical-to-Cloudflare reasoning chain', () => {
+  const ui=fs.readFileSync(path.join(__dirname,'../public/app.js'),'utf8');
+  assert.ok(ui.includes('Commercial reasoning · strongest sourced hypothesis'));
+  for (const label of ['Business priority','Technical initiative','Potential consequence','Cloudflare hypothesis','What could rule it out','How to qualify']) {
+    assert.ok(ui.includes('label:"'+label+'"'),label);
+  }
+  assert.ok(ui.includes('Saved Clef score predates this evidence re-analysis'));
+  assert.ok(!ui.includes('opportunities.find(o => o.confidence !== "low" && /\\[S\\d+\\]/.test(o.evidence || ""))?.hypothesis'));
 });
