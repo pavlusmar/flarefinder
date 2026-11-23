@@ -8,12 +8,12 @@ const ts = require('typescript');
 const path = require('node:path');
 
 const source = fs.readFileSync(path.join(__dirname, '../src/index.ts'), 'utf8');
-const compiled = ts.transpileModule(source + '\nexports.__test = { validateOpportunityEvidence, evidenceGrounded, citedSourceText, scorePursuitWithClef, recoverEvidenceBackedOpportunities, finalizeEvidenceReport, normalizeReport, searchWeb };', {
+const compiled = ts.transpileModule(source + '\nexports.__test = { validateOpportunityEvidence, evidenceGrounded, citedSourceText, scorePursuitWithClef, recoverEvidenceBackedOpportunities, finalizeEvidenceReport, normalizeReport, searchWeb, route };', {
   compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 }
 });
 const sandbox = { exports: {}, console, URL, Response, Request, Headers, TextEncoder, TextDecoder, AbortSignal };
 vm.runInNewContext(compiled.outputText, sandbox, { filename: 'index.transpiled.cjs' });
-const { validateOpportunityEvidence, evidenceGrounded, scorePursuitWithClef, recoverEvidenceBackedOpportunities, finalizeEvidenceReport, normalizeReport, searchWeb } = sandbox.exports.__test;
+const { validateOpportunityEvidence, evidenceGrounded, scorePursuitWithClef, recoverEvidenceBackedOpportunities, finalizeEvidenceReport, normalizeReport, searchWeb, route } = sandbox.exports.__test;
 const sourceItem = snippet => ({ title: 'Company engineering announcement', snippet, url: 'https://example.com/company' });
 const opportunity = (pillar, product_fit) => ({
   pillar, product_fit, confidence: 'medium',
@@ -217,4 +217,28 @@ test('search selection retains a specific 9fin AI engineering role among abundan
   assert.equal(calls,6);
   assert.ok(sources.some(x=>x.title==='Senior AI Platform Engineer at 9fin'));
   assert.ok(sources.length<=16);
+});
+
+test('GET stored research replays evidence pipeline without Tavily, Workers AI or D1 writes', async () => {
+  const sources=ninefinSources;
+  const row={
+    status:'complete', digital_native:'yes', digital_native_reason:'',summary:'9fin debt intelligence',
+    growth_signals:'[]',technical_signals:'[]',cloudflare_opportunities:'[]',
+    ai_signals:JSON.stringify([{theme:'Build & Scale AI Applications',signal:'insufficient',evidence:'',hypothesis:'',confidence:'low'}]),
+    questions:'[]',confidence:'medium',sources:JSON.stringify(sources)
+  };
+  let writes=0;
+  const env={
+    DB:{prepare:(sql)=>{if(!/^\s*SELECT/i.test(sql))writes++;return {bind:()=>({first:async()=>row})};}},
+    AI:{run:async()=>{throw Error('Unexpected AI call');}},
+    SEARCH_API_KEY:'no-network'
+  };
+  sandbox.fetch=async()=>{throw Error('Unexpected Tavily call');};
+  const response=await route(new Request('https://flarefinder.example/api/companies/9fin'),env,{});
+  assert.equal(response.status,200);
+  const data=await response.json();
+  assert.equal(data.cloudflare_opportunities.length,3);
+  assert.equal(data.cloudflare_opportunities[0].evidence,'[S3]');
+  assert.equal(data.ai_signals[0].signal,'strong');
+  assert.equal(writes,0);
 });
