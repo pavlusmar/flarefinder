@@ -159,12 +159,12 @@ function render() {
       <td class="score">${c.rank ?? "—"}</td>
       <td><div class="company-name">${esc(c.name)}</div><div class="description">${esc(c.sector || c.description || "No description")}</div></td>
       <td><strong>${esc(c.priority.tier)}</strong><div class="description" title="${esc(c.priority.reason)}">${esc(c.priority.reason)}</div><div class="meta">${esc(c.priority.quality)}</div></td>
-      <td class="score">${c.priority.score ?? "—"}</td>
+      <td class="score">${c.priority.score ?? "—"}</td>\n      <td class="score" title="Illustrative annual overall TAS, not verified spend">${formatTas(tasTableValue(c))}</td>
       <td>${esc(c.priority.pillar)}</td>
       <td>${esc(c.priority.ai)}</td>
       <td>${pill(c.status || "pending")}</td>
       <td><button class="link-btn" data-id="${esc(c.id)}">View signals →</button></td>
-    </tr>`).join("") : '<tr><td class="empty" colspan="9">No matching companies.</td></tr>';
+    </tr>`).join("") : '<tr><td class="empty" colspan="10">No matching companies.</td></tr>';
   document.querySelectorAll("[data-id]").forEach(b => b.onclick = () => detail(b.dataset.id));
   document.querySelectorAll("[data-select-id]").forEach(b => b.onchange = () => { if (b.checked) selectedCompanies.add(b.dataset.selectId); else selectedCompanies.delete(b.dataset.selectId); updateSelectionLabel(); });
 }
@@ -252,10 +252,19 @@ function tasRevenueScenario(c) {
   }
   return {millions:null,note:"No sufficiently explicit USD annual revenue found in research sources. Enter a verified annual revenue figure manually; no headcount or funding proxy is automatically applied.",kind:"Revenue not verified"};
 }
+function tasTableValue(c) {
+  const scenario = tasRevenueScenario(c);
+  if (scenario.millions == null || !Number.isFinite(scenario.millions) || scenario.millions <= 0) return null;
+  const baseline = tasIndustryBaseline(c.sector);
+  return scenario.millions * 1e6 * baseline.pct / 100 * 0.03;
+}
+function formatTas(value) {
+  return value == null ? "—" : value >= 1e6 ? "$" + (value / 1e6).toFixed(2) + "m" : "$" + Math.round(value / 1000).toLocaleString() + "k";
+}
 function tasSection(c) {
   const baseline = tasIndustryBaseline(c.sector);
   const scenario = tasRevenueScenario(c);
-  return `<section class="brief-tas">
+  return `<details class="brief-tas brief-details"><summary>Commercial potential · Annual TAS — ${formatTas(tasTableValue(c))} (scenario)</summary>
     <h3>Commercial potential · Annual TAS</h3>
     <p class="meta">Calculated scenarios, not verified Cloudflare spend or sales forecasts. AI TAS is a subset of overall TAS; do not add the two.</p>
     <div class="brief-signal">
@@ -523,19 +532,30 @@ async function detail(id, silent = false) {
       <h3>Cloudflare opportunities</h3>
       <p class="meta">Outside-in hypotheses, not verified customer problems.</p>
       ${pillars.map(p => {
-        const matches = opportunities.filter(o => o.pillar === p && /\[S\d+\]/.test(o.evidence || "")).slice(0, compact ? 1 : 99);
-        return '<div class="brief-signal"><strong>' + p + '</strong>' + (matches.length ? matches.map(o =>
-          '<p><strong>Verified signal:</strong> ' + cite(o.signal || o.evidence) + '</p>' +
-          (!compact && o.implication ? '<p><strong>Why it matters:</strong> ' + cite(o.implication) + '</p>' : '') +
-          '<p><strong>Hypothesis:</strong> ' + cite(o.hypothesis) + '</p>' +
-          (o.product_fit ? '<p><strong>Potential fit:</strong> ' + esc(o.product_fit) + '</p>' : '') +
-          (!compact && o.limitations ? '<p><strong>What we do not know:</strong> ' + esc(o.limitations) + '</p>' : '') +
-          (o.stakeholder && !compact ? '<p><strong>Who to approach:</strong> ' + esc(o.stakeholder) + '</p>' : '') +
-          (o.discovery_question ? '<p><strong>Discovery:</strong> ' + esc(o.discovery_question) + '</p>' : '') +
-          (!compact && o.outreach ? '<p><strong>Outreach example:</strong> ' + esc(o.outreach) + '</p>' : '') +
-          '<div class="meta">Evidence: ' + cite(o.evidence) + ' · ' + esc(o.confidence) + ' confidence</div>'
-        ).join("") : '<p class="meta">No specific evidenced opportunity.</p>') + '</div>';
+        const matches = opportunities.filter(o => o.pillar === p && /\\[S\\d+\\]/.test(o.evidence || ""));
+        return '<div class="brief-signal"><strong>' + p + '</strong>' +
+          (matches.length ? matches.slice(0, 2).map(o =>
+            '<p><strong>Opportunity:</strong> ' + cite(o.hypothesis) + '</p>' +
+            '<p class="meta"><strong>Cloudflare fit:</strong> ' + esc(o.product_fit || "To qualify") + '</p>'
+          ).join("") : '<p class="meta">No specific evidenced opportunity.</p>') + '</div>';
       }).join("")}
+      <details class="brief-details"><summary>Detailed opportunity research · signals, evidence, discovery and outreach</summary>
+      ${pillars.map(p => {
+        const matches = opportunities.filter(o => o.pillar === p && /\\[S\\d+\\]/.test(o.evidence || ""));
+        return '<div class="brief-signal"><strong>' + p + '</strong>' +
+          (matches.length ? matches.map(o =>
+            '<p><strong>Research signal:</strong> ' + cite(o.signal || o.evidence) + '</p>' +
+            '<p><strong>Why it matters:</strong> ' + cite(o.implication || "Not established") + '</p>' +
+            '<p><strong>Hypothesis:</strong> ' + cite(o.hypothesis) + '</p>' +
+            '<p><strong>Potential fit:</strong> ' + esc(o.product_fit || "Not established") + '</p>' +
+            '<p><strong>What we do not know:</strong> ' + esc(o.limitations || "Not established") + '</p>' +
+            '<p><strong>Who to approach:</strong> ' + esc(o.stakeholder || "Not established") + '</p>' +
+            '<p><strong>Discovery:</strong> ' + esc(o.discovery_question || "Not established") + '</p>' +
+            '<p><strong>Outreach example:</strong> ' + esc(o.outreach || "Not established") + '</p>' +
+            '<div class="meta">Evidence: ' + cite(o.evidence) + ' · ' + esc(o.confidence || "unknown") + ' confidence</div>'
+          ).join("") : '<p class="meta">No specific evidenced opportunity.</p>') + '</div>';
+      }).join("")}
+      </details>
       ${compact ? `<details class="brief-details"><summary>AI opportunity signals</summary>` : ""}
       <h3>AI opportunity signals</h3>
       <p class="meta">AI economics and multi-model signals are exploratory and not separately scored.</p>
