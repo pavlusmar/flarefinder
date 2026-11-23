@@ -8,12 +8,12 @@ const ts = require('typescript');
 const path = require('node:path');
 
 const source = fs.readFileSync(path.join(__dirname, '../src/index.ts'), 'utf8');
-const compiled = ts.transpileModule(source + '\nexports.__test = { validateOpportunityEvidence, evidenceGrounded, citedSourceText, scorePursuitWithClef, recoverEvidenceBackedOpportunities, finalizeEvidenceReport, normalizeReport };', {
+const compiled = ts.transpileModule(source + '\nexports.__test = { validateOpportunityEvidence, evidenceGrounded, citedSourceText, scorePursuitWithClef, recoverEvidenceBackedOpportunities, finalizeEvidenceReport, normalizeReport, searchWeb };', {
   compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 }
 });
-const sandbox = { exports: {}, console, URL, Response, Request, Headers, TextEncoder, TextDecoder };
+const sandbox = { exports: {}, console, URL, Response, Request, Headers, TextEncoder, TextDecoder, AbortSignal };
 vm.runInNewContext(compiled.outputText, sandbox, { filename: 'index.transpiled.cjs' });
-const { validateOpportunityEvidence, evidenceGrounded, scorePursuitWithClef, recoverEvidenceBackedOpportunities, finalizeEvidenceReport, normalizeReport } = sandbox.exports.__test;
+const { validateOpportunityEvidence, evidenceGrounded, scorePursuitWithClef, recoverEvidenceBackedOpportunities, finalizeEvidenceReport, normalizeReport, searchWeb } = sandbox.exports.__test;
 const sourceItem = snippet => ({ title: 'Company engineering announcement', snippet, url: 'https://example.com/company' });
 const opportunity = (pillar, product_fit) => ({
   pillar, product_fit, confidence: 'medium',
@@ -189,4 +189,32 @@ test('end-to-end offline: no technical primary evidence produces no pitches', ()
   finalizeEvidenceReport(r,sources);
   assert.equal(r.cloudflare_opportunities.length,0);
   assert.equal(r.ai_signals[0].signal,'insufficient');
+});
+
+test('search selection retains a specific 9fin AI engineering role among abundant general news', async () => {
+  let calls=0;
+  sandbox.fetch=async (_url, opts)=>{
+    const q=JSON.parse(opts.body).query;
+    calls++;
+    const results=Array.from({length:8},(_,i)=>({
+      title:'9fin announces market intelligence product expansion '+calls+'-'+i,
+      url:'https://news'+i+'.example.com/9fin/'+calls+'/'+i,
+      content:'9fin expands its debt intelligence platform, customer coverage and AI analytics product with a new announcement about markets and customers.'
+    }));
+    if(q.includes('careers engineering')) results[0]={
+      title:'Senior AI Platform Engineer at 9fin',
+      url:'https://flexa.careers/jobs/9fin-senior-ai-platform-engineer',
+      content:'9fin AI Engineering is building a shared AI platform. The engineer will design reusable infrastructure for generative AI and agentic AI applications.'
+    };
+    if(calls===1) results[1]={
+      title:'9fin official platform',
+      url:'https://9fin.com/platform',
+      content:'9fin is a software platform for global debt markets offering analytics and financial intelligence to customers and firms.'
+    };
+    return {ok:true,json:async()=>({results})};
+  };
+  const sources=await searchWeb({SEARCH_API_KEY:'mock'},mockCompany);
+  assert.equal(calls,6);
+  assert.ok(sources.some(x=>x.title==='Senior AI Platform Engineer at 9fin'));
+  assert.ok(sources.length<=16);
 });
