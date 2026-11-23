@@ -209,11 +209,12 @@ async function searchWeb(
       const lowQuality = /(^|\.)(instagram\.com|facebook\.com|tiktok\.com|pinterest\.com|cbinsights\.com|tracxn\.com)$/.test(host) || /\b(list of .* customers|stock price|interview questions)\b/i.test(title);
       const technicalPrimary = official && /\b(docs?|documentation|architecture|developer|engineering|api|release|security|platform)\b/i.test(title + " " + parsed.pathname);
       const concreteEvent = /\b(announc|launch|release|partnership|integrat|funding|raised|expan|appoint|hire|selected|deploy)\b/i.test(title);
-      return [{ title, url, snippet, searchIndex: r.searchIndex, official, pricingOnly, core, host, lowQuality, technicalPrimary, concreteEvent }];
+      return [{ title, url, snippet, searchIndex: r.searchIndex, official, pricingOnly, core, host, lowQuality, technicalPrimary, concreteEvent, specificJob }];
     });
     // Select source diversity: official and company-specific primary evidence first,
     // and avoid filling the context with duplicate third-party pricing sites.
     candidates.sort((a,b) => Number(b.technicalPrimary)-Number(a.technicalPrimary) ||
+      Number(b.specificJob)-Number(a.specificJob) ||
       Number(b.official)-Number(a.official) || Number(b.concreteEvent)-Number(a.concreteEvent) ||
       Number(a.lowQuality)-Number(b.lowQuality) || Number(b.core)-Number(a.core) ||
       Number(a.pricingOnly)-Number(b.pricingOnly) || a.searchIndex-b.searchIndex);
