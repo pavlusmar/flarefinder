@@ -658,7 +658,7 @@ function recoverEvidenceBackedOpportunities(report: Report, sources: Source[]): 
   sources.forEach((source, index) => {
     const title = source.title || "", text = title + " " + (source.snippet || "");
     const article = /\b(raises?|funding|series [a-f]|investment|valuation|prnewswire|pymnts)\b/i.test(title);
-    const engineering = /\b(engineering|architect|authenticat|authori[sz]|monolith|service boundary|platform engineer|technical blog|developer)\b/i.test(title);
+    const engineering = /\b(engineering|architect|authenticat\w*|authori[sz]\w*|monolith|service boundary|platform engineer|technical blog|developer)\b/i.test(title);
     const job = /\b(platform engineer|ai engineer|engineering lead|head of ai|ai infrastructure)\b/i.test(title);
     const aiPlatform = /\b(ai platform|generative ai|agentic ai|autonomous ai agents|ai infrastructure)\b/i.test(text) &&
       /\b(build\w*|design\w*|architect\w*|shared platform|reusable infrastructure)\b/i.test(text) &&
@@ -712,7 +712,7 @@ function recoverEvidenceBackedOpportunities(report: Report, sources: Source[]): 
     const title = source.title || "";
     if (/\b(raises?|funding|series [a-f]|investment|valuation|pymnts|prnewswire)\b/i.test(title)) return 10;
     if (/\b(ai platform engineer|ai engineering|ai infrastructure)\b/i.test(title)) return 95;
-    if (/\b(authenticat|authori[sz]|service boundary|monolith|engineering|architecture)\b/i.test(title)) return 70;
+    if (/\b(authenticat\w*|authori[sz]\w*|service boundary|monolith|engineering|architecture)\b/i.test(title)) return 70;
     return o.confidence === "high" ? 60 : 35;
   };
   const combined = [...accepted.filter(o => priority(o) > 10).map(o => ({opportunity:o, priority:priority(o), kind:"model"})),...candidates];
@@ -781,7 +781,7 @@ function finalizeEvidenceReport(report: Report, sources: Source[]): Report {
     const match = /\[S(\d+)\]/.exec(o.evidence);
     const title = match ? sources[Number(match[1])-1]?.title || "" : "";
     if (/\b(ai platform engineer|ai engineering|ai infrastructure)\b/i.test(title)) return 95;
-    if (/\b(authenticat|authori[sz]|service boundary|monolith|engineering|architecture)\b/i.test(title)) return 75;
+    if (/\b(authenticat\w*|authori[sz]\w*|service boundary|monolith|engineering|architecture)\b/i.test(title)) return 75;
     if (/\b(raises?|funding|series [a-f]|investment|valuation|pymnts|prnewswire)\b/i.test(title)) return 10;
     return o.confidence === "high" ? 65 : 35;
   };
