@@ -104,6 +104,39 @@ const ninefinSources = [
   sourceItem("Building ABF outside the monolith: a service boundary for financial data. Additive event contracts, domain routing, idempotent consumers and API surface validated in staging. Production measurement is the next phase after cutover."),
   sourceItem("Senior AI Platform Engineer: our AI Engineering team is building the next generation of AI capabilities. Design and evolve the core AI platform enabling Generative AI and Agentic AI. Join at the beginning of the platform's journey and define reusable infrastructure.")
 ];
+
+ninefinSources[0].title='Building scalable authentication and authorisation at 9fin';
+ninefinSources[1].title='Building ABF outside the monolith: a service boundary for financial data';
+ninefinSources[2].title='Senior AI Platform Engineer at 9fin';
+test('9fin: primary engineering evidence outranks funding press coverage regardless of source order', () => {
+  const funding=sourceItem("9fin AI-powered platform raises funding to build AI infrastructure and accelerate product development");
+  funding.title="PYMNTS | 9fin Raises $50 Million for AI-Powered Analytics Platform";
+  const sources=[funding,...ninefinSources];
+  const r=report();
+  r.ai_signals=[ai('Build & Scale AI Applications','insufficient')];
+  recoverEvidenceBackedOpportunities(r,sources);
+  evidenceGrounded(r,sources);
+  validateOpportunityEvidence(r,sources);
+  assert.equal(r.cloudflare_opportunities[0].evidence,'[S4]');
+  assert.ok(r.cloudflare_opportunities.every(o=>o.evidence!=='[S1]'));
+  assert.equal(r.ai_signals[0].signal,'strong');
+  assert.equal(r.ai_signals[0].evidence,'[S4]');
+});
+test('generic marketing and funding mentioning platform infrastructure cannot generate AI Gateway', () => {
+  const sources=[
+    {title:'9fin raises $170m to build AI platform',snippet:'Funding will accelerate AI platform building and infrastructure investment',url:'https://news.example.com/raise'},
+    {title:'AI-powered debt analytics platform',snippet:'Our company is building generative AI products and designing new infrastructure for the future',url:'https://9fin.com/'}
+  ];
+  const r=report();
+  recoverEvidenceBackedOpportunities(r,sources);
+  assert.equal(r.cloudflare_opportunities.length,0);
+});
+test('API Shield is not recommended for JWT mention without a specific architecture initiative', () => {
+  const r=report();
+  recoverEvidenceBackedOpportunities(r,[{title:'Building scalable authentication at 9fin',snippet:'JWT is a common token format for API authentication.',url:'https://9fin.com/blog'}]);
+  assert.equal(r.cloudflare_opportunities.length,0);
+});
+
 test('9fin: evidence produces Protect and Build discovery hypotheses, not empty report', () => {
   const r=report();
   recoverEvidenceBackedOpportunities(r,ninefinSources);
