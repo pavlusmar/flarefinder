@@ -637,71 +637,110 @@ function validateOpportunityEvidence(report: Report, sources: Source[]): void {
 
 // Recover narrow, source-backed discovery hypotheses that the generative model
 // missed. These are NOT verified customer needs and do not imply displacement.
+
+// One evidence-to-hypothesis path for both freshly generated and stored briefs.
+// Funding and generic AI marketing cannot generate technical product suggestions.
 function recoverEvidenceBackedOpportunities(report: Report, sources: Source[]): void {
-  const findings: Opportunity[] = [];
-  const add = (source: Source, index: number, pillar: Opportunity["pillar"],
-    product: string, hypothesis: string, implication: string, limitations: string,
-    stakeholder: string, question: string, outreach: string) => {
-    const ref = "[S" + (index + 1) + "]";
-    findings.push({
-      pillar, evidence: ref, signal: "Public technical material describes: " + source.title + " " + ref,
-      confidence: "medium", hypothesis, implication, product_fit: product,
-      limitations, stakeholder, discovery_question: question, outreach: outreach + " " + ref
-    });
+  type Candidate = { opportunity: Opportunity; priority: number; kind: string };
+  const candidates: Candidate[] = [];
+  const cited = (index: number) => "[S" + (index + 1) + "]";
+  const add = (index: number, kind: string, priority: number,
+    pillar: Opportunity["pillar"], product_fit: string, hypothesis: string,
+    implication: string, limitations: string, stakeholder: string,
+    discovery_question: string, outreach: string) => {
+    const source = sources[index], ref = cited(index);
+    candidates.push({kind, priority, opportunity: {
+      pillar, product_fit, hypothesis, implication, limitations, stakeholder,
+      discovery_question, outreach, evidence: ref, confidence: "medium",
+      signal: "Documented initiative: " + source.title + " " + ref
+    }});
   };
-  sources.forEach((source, i) => {
-    const text = source.title + " " + source.snippet;
-    // A real security architecture change, not merely a mention of APIs or JWT.
-    if (/\b(authenticat\w*|authori[sz]\w*|service.to.service|api.first)\b/i.test(text) &&
-        /\b(jwt|token service|service.to.service|api.first|access control)\b/i.test(text) &&
-        /\b(migrat\w*|moderni[sz]\w*|rebuild\w*|introduc\w*|implement\w*|needed to fix|architecture grew|moving|move more data)\b/i.test(text)) {
-      add(source, i, "Protect", "API Shield — assess API endpoint discovery, JWT validation or mTLS only for compatible externally routed APIs",
-        "Determine whether the documented API identity modernisation creates any unmet requirement for customer-facing API protection or traffic-level controls.",
-        "API-first expansion can increase the importance of consistent endpoint protection; this is not evidence of a vulnerability.",
-        "Existing JWT token service and load-balancer validation may already meet the requirement; internal service-to-service controls are not automatically a Cloudflare fit.",
-        "Platform security or API engineering lead",
-        "Your team has implemented JWT-based service identity. Which customer-facing API controls, if any, are still being evaluated beyond the existing token service?",
-        "I read about your service identity and API-first architecture work. I'd be interested in how you distinguish internal identity from external API protection.");
-    }
-    // Require explicit shared AI platform construction, not generic AI marketing or funding.
-    if (/\b(ai platform|generative ai|agentic ai|autonomous ai agents|ai infrastructure)\b/i.test(text) &&
-        /\b(build\w*|design\w*|architect\w*|platform engineer|shared platform|reusable infrastructure)\b/i.test(text) &&
-        /\b(engineer|platform|infrastructure|architecture|runtime|services)\b/i.test(text)) {
-      add(source, i, "Build", "AI Gateway — evaluate supported third-party model calls; Workers/Workflows only for suitable peripheral APIs and orchestration",
-        "Explore whether the emerging shared AI platform needs cross-provider request visibility, controls or supporting application workflows that existing infrastructure does not provide.",
-        "Early platform architecture decisions can create a timely technical discovery conversation, not an established purchase project.",
-        "Existing model hosting, cloud platform, gateways and inference architecture are unknown; do not assume model migration or replacement.",
+  sources.forEach((source, index) => {
+    const title = source.title || "", text = title + " " + (source.snippet || "");
+    const article = /\b(raises?|funding|series [a-f]|investment|valuation|prnewswire|pymnts)\b/i.test(title);
+    const engineering = /\b(engineering|architect|authenticat|authori[sz]|monolith|service boundary|platform engineer|technical blog|developer)\b/i.test(title);
+    const job = /\b(platform engineer|ai engineer|engineering lead|head of ai|ai infrastructure)\b/i.test(title);
+    const aiPlatform = /\b(ai platform|generative ai|agentic ai|autonomous ai agents|ai infrastructure)\b/i.test(text) &&
+      /\b(build\w*|design\w*|architect\w*|shared platform|reusable infrastructure)\b/i.test(text) &&
+      /\b(engineer\w*|platform|infrastructure|architecture)\b/i.test(text);
+    // Require a specific technical primary source or an identifiable employer role.
+    // Generic funding articles, marketing copy and industry news are not platform plans.
+    if (!article && (engineering || job) && aiPlatform) {
+      add(index,"ai-platform",95,"Build",
+        "AI Gateway — discovery only for compatible third-party inference traffic; Workers/Workflows for bounded supporting workloads",
+        "Determine whether the shared AI platform under construction has an unresolved need for model-request visibility, governance or supporting APIs.",
+        "Platform design work creates a timely architecture discussion, not evidence of a purchase or deployment gap.",
+        "Existing gateways, model providers and cloud infrastructure are unknown; the job description does not prove any model provider is deployed.",
         "AI platform engineering lead",
-        "As you define shared AI platform services, how are you planning to observe and govern model requests, and what have you already solved with your existing stack?",
-        "I noticed the work to build shared infrastructure for generative and agentic AI. I'd be interested in how you're approaching model traffic observability and platform boundaries.");
+        "As you build shared AI platform services, which model-request controls are already covered, and which architecture decisions remain open?",
+        "Your AI platform engineering initiative caught my attention. How are you approaching shared model-request controls and reusable platform services?");
     }
-    // A specific architectural boundary project with explicit APIs and a production measurement phase.
-    if (/\b(monolith|service boundary|microservice|event contracts)\b/i.test(text) &&
-        /\b(api surface|api|event|routing|consumer)\b/i.test(text) &&
-        /\b(staging|production|cutover|backfill|delivery performance|projection freshness)\b/i.test(text)) {
-      add(source, i, "Build", "Workers — investigate discrete external API or event-handling workloads only if deployment and data locality fit",
-        "Ask whether any newly separated API or event workloads would benefit from edge execution, without suggesting moving the core financial data platform.",
-        "Service-boundary modernisation can reveal a bounded workload for architectural evaluation.",
-        "Existing event processing, consistency requirements and cloud architecture may make Cloudflare unsuitable; no latency problem is established.",
+    if (!article && engineering &&
+      /\b(service.to.service|api.first|service identity)\b/i.test(text) &&
+      /\b(jwt|token service|authorization|authorisation|authentication)\b/i.test(text) &&
+      /\b(needed to fix|introduced|implemented|architecture grew|moving|move more data|moderni[sz]\w*)\b/i.test(text)) {
+      add(index,"api-identity",75,"Protect",
+        "API Shield — conditional evaluation of customer-facing API endpoint protection, JWT validation and mTLS",
+        "Check whether API-first architecture work leaves any unmet requirement for externally exposed API controls.",
+        "An API-first architecture creates an API protection discussion, not evidence of insecure authentication.",
+        "The documented token service and load-balancer JWT checks may already solve identity requirements; internal service identity is not equivalent to external API protection.",
+        "API platform or security engineering lead",
+        "Which customer-facing API protection requirements, if any, remain open beyond your existing JWT and load-balancer controls?",
+        "I read about your service-identity architecture. I'm interested in how your existing controls extend to customer-facing APIs.");
+    }
+    if (!article && engineering &&
+      /\b(monolith|service boundary|microservice)\b/i.test(text) &&
+      /\b(api surface|api|event contracts|event routing)\b/i.test(text) &&
+      /\b(staging|production|cutover|backfill|delivery performance)\b/i.test(text)) {
+      add(index,"service-boundary",65,"Build",
+        "Workers — only for a bounded API or event workload whose runtime and data locality requirements fit",
+        "Explore whether any newly separated external API or event-processing components have an open deployment decision.",
+        "A new service boundary is a concrete engineering initiative, not proof that edge execution is needed.",
+        "Current cloud runtime, consistency and data requirements may make Workers unsuitable; no migration or performance problem is established.",
         "Backend platform engineering lead",
-        "As this service moves into production, are there any customer-facing API or event workloads whose deployment model is still open for evaluation?",
-        "Your engineering write-up on separating financial-data services stood out. I'm curious which deployment decisions remain open after the staging validation.");
+        "Following staging validation, are any external API or event components still open for runtime evaluation?",
+        "Your write-up on separating the financial-data service was interesting. Which deployment decisions remain open after staging?");
     }
   });
-  // Avoid duplicating the model's already accepted hypothesis for the same
-  // source and product category. Never manufacture a pillar quota.
+  // Model proposals still require validation; recovery is a candidate source, not
+  // a blanket approval. Rank by initiative specificity, never source list order.
   const accepted = report.cloudflare_opportunities;
-  for (const candidate of findings) {
-    const same = accepted.some(o => o.pillar === candidate.pillar &&
-      o.evidence === candidate.evidence &&
-      (o.product_fit || "").toLowerCase().includes((candidate.product_fit || "").split(" ")[0].toLowerCase()));
-    if (!same) accepted.push(candidate);
+  const priority = (o: Opportunity) => {
+    const ref = [...o.evidence.matchAll(/\[S(\d+)\]/g)][0];
+    const source = ref && sources[Number(ref[1])-1];
+    if (!source) return 0;
+    const title = source.title || "";
+    if (/\b(raises?|funding|series [a-f]|investment|valuation|pymnts|prnewswire)\b/i.test(title)) return 10;
+    if (/\b(ai platform engineer|ai engineering|ai infrastructure)\b/i.test(title)) return 95;
+    if (/\b(authenticat|authori[sz]|service boundary|monolith|engineering|architecture)\b/i.test(title)) return 70;
+    return o.confidence === "high" ? 60 : 35;
+  };
+  const combined = [...accepted.map(o => ({opportunity:o, priority:priority(o), kind:"model"})),...candidates];
+  combined.sort((a,b) => b.priority-a.priority);
+  const selected: Opportunity[] = [];
+  for (const candidate of combined) {
+    const o = candidate.opportunity;
+    const primaryRef = [...o.evidence.matchAll(/\[S(\d+)\]/g)][0]?.[0];
+    if (selected.some(x => x.pillar === o.pillar && x.evidence.includes(primaryRef || "UNMATCHABLE") &&
+      (x.product_fit || "").split(/[ —]/)[0].toLowerCase() === (o.product_fit || "").split(/[ —]/)[0].toLowerCase())) continue;
+    selected.push(o);
+    if (selected.length === 4) break;
   }
-  // Prefer independently evidenced, technically specific hypotheses.
-  report.cloudflare_opportunities = accepted.slice(0, 4);
-  report.questions = accepted.length
-    ? accepted.slice(0, 4).map(o => o.discovery_question || "").filter(Boolean)
-    : report.questions;
+  report.cloudflare_opportunities = selected;
+  report.questions = selected.length ? selected.map(o=>o.discovery_question || "").filter(Boolean) : report.questions;
+  // AI theme and Cloudflare opportunities must be grounded in the same evidence.
+  // A company-specific engineering source about BUILDING an AI platform is direct
+  // AI application activity; it is NOT proof of inference cost or multi-model use.
+  const ai = candidates.find(c=>c.kind==="ai-platform");
+  if (ai) {
+    const theme = report.ai_signals.find(a=>a.theme==="Build & Scale AI Applications");
+    if (theme && theme.signal === "insufficient") {
+      theme.signal = "strong";
+      theme.evidence = ai.opportunity.evidence;
+      theme.hypothesis = "Engineering source documents active development of a shared AI platform; deployment architecture and buying requirements remain unverified.";
+      theme.confidence = "medium";
+    }
+  }
 }
 
 function evidenceGrounded(report: Report, sources: Source[]): Report {
@@ -1380,7 +1419,7 @@ async function route(
       dbConfigured: !!env.DB,
       model: MODEL,
       decisionModel: DECISION_MODEL,
-      researchRevision: "api-evidence-regex-v2"
+      researchRevision: "evidence-pipeline-v3"
     });
   }
 
@@ -1447,6 +1486,10 @@ async function route(
         confidence: stored.confidence === "high" || stored.confidence === "medium" ? stored.confidence : "low"
       };
       evidenceGrounded(report, sources);
+      validateOpportunityEvidence(report, sources);
+      recoverEvidenceBackedOpportunities(report, sources);
+      evidenceGrounded(report, sources);
+      validateOpportunityEvidence(report, sources);
       stored.growth_signals = report.growth_signals;
       stored.technical_signals = report.technical_signals;
       stored.cloudflare_opportunities = report.cloudflare_opportunities;
