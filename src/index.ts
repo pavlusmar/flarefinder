@@ -582,7 +582,7 @@ function sourceGroundedOpportunities(sources: Source[]): Opportunity[] {
 const EVIDENCE_RULES = {
   Connect: /\b(cdn|cache|caching|content delivery|dns|network|latency|traffic routing|load balanc|global delivery|edge performance|wan|sase)\b/i,
   Protect: /\b(waf|ddos|bot protection|api security|authentication|authorization|mTLS|zero trust|access control|threat|fraud|compliance|security|sensitive data)\b/i,
-  Build: /\b(api|sdk|serverless|workers|developer platform|application platform|model serving|inference|ai gateway|agent runtime|orchestration|llm|model routing|deployment|workflow)\b/i
+  Build: /\b(api|sdk|serverless|workers|developer platform|application platform|ai platform|generative ai|agentic ai|model serving|inference|ai gateway|agent runtime|orchestration|llm|model routing|deployment|workflow)\b/i
 } as const;
 const AI_EVIDENCE_RULES: Record<AiSignal["theme"], RegExp> = {
   "Build & Scale AI Applications": /\b(ai application|ai product|agent|llm|model serving|inference|ai platform|ai engineering|rag|orchestration)\b/i,
