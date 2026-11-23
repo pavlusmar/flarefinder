@@ -8,12 +8,12 @@ const ts = require('typescript');
 const path = require('node:path');
 
 const source = fs.readFileSync(path.join(__dirname, '../src/index.ts'), 'utf8');
-const compiled = ts.transpileModule(source + '\nexports.__test = { validateOpportunityEvidence, evidenceGrounded, citedSourceText, scorePursuitWithClef };', {
+const compiled = ts.transpileModule(source + '\nexports.__test = { validateOpportunityEvidence, evidenceGrounded, citedSourceText, scorePursuitWithClef, recoverEvidenceBackedOpportunities };', {
   compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 }
 });
 const sandbox = { exports: {}, console, URL, Response, Request, Headers, TextEncoder, TextDecoder };
 vm.runInNewContext(compiled.outputText, sandbox, { filename: 'index.transpiled.cjs' });
-const { validateOpportunityEvidence, evidenceGrounded, scorePursuitWithClef } = sandbox.exports.__test;
+const { validateOpportunityEvidence, evidenceGrounded, scorePursuitWithClef, recoverEvidenceBackedOpportunities } = sandbox.exports.__test;
 const sourceItem = snippet => ({ title: 'Company engineering announcement', snippet, url: 'https://example.com/company' });
 const opportunity = (pillar, product_fit) => ({
   pillar, product_fit, confidence: 'medium',
@@ -97,4 +97,30 @@ test('scoring: a documented RFP and explicit need can preserve scored readiness'
   assert.equal(score.status,'scored');
   assert.equal(score.readiness.dimensions.find(x=>x.key==='validated_need').score,3);
   assert.equal(score.readiness.dimensions.find(x=>x.key==='stakeholders').score,3);
+});
+
+const ninefinSources = [
+  sourceItem("Our service-to-service authentication previously relied on network separation. To move more data between our systems and become an API-first company, we needed to fix these constraints. Our architecture grew, so we introduced a token service minting short-lived JWTs validated at the load balancer."),
+  sourceItem("Building ABF outside the monolith: a service boundary for financial data. Additive event contracts, domain routing, idempotent consumers and API surface validated in staging. Production measurement is the next phase after cutover."),
+  sourceItem("Senior AI Platform Engineer: our AI Engineering team is building the next generation of AI capabilities. Design and evolve the core AI platform enabling Generative AI and Agentic AI. Join at the beginning of the platform's journey and define reusable infrastructure.")
+];
+test('9fin: evidence produces Protect and Build discovery hypotheses, not empty report', () => {
+  const r=report();
+  recoverEvidenceBackedOpportunities(r,ninefinSources);
+  evidenceGrounded(r,ninefinSources);
+  validateOpportunityEvidence(r,ninefinSources);
+  assert.ok(r.cloudflare_opportunities.some(x=>x.pillar==='Protect' && x.evidence==='[S1]'));
+  assert.ok(r.cloudflare_opportunities.some(x=>x.pillar==='Build' && x.evidence==='[S3]'));
+  assert.ok(r.cloudflare_opportunities.some(x=>x.pillar==='Build' && x.evidence==='[S2]'));
+  assert.ok(r.questions.length>=2);
+});
+test('generic funding and AI marketing alone produce no Cloudflare opportunities', () => {
+  const r=report();
+  recoverEvidenceBackedOpportunities(r,[sourceItem("Series C funding to accelerate AI capabilities and US expansion"),sourceItem("We are an AI-powered analytics platform")]);
+  assert.equal(r.cloudflare_opportunities.length,0);
+});
+test('existing accepted opportunity is not duplicated by recovery', () => {
+  const r=report([{...opportunity('Build','AI Gateway'),evidence:'[S3]',signal:'Company initiative [S3]'}]);
+  recoverEvidenceBackedOpportunities(r,ninefinSources);
+  assert.equal(r.cloudflare_opportunities.filter(x=>x.evidence==='[S3]' && x.pillar==='Build').length,1);
 });
