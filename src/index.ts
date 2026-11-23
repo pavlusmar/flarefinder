@@ -634,6 +634,76 @@ function validateOpportunityEvidence(report: Report, sources: Source[]): void {
   });
 }
 
+
+// Recover narrow, source-backed discovery hypotheses that the generative model
+// missed. These are NOT verified customer needs and do not imply displacement.
+function recoverEvidenceBackedOpportunities(report: Report, sources: Source[]): void {
+  const findings: Opportunity[] = [];
+  const add = (source: Source, index: number, pillar: Opportunity["pillar"],
+    product: string, hypothesis: string, implication: string, limitations: string,
+    stakeholder: string, question: string, outreach: string) => {
+    const ref = "[S" + (index + 1) + "]";
+    findings.push({
+      pillar, evidence: ref, signal: "Public technical material describes: " + source.title + " " + ref,
+      confidence: "medium", hypothesis, implication, product_fit: product,
+      limitations, stakeholder, discovery_question: question, outreach: outreach + " " + ref
+    });
+  };
+  sources.forEach((source, i) => {
+    const text = source.title + " " + source.snippet;
+    // A real security architecture change, not merely a mention of APIs or JWT.
+    if (/\b(authenticat|authori[sz]|service.to.service|api.first)\b/i.test(text) &&
+        /\b(jwt|token service|service.to.service|api.first|access control)\b/i.test(text) &&
+        /\b(migrat|moderni[sz]|rebuild|introduc|implement|needed to fix|architecture grew|moving|move more data)\b/i.test(text)) {
+      add(source, i, "Protect", "API Shield — assess API endpoint discovery, JWT validation or mTLS only for compatible externally routed APIs",
+        "Determine whether the documented API identity modernisation creates any unmet requirement for customer-facing API protection or traffic-level controls.",
+        "API-first expansion can increase the importance of consistent endpoint protection; this is not evidence of a vulnerability.",
+        "Existing JWT token service and load-balancer validation may already meet the requirement; internal service-to-service controls are not automatically a Cloudflare fit.",
+        "Platform security or API engineering lead",
+        "Your team has implemented JWT-based service identity. Which customer-facing API controls, if any, are still being evaluated beyond the existing token service?",
+        "I read about your service identity and API-first architecture work. I'd be interested in how you distinguish internal identity from external API protection.");
+    }
+    // Require explicit shared AI platform construction, not generic AI marketing or funding.
+    if (/\b(ai platform|generative ai|agentic ai|autonomous ai agents|ai infrastructure)\b/i.test(text) &&
+        /\b(build|building|design|architect|platform engineer|shared platform|reusable infrastructure)\b/i.test(text) &&
+        /\b(engineer|platform|infrastructure|architecture|runtime|services)\b/i.test(text)) {
+      add(source, i, "Build", "AI Gateway — evaluate supported third-party model calls; Workers/Workflows only for suitable peripheral APIs and orchestration",
+        "Explore whether the emerging shared AI platform needs cross-provider request visibility, controls or supporting application workflows that existing infrastructure does not provide.",
+        "Early platform architecture decisions can create a timely technical discovery conversation, not an established purchase project.",
+        "Existing model hosting, cloud platform, gateways and inference architecture are unknown; do not assume model migration or replacement.",
+        "AI platform engineering lead",
+        "As you define shared AI platform services, how are you planning to observe and govern model requests, and what have you already solved with your existing stack?",
+        "I noticed the work to build shared infrastructure for generative and agentic AI. I'd be interested in how you're approaching model traffic observability and platform boundaries.");
+    }
+    // A specific architectural boundary project with explicit APIs and a production measurement phase.
+    if (/\b(monolith|service boundary|microservice|event contracts)\b/i.test(text) &&
+        /\b(api surface|api|event|routing|consumer)\b/i.test(text) &&
+        /\b(staging|production|cutover|backfill|delivery performance|projection freshness)\b/i.test(text)) {
+      add(source, i, "Build", "Workers — investigate discrete external API or event-handling workloads only if deployment and data locality fit",
+        "Ask whether any newly separated API or event workloads would benefit from edge execution, without suggesting moving the core financial data platform.",
+        "Service-boundary modernisation can reveal a bounded workload for architectural evaluation.",
+        "Existing event processing, consistency requirements and cloud architecture may make Cloudflare unsuitable; no latency problem is established.",
+        "Backend platform engineering lead",
+        "As this service moves into production, are there any customer-facing API or event workloads whose deployment model is still open for evaluation?",
+        "Your engineering write-up on separating financial-data services stood out. I'm curious which deployment decisions remain open after the staging validation.");
+    }
+  });
+  // Avoid duplicating the model's already accepted hypothesis for the same
+  // source and product category. Never manufacture a pillar quota.
+  const accepted = report.cloudflare_opportunities;
+  for (const candidate of findings) {
+    const same = accepted.some(o => o.pillar === candidate.pillar &&
+      o.evidence === candidate.evidence &&
+      (o.product_fit || "").toLowerCase().includes((candidate.product_fit || "").split(" ")[0].toLowerCase()));
+    if (!same) accepted.push(candidate);
+  }
+  // Prefer independently evidenced, technically specific hypotheses.
+  report.cloudflare_opportunities = accepted.slice(0, 4);
+  report.questions = accepted.length
+    ? accepted.slice(0, 4).map(o => o.discovery_question || "").filter(Boolean)
+    : report.questions;
+}
+
 function evidenceGrounded(report: Report, sources: Source[]): Report {
   const refs = (value: string) => [...value.matchAll(/\[S(\d+)\]/g)].map(m => Number(m[1])-1);
   const valid = (value: string) => refs(value).length > 0 && refs(value).every(i => i >= 0 && i < sources.length);
@@ -1072,6 +1142,11 @@ ${JSON.stringify(sources.map((source, i) => ({ id: `S${i+1}`, ...source })))}
 
       evidenceGrounded(report, sources);
       validateOpportunityEvidence(report, sources);
+      recoverEvidenceBackedOpportunities(report, sources);
+      // Apply the same citation and pillar checks to recovered opportunities.
+      evidenceGrounded(report, sources);
+      validateOpportunityEvidence(report, sources);
+      console.log("Opportunity validation:", company.id, { count: report.cloudflare_opportunities.length, pillars: report.cloudflare_opportunities.map(o => o.pillar) });
       console.log("AI generation completed:", company.id);
       return report;
     } catch (e) {
