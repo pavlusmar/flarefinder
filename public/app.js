@@ -440,6 +440,17 @@ async function detail(id, silent = false) {
     const link = validLink(c.crunchbase_url);
     const cite = value => esc(value || "").replace(/\[S(\d+)\]/g, (match, n) =>
       Number(n) > 0 && Number(n) <= sources.length ? '<a class="citation" href="#source-' + n + '">' + match + '</a>' : match);
+    const aiSourceExcerpt = evidence => {
+      const ref = /\[S(\d+)\]/.exec(evidence || "");
+      if (!ref) return "";
+      const source = sources[Number(ref[1]) - 1];
+      if (!source) return "";
+      const raw = String(source.snippet || "").replace(/\s+/g, " ").trim();
+      if (!raw) return "";
+      // A short verbatim excerpt, not an AI-generated interpretation of the source.
+      const sentence = raw.split(/(?<=[.!?])\s+/).find(x => x.length >= 35 && !/^\s*(?:#|\||\[)/.test(x)) || raw;
+      return sentence.length > 210 ? sentence.slice(0, 207).trimEnd() + "…" : sentence;
+    };
     const businessHighlights = priorities.filter(p => p.basis === "stated" && /\[S\d+\]/.test(p.evidence || "")).slice(0, 3);
     const reason = compact ? "Series D investment, developer platform expansion and enterprise adoption warrant discovery; infrastructure needs are unverified." : ([c.last_funding_date ? "Latest funding " + c.last_funding_date : "", businessHighlights[0]?.why_it_matters || "", opportunities.find(o => o.confidence !== "low" && /\[S\d+\]/.test(o.evidence || ""))?.hypothesis || ""].filter(Boolean).join(" · ") || priority.reason);
 
@@ -561,7 +572,7 @@ async function detail(id, silent = false) {
       <p class="meta">AI economics and multi-model signals are exploratory and not separately scored.</p>
       ${aiThemes.map(theme => {
         const signal = aiSignals.find(x => x.theme === theme);
-        return '<div class="brief-ai-row"><div class="signal-head"><strong>' + esc(theme) + '</strong>' + pill(signal?.signal || "insufficient") + '</div>' + (signal && signal.signal !== "insufficient" ? '<p>' + cite(signal.evidence) + '</p>' : '<p class="meta">Insufficient public evidence.</p>') + '</div>';
+        return '<div class="brief-ai-row"><div class="signal-head"><strong>' + esc(theme) + '</strong>' + pill(signal?.signal || "insufficient") + '</div>' + (signal && signal.signal !== "insufficient" ? '<p class="meta"><strong>Source excerpt:</strong> ' + esc(aiSourceExcerpt(signal.evidence) || "No source excerpt available.") + ' ' + cite(signal.evidence) + '</p>' : '<p class="meta">Insufficient public evidence.</p>') + '</div>';
       }).join("")}
       ${compact ? "</details>" : ""}
       <h3>Discovery questions</h3>
