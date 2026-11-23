@@ -1592,10 +1592,11 @@ export default {
     }
   },
 
-  async queue(batch: MessageBatch<{ id: string }>, env: Env) {
+  async queue(batch: MessageBatch<unknown>, env: Env) {
     // A single message per invocation permits horizontal consumer scaling.
     for (const message of batch.messages) {
-      const id = message.body?.id;
+      const body = message.body as { id?: unknown } | null;
+      const id = body?.id;
       if (typeof id !== "string" || !id) {
         message.ack();
         continue;
@@ -1619,7 +1620,7 @@ export default {
     }
   },
 
-  async scheduled(_event: ScheduledEvent, env: Env) {
+  async scheduled(_event: ScheduledController, env: Env) {
     await dispatchPending(env, 50);
   }
 } satisfies ExportedHandler<Env>;
