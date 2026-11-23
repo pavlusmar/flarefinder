@@ -567,7 +567,7 @@ function sourceGroundedOpportunities(sources: Source[]): Opportunity[] {
       hypothesis:"Validate whether inference traffic management, runtime observability or workload isolation is an active platform priority; do not assume an existing latency or reliability problem.",
       implication:"Inference-platform ownership suggests a relevant technical discovery area, but does not establish a gap in the current architecture.",
       product_fit:"AI Gateway for compatible third-party inference traffic, or Workers for discrete supporting API workloads, subject to SE validation.",
-      limitations:"PolyAI reports strong existing uptime and latency. Its internal serving architecture, existing tooling and model-hosting requirements are unknown.",
+      limitations:"Existing runtime, model hosting, observability and performance are unknown; validate with the customer.",
       stakeholder:"Runtime platform engineering lead or infrastructure product manager",
       discovery_question:"Which parts of your inference runtime are you optimizing this year, and where do your existing observability and traffic-management tools already meet the requirements?",
       outreach:"I saw your platform team is working on runtime and inference capabilities " + runtime.ref + ". I'd be interested in how you evaluate infrastructure trade-offs as those workloads evolve.",
@@ -577,33 +577,61 @@ function sourceGroundedOpportunities(sources: Source[]): Opportunity[] {
   return result;
 }
 
-function recoverSourceFacts(report: Report, sources: Source[]): void {
-  const facts = sources.map((s,i)=>({text:s.title+" "+s.snippet, ref:"[S"+(i+1)+"]",url:s.url}));
-  const first=(re:RegExp)=>facts.find(f=>re.test(f.text));
-  const add=(target:string[],value:string)=>{if(!target.some(v=>v.toLowerCase().replace(/\[s\d+\]/gi,"").trim()===value.toLowerCase().replace(/\[s\d+\]/gi,"").trim()))target.push(value);};
-  // Recovery of explicit events is deterministic, rather than trusting the
-  // large report model to repeat facts it already included elsewhere.
-  // Match the round amount to the Series D announcement itself, not the
-  // first dollar figure on a mixed aggregator page.
-  const financing = facts.find(f => /\b(?:series d|funding round)\b/i.test(f.text) &&
-    /\b(?:raised|raises|raise)\s+\$\s?86\s?(?:million|m)\b/i.test(f.text) &&
-    /(?:poly\.ai|prnewswire\.com)/i.test(f.url)) ||
-    facts.find(f => /\bseries d\b/i.test(f.text) && /\b(?:raised|raises|raise)\s+\$\s?86\s?(?:million|m)\b/i.test(f.text));
-  report.growth_signals = report.growth_signals.filter(x =>
-    !/\breported financing round\b/i.test(x) &&
-    !/\b(?:series d|funding round)\b/i.test(x) || /\b\$86(?:\.0)?\s?m\b/i.test(x));
-  if (financing) add(report.growth_signals,"PolyAI announced an $86M Series D financing round "+financing.ref);
-  const hiring=first(/\b(?:VP of Engineering|Head of Engineering)\b/i);
-  if(hiring)add(report.growth_signals,"Engineering leadership recruitment "+hiring.ref);
-  const adoption=first(/\b(?:\d[\d,]*\+?\s+(?:enterprise customers|enterprises|live deployments)|\d[\d,]*\s+countries)\b/i);
-  if(adoption)add(report.growth_signals,"Publicly reported customer or deployment scale "+adoption.ref);
-  const platform=first(/\b(?:agent studio|agent development kit|developer APIs|inference runtime)\b/i);
-  if(platform)add(report.technical_signals,"Documented software platform or developer capabilities "+platform.ref);
-  const models=first(/\b(?:Claude|Gemini|GPT[- ]?\d)\b/i);
-  if(models && (models.text.match(/\b(?:Claude|Gemini|GPT[- ]?\d)\b/gi)||[]).length>=2){
-    const theme=report.ai_signals.find(x=>x.theme==="Multi-Model Operations");
-    if(theme){theme.signal="strong";theme.evidence="Multiple named model families referenced "+models.ref;theme.hypothesis="Validate existing model-provider observability and policy controls; no gap is assumed.";theme.confidence="medium";}
-  }
+// Evidence rules are deliberately conservative. A source mention qualifies a
+// discovery angle, never establishes an unmet need, vendor displacement or budget.
+const EVIDENCE_RULES = {
+  Connect: /\b(cdn|cache|caching|content delivery|dns|network|latency|traffic routing|load balanc|global delivery|edge performance|wan|sase)\b/i,
+  Protect: /\b(waf|ddos|bot protection|api security|authentication|authorization|mTLS|zero trust|access control|threat|fraud|compliance|security|sensitive data)\b/i,
+  Build: /\b(api|sdk|serverless|workers|developer platform|application platform|model serving|inference|ai gateway|agent runtime|orchestration|llm|model routing|deployment|workflow)\b/i
+} as const;
+const AI_EVIDENCE_RULES: Record<AiSignal["theme"], RegExp> = {
+  "Build & Scale AI Applications": /\b(ai application|ai product|agent|llm|model serving|inference|ai platform|ai engineering|rag|orchestration)\b/i,
+  "Secure AI Applications & Agents": /\b(ai security|agent security|model security|prompt injection|agent access|ai governance|ai compliance|ai api security|llm security)\b/i,
+  "Optimise AI Inference & Delivery": /\b(inference|model serving|ai gateway|model routing|model latency|model caching|llm gateway|model deployment)\b/i,
+  "AI Cost & Inference Economics": /\b(inference cost|model cost|token cost|compute cost|ai spend|llm cost|cost optimization|cost optimisation|cost tracking|cost observability)\b/i,
+  "Multi-Model Operations": /\b(multi.model|multiple models|model routing|model fallback|model providers|model gateway|ai gateway|model governance)\b/i
+};
+function citedSourceText(value: string, sources: Source[]): string {
+  const indexes = [...value.matchAll(/\[S(\d+)\]/g)].map(m => Number(m[1]) - 1);
+  if (!indexes.length || indexes.some(i => i < 0 || i >= sources.length)) return "";
+  return indexes.map(i => sources[i].title + " " + sources[i].snippet).join(" ");
+}
+function validateOpportunityEvidence(report: Report, sources: Source[]): void {
+  report.cloudflare_opportunities = report.cloudflare_opportunities.filter(o => {
+    const text = citedSourceText((o.signal || "") + " " + o.evidence, sources);
+    if (!text || !EVIDENCE_RULES[o.pillar].test(text)) return false;
+    // Product recommendation must match the supported pillar. The citation
+    // alone is insufficient; unknown customer pain remains a discovery question.
+    const fit = (o.product_fit || "").toLowerCase();
+    const product = o.pillar === "Connect"
+      ? /cdn|dns|network|load balan|routing|connect|cache|wan|sase/
+      : o.pillar === "Protect"
+      ? /waf|ddos|bot|api shield|zero trust|access|security|protect|rate limit/
+      : /workers|r2|d1|ai gateway|workers ai|build|workflow|durable object|container|sandbox/;
+    if (!product.test(fit)) return false;
+    return true;
+  });
+  report.ai_signals = report.ai_signals.map(a => {
+    const text = citedSourceText(a.evidence, sources);
+    if (!text || !AI_EVIDENCE_RULES[a.theme].test(text)) {
+      return {...a, signal:"insufficient" as const, confidence:"low" as const,
+        hypothesis:"", evidence:"Insufficient company-specific evidence for this AI theme."};
+    }
+    // A cost or multi-model claim needs more than generic AI marketing.
+    if (a.theme === "AI Cost & Inference Economics" &&
+        !/\b(inference cost|model cost|token cost|compute cost|ai spend|llm cost|cost optimization|cost optimisation|cost tracking|cost observability)\b/i.test(text)) {
+      return {...a,signal:"insufficient" as const,confidence:"low" as const,hypothesis:""};
+    }
+    if (a.theme === "Multi-Model Operations" && a.signal === "strong") {
+      // Routing or gateway ownership is a plausible theme, but not proof that
+      // two named model providers are already used in production.
+      const named = [ /\b(?:OpenAI|GPT[- ]?\d)\b/i, /\b(?:Anthropic|Claude)\b/i,
+        /\b(?:Google Gemini|Gemini)\b/i, /\b(?:Mistral)\b/i,
+        /\b(?:Cohere)\b/i, /\b(?:Llama)\b/i ].filter(re => re.test(text)).length;
+      if (named < 2) return {...a, signal:"possible" as const, confidence:"medium" as const};
+    }
+    return a;
+  });
 }
 
 function evidenceGrounded(report: Report, sources: Source[]): Report {
@@ -740,6 +768,25 @@ async function scorePursuitWithClef(env: Env, company: Company, report: Report, 
     };
     const account=scoreAxis(ATTRACTIVENESS_DIMENSIONS);
     const readiness=scoreAxis(READINESS_DIMENSIONS);
+    // Scores are ordinal model judgments, not verified account facts. Prevent
+    // high readiness from unsupported opportunities or absent buyer evidence.
+    if (readiness) {
+      const evidencedOpportunity = report.cloudflare_opportunities.some(o =>
+        o.confidence === "high" && !!citedSourceText(o.evidence, sources));
+      // A high-confidence hypothesis is not evidence of an unmet customer need.
+      // Direct customer statements are required before granting need > 1.
+      const explicitNeed = sources.some(source =>
+        /\b(we (need|struggle|are looking for|plan to replace)|seeking (a|an) (vendor|solution)|request for proposal|rfp issued|currently evaluating|pain point|technical challenge)\b/i.test(source.title + " " + source.snippet));
+      const hasBuyerEvidence = sources.some(source =>
+        /\b(request for proposal|rfp issued|vendor selection underway|buying process|budget approved|currently evaluating vendors)\b/i.test(source.title + " " + source.snippet));
+      readiness.dimensions = readiness.dimensions.map(d => ({
+        ...d,
+        score: d.key === "validated_need" && (!evidencedOpportunity || !explicitNeed) ? Math.min(d.score, 1)
+          : d.key === "stakeholders" && !hasBuyerEvidence ? 0 : d.score
+      }));
+      readiness.total = Math.round(readiness.dimensions.reduce((sum,d) => sum + d.score / 4 * d.weight,0));
+      readiness.tier = readiness.total >= 75 ? "High" : readiness.total >= 50 ? "Moderate" : "Low";
+    }
     if (!account || !readiness) return unavailable("Clef did not return all valid scoring choices.");
     const tier=account.total>=75?"T1 · Prioritize discovery":account.total>=50?"T2 · Qualify":"T3 · Monitor";
     const next_action=account.total>=75 && readiness.total<50
@@ -1024,6 +1071,7 @@ ${JSON.stringify(sources.map((source, i) => ({ id: `S${i+1}`, ...source })))}
       });
 
       evidenceGrounded(report, sources);
+      validateOpportunityEvidence(report, sources);
       console.log("AI generation completed:", company.id);
       return report;
     } catch (e) {
@@ -1544,10 +1592,11 @@ export default {
     }
   },
 
-  async queue(batch: MessageBatch<{ id: string }>, env: Env) {
+  async queue(batch: MessageBatch<unknown>, env: Env) {
     // A single message per invocation permits horizontal consumer scaling.
     for (const message of batch.messages) {
-      const id = message.body?.id;
+      const body = message.body as { id?: unknown } | null;
+      const id = body?.id;
       if (typeof id !== "string" || !id) {
         message.ack();
         continue;
@@ -1571,7 +1620,7 @@ export default {
     }
   },
 
-  async scheduled(_event: ScheduledEvent, env: Env) {
+  async scheduled(_event: ScheduledController, env: Env) {
     await dispatchPending(env, 50);
   }
 } satisfies ExportedHandler<Env>;
