@@ -25,7 +25,7 @@ const opportunity = (pillar, product_fit) => ({
   discovery_question: 'What requirements are driving this initiative?',
   outreach: 'I saw your initiative [S1] and would welcome a conversation.'
 });
-const report = (opportunities=[], ai=[]) => ({ cloudflare_opportunities: opportunities, ai_signals: ai, questions: [] });
+const report = (opportunities=[], ai=[]) => ({ cloudflare_opportunities: opportunities, ai_signals: ai, questions: [], customer_perspective: { priorities: [] }, digital_native: 'yes', summary: '', growth_signals: [], technical_signals: [], hiring_signals: [] });
 const ai = (theme, signal='strong') => ({ theme, signal, evidence:'[S1]', hypothesis:'Validate relevance', confidence:'high' });
 
 test('accepts a sourced Build AI Gateway opportunity, without asserting a purchase', () => {
