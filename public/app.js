@@ -534,7 +534,7 @@ async function detail(id, silent = false) {
         const matches = opportunities.filter(o => o.pillar === p && /\[S\d+\]/.test(o.evidence || ""));
         return '<div class="brief-signal"><strong>' + p + '</strong>' +
           (matches.length ? matches.slice(0, 2).map(o =>
-            '<p><strong>Opportunity:</strong> ' + cite(o.hypothesis) + '</p>' +
+            '<p><strong>Research signal:</strong> ' + cite(o.signal || o.evidence) + '</p>' +
             '<p class="meta"><strong>Cloudflare fit:</strong> ' + esc(o.product_fit || "To qualify") + '</p>'
           ).join("") : '<p class="meta">No specific evidenced opportunity.</p>') + '</div>';
       }).join("")}
