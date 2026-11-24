@@ -586,12 +586,12 @@ function sourceGroundedOpportunities(sources: Source[]): Opportunity[] {
 // Evidence rules are deliberately conservative. A source mention qualifies a
 // discovery angle, never establishes an unmet need, vendor displacement or budget.
 const EVIDENCE_RULES = {
-  Connect: /\b(cdn|cache|caching|content delivery|dns|network|latency|traffic routing|load balanc|global delivery|edge performance|wan|sase)\b/i,
-  Protect: /\b(waf|ddos|bot protection|api security|authentication|authorization|mTLS|zero trust|access control|threat|fraud|compliance|security|sensitive data)\b/i,
-  Build: /\b(api|sdk|serverless|workers|developer platform|application platform|ai platform|generative ai|agentic ai|model serving|inference|ai gateway|agent runtime|orchestration|llm|model routing|deployment|workflow)\b/i
+  Connect: /\b(cloudfront|route53|route 53|cdn|cache|caching|content delivery|dns|network|latency|traffic routing|load balanc|global delivery|edge performance|wan|sase)\b/i,
+  Protect: /\b(waf|ddos|bot protection|api security|authentication|authorization|authorisation|mTLS|zero trust|access control|threat|fraud|compliance|security|sensitive data)\b/i,
+  Build: /\b(genai|ai powered systems|ai across teams|developer portal|ci\/cd|api|sdk|serverless|workers|developer platform|application platform|ai platform|generative ai|agentic ai|model serving|inference|ai gateway|agent runtime|orchestration|llm|model routing|deployment|workflow)\b/i
 } as const;
 const AI_EVIDENCE_RULES: Record<AiSignal["theme"], RegExp> = {
-  "Build & Scale AI Applications": /\b(ai application|ai product|agent|llm|model serving|inference|ai platform|ai engineering|rag|orchestration)\b/i,
+  "Build & Scale AI Applications": /\b(genai platform|ai powered systems|ai across teams|ai application|ai product|agent|llm|model serving|inference|ai platform|ai engineering|rag|orchestration)\b/i,
   "Secure AI Applications & Agents": /\b(ai security|agent security|model security|prompt injection|agent access|ai governance|ai compliance|ai api security|llm security)\b/i,
   "Optimise AI Inference & Delivery": /\b(inference|model serving|ai gateway|model routing|model latency|model caching|llm gateway|model deployment)\b/i,
   "AI Cost & Inference Economics": /\b(inference cost|model cost|token cost|compute cost|ai spend|llm cost|cost optimization|cost optimisation|cost tracking|cost observability)\b/i,
@@ -669,17 +669,25 @@ function recoverEvidenceBackedOpportunities(report: Report, sources: Source[]): 
     const aiPlatform = /\b(ai platform|generative ai|agentic ai|autonomous ai agents|ai infrastructure)\b/i.test(text) &&
       /\b(build\w*|design\w*|architect\w*|shared platform|reusable infrastructure)\b/i.test(text) &&
       /\b(engineer\w*|platform|infrastructure|architecture)\b/i.test(text);
+    const aiHiring = /\b(genai platform|ai platform engineer|ai engineering lead)\b/i.test(text) && /\b(jobs|careers|engineer|engineering)\b/i.test(title);
+    const aiDelivery = /\bai engineer\b/i.test(title) && /\b(ai across teams|ai powered systems|application of ai across teams)\b/i.test(text);
     // Require a specific technical primary source or an identifiable employer role.
     // Generic funding articles, marketing copy and industry news are not platform plans.
-    if (!article && (engineering || job) && aiPlatform) {
+    if (!article && (((engineering || job) && aiPlatform) || aiHiring || aiDelivery)) {
       add(index,"ai-platform",95,"Build",
         "AI Gateway — discovery only for compatible third-party inference traffic; Workers/Workflows for bounded supporting workloads",
-        "Determine whether the shared AI platform under construction has an unresolved need for model-request visibility, governance or supporting APIs.",
+        "Determine whether the AI platform or cross-team AI delivery initiative has an unresolved need for model-request visibility, governance or supporting APIs.",
         "Platform design work creates a timely architecture discussion, not evidence of a purchase or deployment gap.",
         "Existing gateways, model providers and cloud infrastructure are unknown; the job description does not prove any model provider is deployed.",
         "AI platform engineering lead",
         "As you build shared AI platform services, which model-request controls are already covered, and which architecture decisions remain open?",
         "Your AI platform engineering initiative caught my attention. How are you approaching shared model-request controls and reusable platform services?");
+    }
+    if (!article && job && /\b(cloudfront|route53|route 53)\b/i.test(text)) {
+      add(index,"delivery-stack",60,"Connect","CDN and DNS — compare existing delivery architecture only if requirements warrant","Qualify whether existing CDN and DNS services meet current delivery requirements.","Hiring lists relevant AWS technologies; this is an architecture discovery signal.","Listed skills do not establish deployment or dissatisfaction.","Platform engineering lead","How do you evaluate your current CDN and DNS architecture?","Your platform engineering role references delivery infrastructure; I would welcome a discussion of current requirements.");
+    }
+    if (!article && job && /\b(developer portal|ci\/cd)\b/i.test(text)) {
+      add(index,"developer-delivery",70,"Build","Workers — evaluate bounded APIs or developer tooling workloads","Explore whether any developer tooling or API workloads have an open runtime decision.","Platform hiring explicitly targets release velocity and developer tooling.","Existing AWS infrastructure may already meet requirements; no migration need established.","Platform engineering lead","Which developer tooling workloads have open deployment decisions?","Your platform role describes developer tooling and release velocity; how are you approaching those priorities?");
     }
     if (!article && engineering &&
       /\b(service.to.service|api.first|service identity)\b/i.test(text) &&
@@ -743,7 +751,7 @@ function recoverEvidenceBackedOpportunities(report: Report, sources: Source[]): 
     if (theme && theme.signal === "insufficient") {
       theme.signal = "strong";
       theme.evidence = ai.opportunity.evidence;
-      theme.hypothesis = "Engineering source documents active development of a shared AI platform; deployment architecture and buying requirements remain unverified.";
+      theme.hypothesis = "Hiring or engineering evidence identifies AI platform or cross-team AI delivery activity; architecture and buying requirements remain unverified.";
       theme.confidence = "medium";
     }
   }
@@ -796,6 +804,44 @@ function finalizeEvidenceReport(report: Report, sources: Source[]): Report {
     ? report.cloudflare_opportunities.map(o=>o.discovery_question || "").filter(Boolean).slice(0,4)
     : ["Which current technical initiative has an owner and timeline?", "Which incumbent providers already address this workload?"];
   return report;
+}
+
+function replaySavedResearch(row: unknown): Record<string, unknown> {
+    const stored = row as Record<string, unknown>;
+    const parseArray = (value: unknown): unknown[] => {
+      if (Array.isArray(value)) return value;
+      if (typeof value !== "string") return [];
+      try { const parsed: unknown = JSON.parse(value); return Array.isArray(parsed) ? parsed : []; }
+      catch { return []; }
+    };
+    const sources = parseArray(stored.sources) as Source[];
+    if (sources.length) {
+      const perspective = sources[0]?.customer_perspective ||
+        { mission: "", priorities: [], business_tension: "" };
+      const report: Report = {
+        digital_native: stored.digital_native === "yes" || stored.digital_native === "no" ? stored.digital_native : "uncertain",
+        digital_native_reason: safe(stored.digital_native_reason),
+        summary: safe(stored.summary),
+        customer_perspective: perspective,
+        growth_signals: parseArray(stored.growth_signals).filter((x): x is string => typeof x === "string"),
+        technical_signals: parseArray(stored.technical_signals).filter((x): x is string => typeof x === "string"),
+        cloudflare_opportunities: parseArray(stored.cloudflare_opportunities) as Opportunity[],
+        ai_signals: parseArray(stored.ai_signals) as AiSignal[],
+        hiring_signals: [],
+        questions: parseArray(stored.questions).filter((x): x is string => typeof x === "string"),
+        confidence: stored.confidence === "high" || stored.confidence === "medium" ? stored.confidence : "low"
+      };
+      finalizeEvidenceReport(report, sources);
+      stored.growth_signals = report.growth_signals;
+      stored.technical_signals = report.technical_signals;
+      stored.cloudflare_opportunities = report.cloudflare_opportunities;
+      stored.ai_signals = report.ai_signals;
+      stored.questions = report.questions;
+      // The original Clef score was calculated before the saved-source replay.
+      // Never present it as a score recalculated from this revised brief.
+      stored.brief_recomputed = true;
+    }
+    return stored;
 }
 
 const DECISION_MODEL = "@cf/cloudflare/clef-flash";
@@ -1464,14 +1510,14 @@ async function route(
              r.confidence, r.researched_at, r.error, r.ai_signals,
              r.cloudflare_opportunities, r.sources,
              json_extract(r.sources, '$[0].pursuit_score') AS pursuit_score,
-             r.growth_signals
+             r.growth_signals, r.technical_signals, r.questions, r.summary, r.digital_native_reason
       FROM companies c
       LEFT JOIN research r ON r.company_id=c.id
       ORDER BY c.growth_score DESC, c.name ASC
       LIMIT 1000
     `).all();
 
-    return json(rows.results);
+    return json(rows.results.map(replaySavedResearch));
   }
 
   if (path.startsWith("/api/companies/") &&
@@ -1495,41 +1541,7 @@ async function route(
     if (!row) return error("Not found", 404);
     // Rebuild a grounded brief from the already-saved citations. This makes
     // improvements visible without spending credits or rerunning research.
-    const stored = row as Record<string, unknown>;
-    const parseArray = (value: unknown): unknown[] => {
-      if (Array.isArray(value)) return value;
-      if (typeof value !== "string") return [];
-      try { const parsed: unknown = JSON.parse(value); return Array.isArray(parsed) ? parsed : []; }
-      catch { return []; }
-    };
-    const sources = parseArray(stored.sources) as Source[];
-    if (sources.length) {
-      const perspective = sources[0]?.customer_perspective ||
-        { mission: "", priorities: [], business_tension: "" };
-      const report: Report = {
-        digital_native: stored.digital_native === "yes" || stored.digital_native === "no" ? stored.digital_native : "uncertain",
-        digital_native_reason: safe(stored.digital_native_reason),
-        summary: safe(stored.summary),
-        customer_perspective: perspective,
-        growth_signals: parseArray(stored.growth_signals).filter((x): x is string => typeof x === "string"),
-        technical_signals: parseArray(stored.technical_signals).filter((x): x is string => typeof x === "string"),
-        cloudflare_opportunities: parseArray(stored.cloudflare_opportunities) as Opportunity[],
-        ai_signals: parseArray(stored.ai_signals) as AiSignal[],
-        hiring_signals: [],
-        questions: parseArray(stored.questions).filter((x): x is string => typeof x === "string"),
-        confidence: stored.confidence === "high" || stored.confidence === "medium" ? stored.confidence : "low"
-      };
-      finalizeEvidenceReport(report, sources);
-      stored.growth_signals = report.growth_signals;
-      stored.technical_signals = report.technical_signals;
-      stored.cloudflare_opportunities = report.cloudflare_opportunities;
-      stored.ai_signals = report.ai_signals;
-      stored.questions = report.questions;
-      // The original Clef score was calculated before the saved-source replay.
-      // Never present it as a score recalculated from this revised brief.
-      stored.brief_recomputed = true;
-    }
-    return json(stored);
+    return json(replaySavedResearch(row));
   }
 
   if (!authorized(request, env)) {
