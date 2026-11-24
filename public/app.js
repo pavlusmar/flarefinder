@@ -439,7 +439,7 @@ async function detail(id, silent = false) {
       if (platform) c.questions = [...new Set(["As more developers integrate with PolyAI, which parts of API delivery, onboarding and governance are becoming priorities?",...list(c.questions)])].slice(0, 6);
       if (runtime) c.technical_signals = [...new Set(["Public hiring references runtime, inference and data-platform responsibilities " + runtime,...list(c.technical_signals)])].slice(0, 8);
     }
-    const compact = /^polyai$/i.test((c.name || "").trim());
+    const compact = false; // Full research is available for every account.
     const sources = list(c.sources);
     const perspective = sources[0]?.customer_perspective || {};
     const pursuit = sources[0]?.pursuit_score || null;
@@ -532,6 +532,14 @@ async function detail(id, silent = false) {
               : "Research has not yet been completed.";
 
     $("detailContent").innerHTML = `
+      <div class="research-export-tools" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">
+        <button type="button" class="primary" id="copyFullResearch">Copy full research</button>
+        <button type="button" id="downloadFullResearch">Export research (.txt)</button>
+        <button type="button" id="expandResearch">Expand all</button>
+        <button type="button" id="collapseResearch">Collapse all</button>
+        <button type="button" id="reloadResearch">Reload saved report</button>
+      </div>
+      <p class="meta" id="exportFeedback" role="status" aria-live="polite">Report stays open while background status updates continue.</p>
       <div class="meta">
         ${esc(c.sector || "Unclassified")} ·
         ${headcountDisplay} employees ·
@@ -721,6 +729,53 @@ async function detail(id, silent = false) {
     `;
 
     wireTas();
+    const reportRoot = $("detailContent");
+    const exportFeedback = message => { const el = $("exportFeedback"); if (el) el.textContent = message; };
+    const fullResearchText = () => {
+      const clone = reportRoot.cloneNode(true);
+      clone.removeAttribute("id");
+      clone.querySelectorAll("details").forEach(el => { el.open = true; });
+      clone.querySelectorAll("a[href]").forEach(el => {
+        const href = el.getAttribute("href");
+        if (/^https?:\/\//i.test(href)) el.append(document.createTextNode(" (" + href + ")"));
+      });
+      clone.querySelectorAll("input, select, textarea").forEach(el => {
+        el.replaceWith(document.createTextNode(el.value || ""));
+      });
+      clone.querySelectorAll(".research-export-tools, button, #exportFeedback, #researchFeedback").forEach(el => el.remove());
+      clone.style.cssText = "position:fixed;left:-100000px;top:0;width:900px;display:block;";
+      document.body.appendChild(clone);
+      try {
+        return c.name + "\nFULL RESEARCH REPORT\n\n" + clone.innerText.trim() +
+          "\n\n--- COMPLETE SAVED RESEARCH DATA (JSON) ---\n" + JSON.stringify(c, null, 2);
+      } finally { clone.remove(); }
+    };
+    $("copyFullResearch").onclick = async () => {
+      const value = fullResearchText();
+      try {
+        await navigator.clipboard.writeText(value);
+        exportFeedback("Full research copied, including collapsed sections and sources.");
+      } catch {
+        const field = document.createElement("textarea");
+        field.value = value;
+        field.setAttribute("aria-label", "Full research text");
+        field.style.cssText = "width:100%;min-height:180px;";
+        $("exportFeedback").after(field);
+        field.focus(); field.select();
+        exportFeedback("Clipboard unavailable. Press Ctrl+C (or Cmd+C) to copy the selected full report.");
+      }
+    };
+    $("downloadFullResearch").onclick = () => {
+      const url = URL.createObjectURL(new Blob([fullResearchText()], {type:"text/plain;charset=utf-8"}));
+      const a = document.createElement("a");
+      a.href = url; a.download = c.name.replace(/[^a-z0-9_-]+/gi, "-") + "-research.txt";
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      exportFeedback("Full research export prepared.");
+    };
+    $("expandResearch").onclick = () => reportRoot.querySelectorAll("details").forEach(el => { el.open = true; });
+    $("collapseResearch").onclick = () => reportRoot.querySelectorAll("details").forEach(el => { el.open = false; });
+    $("reloadResearch").onclick = () => detail(id, true);
     const button = $("researchOne");
     const feedback = message => { const el = $("researchFeedback"); if (el) el.textContent = message; };
 
@@ -764,7 +819,8 @@ async function detail(id, silent = false) {
               feedback("Updated research is ready.");
               activeResearchRequests.delete(id);
               await load();
-              await detail(id,true);
+              button.textContent = "Updated report ready";
+              feedback("Updated research is ready. Click Reload saved report when you finish reading or copying.");
               return;
             }
           }
@@ -810,7 +866,8 @@ async function refreshStatus() {
     ) {
       // The per-account refresh poll owns the brief until research finishes.
       // Do not replace its button or feedback during a background status tick.
-      if (!activeResearchRequests.has(currentCompanyId)) await detail(currentCompanyId, true);
+      // Keep the open report as a stable snapshot. Reload is explicitly user-controlled.
+      // Background table refresh must never replace selected text or expanded sections.
     }
   } finally {
     refreshBusy = false;
