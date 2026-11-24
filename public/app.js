@@ -533,7 +533,7 @@ async function detail(id, silent = false) {
 
     $("detailContent").innerHTML = `
       <div class="research-export-tools" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px">
-        <button type="button" class="primary" id="copyFullResearch">Copy full research</button>
+        <button type="button" class="primary" id="copyFullResearch">Copy readable research</button>
         <button type="button" id="downloadFullResearch">Export research (.txt)</button>
         <button type="button" id="expandResearch">Expand all</button>
         <button type="button" id="collapseResearch">Collapse all</button>
@@ -731,7 +731,7 @@ async function detail(id, silent = false) {
     wireTas();
     const reportRoot = $("detailContent");
     const exportFeedback = message => { const el = $("exportFeedback"); if (el) el.textContent = message; };
-    const fullResearchText = () => {
+    const fullResearchText = (includeRaw = false) => {
       const clone = reportRoot.cloneNode(true);
       clone.removeAttribute("id");
       clone.querySelectorAll("details").forEach(el => { el.open = true; });
@@ -746,15 +746,15 @@ async function detail(id, silent = false) {
       clone.style.cssText = "position:fixed;left:-100000px;top:0;width:900px;display:block;";
       document.body.appendChild(clone);
       try {
-        return c.name + "\nFULL RESEARCH REPORT\n\n" + clone.innerText.trim() +
-          "\n\n--- COMPLETE SAVED RESEARCH DATA (JSON) ---\n" + JSON.stringify(c, null, 2);
+        return c.name + "\nRESEARCH REPORT\n\n" + clone.innerText.trim() +
+          (includeRaw ? "\n\n--- COMPLETE SAVED RESEARCH DATA (JSON) ---\n" + JSON.stringify(c, null, 2) : "");
       } finally { clone.remove(); }
     };
     $("copyFullResearch").onclick = async () => {
       const value = fullResearchText();
       try {
         await navigator.clipboard.writeText(value);
-        exportFeedback("Full research copied, including collapsed sections and sources.");
+        exportFeedback("Readable research copied, including collapsed sections and sources. Raw JSON is available in the text export.");
       } catch {
         const field = document.createElement("textarea");
         field.value = value;
@@ -766,7 +766,7 @@ async function detail(id, silent = false) {
       }
     };
     $("downloadFullResearch").onclick = () => {
-      const url = URL.createObjectURL(new Blob([fullResearchText()], {type:"text/plain;charset=utf-8"}));
+      const url = URL.createObjectURL(new Blob([fullResearchText(true)], {type:"text/plain;charset=utf-8"}));
       const a = document.createElement("a");
       a.href = url; a.download = c.name.replace(/[^a-z0-9_-]+/gi, "-") + "-research.txt";
       document.body.appendChild(a); a.click(); a.remove();
