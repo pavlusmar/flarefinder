@@ -98,7 +98,8 @@ function priorityFor(c) {
   const tas = tasTableValue(c);
   // Illustrative planning bands, not official Cloudflare thresholds.
   const tasScore = tas == null ? null : tas < 10000 ? 20 : tas < 25000 ? 40 : tas < 50000 ? 60 : tas < 100000 ? 80 : 100;
-  const score = baseScore == null ? null : tasScore == null ? baseScore : Math.round(baseScore * 0.85 + tasScore * 0.15);
+  const tasWeight = tasRevenueScenario(c).budgetProxy ? 0.05 : 0.15;
+  const score = baseScore == null ? null : tasScore == null ? baseScore : Math.round(baseScore * (1-tasWeight) + tasScore * tasWeight);
   const opportunities = list(c.cloudflare_opportunities);
   const ai = list(c.ai_signals);
   const strong = ai.filter(x => x.signal === "strong" && /\[S\d+\]/.test(x.evidence || "") && !["AI Cost & Inference Economics", "Multi-Model Operations"].includes(x.theme));
@@ -115,7 +116,7 @@ function priorityFor(c) {
   const reason = score === null ? "Research required before prioritization" :
     [datedFunding, leading ? leading.pillar + ": " + leading.hypothesis : "", signal ? signal.theme + ": " + signal.hypothesis : ""].filter(Boolean).join(" · ").slice(0, 190) ||
     "No sufficiently sourced workload trigger; validate fit";
-  return {score,baseScore,tas,tasScore,tier,reason,quality,pillar:leading?.pillar || "Unverified",ai:signal?.theme || "Not established"};
+  return {score,baseScore,tas,tasScore,tasWeight,tier,reason,quality,pillar:leading?.pillar || "Unverified",ai:signal?.theme || "Not established"};
 }
 function rankedTerritory() {
   const result = companies.map(c => ({...c, priority:priorityFor(c)}));
@@ -163,7 +164,7 @@ function render() {
       <td class="score">${c.rank ?? "—"}</td>
       <td><div class="company-name">${esc(c.name)}</div><div class="description">${esc(c.sector || c.description || "No description")}</div></td>
       <td><strong>${esc(c.priority.tier)}</strong><div class="description" title="${esc(c.priority.reason)}">${esc(c.priority.reason)}</div><div class="meta">${esc(c.priority.quality)}</div></td>
-      <td class="score" title="${esc(c.priority.baseScore == null ? "Unassessed" : "Base attractiveness: "+c.priority.baseScore+"; "+(c.priority.tasScore == null ? "TAS unknown, no adjustment" : "85% base + 15% illustrative TAS band: "+c.priority.tasScore))}">${c.priority.score ?? "—"}</td>\n      <td class="score" title="Illustrative annual overall TAS, not verified spend">${formatTas(tasTableValue(c))}</td>
+      <td class="score" title="${esc(c.priority.baseScore == null ? "Unassessed" : "Base attractiveness: "+c.priority.baseScore+"; "+(c.priority.tasScore == null ? "TAS unknown, no adjustment" : Math.round((1-c.priority.tasWeight)*100)+"% base + "+Math.round(c.priority.tasWeight*100)+"% illustrative TAS band: "+c.priority.tasScore))}">${c.priority.score ?? "—"}</td>\n      <td class="score" title="Illustrative annual overall TAS, not verified spend">${formatTas(tasTableValue(c))}</td>
       <td>${esc(c.priority.pillar)}</td>
       <td>${esc(c.priority.ai)}</td>
       <td>${pill(c.status || "pending")}</td>
@@ -254,13 +255,23 @@ function tasRevenueScenario(c) {
     const x = candidates[0];
     return {millions:x.millions,note:"Source-reported annual revenue "+x.ref+" ("+x.title+"). Verify original financial statements and reporting period before using for forecasts.",kind:"Source-reported revenue (unverified)"};
   }
-  return {millions:null,note:"No sufficiently explicit USD annual revenue found in research sources. Enter a verified annual revenue figure manually; no headcount or funding proxy is automatically applied.",kind:"Revenue not verified"};
+  // Explicit low-confidence planning proxy, not reported revenue or actual IT spend.
+  const raw = String(c.employees || "").replace(/,/g,"").trim();
+  const match = raw.match(/^(\d+)(?:\s*[-–—]\s*(\d+))?\s*\+?$/);
+  if (match) {
+    const lo = Number(match[1]), hi = match[2] ? Number(match[2]) : lo;
+    if (lo > 0 && hi >= lo && hi <= 1000000) {
+      const headcount = (lo + hi) / 2;
+      return {millions:headcount * 10000 / 1e6, budgetProxy:true, kind:"Headcount-based technology budget scenario (low confidence)",note:"No sourced USD annual revenue. Uses employee count "+raw+" and an illustrative $10,000 annual technology budget per employee. Not reported revenue, actual spend or a Cloudflare benchmark. Replace with a better budget estimate when available."};
+    }
+  }
+  return {millions:null,note:"No sufficiently explicit USD annual revenue or usable employee count. Enter a sourced revenue figure manually.",kind:"Revenue not verified"};
 }
 function tasTableValue(c) {
   const scenario = tasRevenueScenario(c);
   if (scenario.millions == null || !Number.isFinite(scenario.millions) || scenario.millions <= 0) return null;
   const baseline = tasIndustryBaseline(c.sector);
-  return scenario.millions * 1e6 * baseline.pct / 100 * 0.03;
+  return scenario.millions * 1e6 * (scenario.budgetProxy ? 1 : baseline.pct / 100) * 0.03;
 }
 function formatTas(value) {
   return value == null ? "—" : value >= 1e6 ? "$" + (value / 1e6).toFixed(2) + "m" : "$" + Math.round(value / 1000).toLocaleString() + "k";
@@ -269,22 +280,21 @@ function tasSection(c) {
   const baseline = tasIndustryBaseline(c.sector);
   const scenario = tasRevenueScenario(c);
   return `<section class="brief-tas"><h3>Commercial potential · Annual TAS — ${formatTas(tasTableValue(c))} (scenario)</h3>
-    <h3>Commercial potential · Annual TAS</h3>
     <p class="meta">Calculated scenarios, not verified Cloudflare spend or sales forecasts. AI TAS is a subset of overall TAS; do not add the two.</p>
     <div class="brief-signal">
       <div id="tasResult" class="info">Calculating overall and AI TAS…</div>
       <p class="meta"><strong>${esc(scenario.kind)}</strong> · ${esc(scenario.note)}</p>
-      <label>Annual revenue (USD millions)
+      <label>${scenario.budgetProxy ? "Estimated technology budget (USD millions)" : "Annual revenue (USD millions)"}
         <input id="tasRevenue" type="number" min="0" step="0.01" placeholder="Unknown — enter sourced revenue" style="width:100%;margin-top:5px" ${scenario.millions != null ? 'value="'+scenario.millions.toFixed(2)+'"' : ''}>
       </label>
-      <label>Technology spend % <input id="tasIT" type="number" min="0" max="100" step="0.1" value="${baseline.pct}" style="width:85px"></label>
+      <label>Technology spend % <input id="tasIT" type="number" min="0" max="100" step="0.1" value="${scenario.budgetProxy ? 100 : baseline.pct}" ${scenario.budgetProxy ? "disabled" : ""} style="width:85px"></label>
       <label>Overall Cloudflare-addressable low % <input id="tasLow" type="number" min="0" max="100" step="0.1" value="1" style="width:75px"></label>
       <label>Overall Cloudflare-addressable high % <input id="tasHigh" type="number" min="0" max="100" step="0.1" value="5" style="width:75px"></label>
       <label>AI share of technology spend % <input id="tasAIShare" type="number" min="0" max="100" step="0.1" value="15" style="width:75px"></label>
       <label>AI Cloudflare-addressable low % <input id="tasAILow" type="number" min="0" max="100" step="0.1" value="2" style="width:75px"></label>
       <label>AI Cloudflare-addressable high % <input id="tasAIHigh" type="number" min="0" max="100" step="0.1" value="10" style="width:75px"></label>
       <details><summary class="meta">Method, assumptions and limitations</summary>
-        <p class="meta">Technology budget = annual revenue × technology spend %. Overall TAS = technology budget × 1–5% addressable share. AI budget = technology budget × 15% AI allocation. AI TAS = AI budget × 2–10% addressable share. Displayed central estimates are arithmetic midpoints of each range, not forecasts. AI TAS is already part of overall TAS and must not be added to it. All percentages are editable, illustrative planning assumptions; no validated AI budget, pricing, spend or official Cloudflare sizing methodology is implied. Funding is never treated as revenue. Revenue is only prefilled when an explicit USD annual-revenue statement is found in the research sources; otherwise enter a verified value.</p>
+        <p class="meta">Technology budget = annual revenue × technology spend %. Overall TAS = technology budget × 1–5% addressable share. AI budget = technology budget × 15% AI allocation. AI TAS = AI budget × 2–10% addressable share. Displayed central estimates are arithmetic midpoints of each range, not forecasts. AI TAS is already part of overall TAS and must not be added to it. All percentages are editable, illustrative planning assumptions; no validated AI budget, pricing, spend or official Cloudflare sizing methodology is implied. Funding is never treated as revenue. Revenue is only prefilled from source-reported USD revenue. If unavailable, a clearly labelled headcount-based technology budget scenario is used where possible; in that mode the budget is entered directly and the technology percentage is fixed at 100%. This proxy receives only 5% ranking weight, versus 15% for revenue-based scenarios. Manual edits are local calculator scenarios, not saved ranking inputs.</p>
       </details>
     </div>
   </section>`;
@@ -300,7 +310,7 @@ function wireTas() {
     if (!vals.every(Number.isFinite) || revenue <= 0 ||
         [it,low,high,aiShare,aiLow,aiHigh].some(x => x < 0 || x > 100) ||
         high < low || aiHigh < aiLow) {
-      out.textContent = "Enter valid revenue and percentage assumptions (high must be ≥ low) to calculate both TAS values.";
+      out.textContent = !Number.isFinite(revenue) || revenue <= 0 ? "TAS unavailable: enter a positive revenue or technology budget estimate above." : "Check percentage assumptions (0–100%; high must be ≥ low).";
       return;
     }
     const tech = revenue * 1e6 * it / 100;
