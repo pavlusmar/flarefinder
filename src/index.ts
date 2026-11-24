@@ -24,7 +24,9 @@ type Company = {
   growth_prediction: string | null;
 };
 
+type Stakeholder = { name: string; role: string; signals: string[] };
 type Source = {
+  recommended_stakeholders?: Stakeholder[];
   title: string;
   url: string;
   snippet: string;
@@ -58,6 +60,7 @@ type ScoreAxis = { total: number; tier: string; dimensions: Array<{key:string; l
 type PursuitScore = { account?: ScoreAxis; readiness?: ScoreAxis; next_action?: string; status: "scored" | "unavailable"; total: number | null; tier: string; dimensions: Array<{ key: string; label: string; score: number; weight: number }>; opportunity_size: string; primary_pillar: string; rationale: string; caveat: string; model: string };
 
 type Report = {
+  recommended_stakeholders?: Stakeholder[];
   customer_perspective: CustomerPerspective;
   ai_signals: AiSignal[];
   hiring_signals: HiringSignal[];
@@ -155,7 +158,7 @@ async function searchWeb(
   }
 
   const domain = (() => { try { return new URL(company.website || "").hostname.replace(/^www\./, ""); } catch { return ""; } })();
-  const tokens = company.name.toLowerCase().split(/[^a-z0-9]+/).filter(t => t.length >= 4);
+  const tokens = company.name.toLowerCase().split(/[^a-z0-9]+/).filter(t => t.length >= 3);
   // Research the BUSINESS before looking for Cloudflare/AI workloads.
   // Six targeted searches balance financial grounding, AI launches and infrastructure evidence against API spending.
   const identity = '"' + company.name + '"' + (domain ? ' "' + domain + '"' : '');
@@ -165,7 +168,8 @@ async function searchWeb(
     '"' + company.name + '" engineering infrastructure API security cloud architecture',
     '"' + company.name + '" AI agent MCP product launch model gateway security architecture',
     '"' + company.name + '" annual revenue turnover financial statements Companies House',
-    '"' + company.name + '" careers engineering AI product hiring'
+    '"' + company.name + '" careers engineering AI product hiring',
+    '"' + company.name + '" CTO VP engineering head of AI platform leadership engineering blog interview'
   ];
   console.log("Tavily searches started:", company.id);
   type SearchHit = { title?: string; url?: string; content?: string; searchIndex: number };
@@ -200,7 +204,7 @@ async function searchWeb(
       const jobSite = /(^|\.)(indeed\.com|glassdoor\.com|ziprecruiter\.com|linkedin\.com|greenhouse\.io|lever\.co|ashbyhq\.com|workable\.com)$/.test(host);
       const jobLike = /\b(job|jobs|careers|vacancy|hiring|apply|engineer|developer|architect)\b/i.test(title + " " + url);
       const specificJob = jobLike && employerNamed && !/jobs?\s+(in|near|search|results|openings)\b/i.test(title);
-      if ((!official && !employerNamed) || (jobSite && !specificJob) || snippet.length < 60) return [];
+      if ((!official && !employerNamed) || (jobSite && !specificJob && !(host.endsWith('linkedin.com') && parsed.pathname.startsWith('/in/'))) || snippet.length < 60) return [];
       const canonical = parsed.origin + parsed.pathname.replace(/\/$/, "").toLowerCase();
       if (seen.has(canonical)) return [];
       seen.add(canonical);
@@ -218,9 +222,10 @@ async function searchWeb(
       Number(b.official)-Number(a.official) || Number(b.concreteEvent)-Number(a.concreteEvent) ||
       Number(a.lowQuality)-Number(b.lowQuality) || Number(b.core)-Number(a.core) ||
       Number(a.pricingOnly)-Number(b.pricingOnly) || a.searchIndex-b.searchIndex);
-    const chosen: typeof candidates = [];
+    const chosen: typeof candidates = candidates.filter(x=>x.searchIndex === 6).slice(0,3);
     const byHost = new Map<string,number>();
     for (const hit of candidates) {
+      if (chosen.includes(hit)) continue;
       const count = byHost.get(hit.host) || 0;
       if (count >= (hit.official ? 6 : 2)) continue;
       if (hit.pricingOnly && chosen.some(s => s.pricingOnly)) continue;
@@ -1087,6 +1092,7 @@ Return ONLY one valid JSON object with exactly these keys:
  "customer_perspective": {"mission":"","priorities":[{"priority":"","basis":"inferred","evidence":"[S1]","why_it_matters":""}],"business_tension":""},
  "growth_signals": [],
  "technical_signals": [],
+ "recommended_stakeholders": [{"name":"","role":"","signals":["Specific professional evidence [S1]"]}],
  "hiring_signals": [{"role":"","posted_date":"","technologies":[],"evidence":"[S1]","relevance":"","confidence":"medium"}],
  "cloudflare_opportunities": [
    {
@@ -1122,7 +1128,7 @@ For hiring_signals, role is the actual job title, posted_date is YYYY-MM-DD only
 technologies contains only named requirements, evidence includes [S#], relevance is a cautious Cloudflare discovery angle.
 Return [] if no verified company-specific job posting is present.
 Include all five AI themes, with signal strong, possible, or insufficient. Keep evidence and hypotheses concise.
-Keep the JSON concise. No Markdown or explanations.
+Recommend up to three stakeholders relevant to the strongest opportunity signals. Use named people only when supplied sources explicitly support their name and role; otherwise use an empty name and a relevant role. Each signal must cite a source and explain relevance without asserting buying intent. Do not invent people or titles. Keep the JSON concise. No Markdown or explanations.
 
 Company:
 ${JSON.stringify(companyData)}
@@ -1204,6 +1210,14 @@ ${JSON.stringify(sources.map((source, i) => ({ id: `S${i+1}`, ...source })))}
         });
       });
 
+      report.recommended_stakeholders = (Array.isArray(parsed.recommended_stakeholders) ? parsed.recommended_stakeholders : []).slice(0,3).flatMap(item => {
+        if (!item || typeof item !== 'object') return [];
+        const name = safe(item.name), role = safe(item.role);
+        const signals = stringList(item.signals).filter(v=>/\[S\d+\]/.test(v) && validCitations(v)).slice(0,3);
+        if (!role || !signals.length) return [];
+        const cited = signals.flatMap(v=>[...v.matchAll(/\[S(\d+)\]/g)].map(m=>sources[Number(m[1])-1])).map(x=>x.title+' '+x.snippet).join(' ').toLowerCase();
+        return [{name: name && cited.includes(name.toLowerCase()) ? name : '', role, signals}];
+      });
       finalizeEvidenceReport(report, sources);
       console.log("Opportunity validation:", company.id, { count: report.cloudflare_opportunities.length, pillars: report.cloudflare_opportunities.map(o => o.pillar) });
       console.log("AI generation completed:", company.id);
@@ -1289,7 +1303,7 @@ async function researchCompany(env: Env, id: string) {
     if (sources.length) sources[0].pursuit_score = pursuit;
 
     // Preserve customer perspective with research sources to avoid a D1 migration.
-    if (sources.length) sources[0].customer_perspective = report.customer_perspective;
+    if (sources.length) { sources[0].customer_perspective = report.customer_perspective; sources[0].recommended_stakeholders = report.recommended_stakeholders || []; }
 
     // Store hiring signals with the relevant source, avoiding a D1 migration.
     for (const hiring of report.hiring_signals) {
