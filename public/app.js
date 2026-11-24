@@ -589,6 +589,8 @@ async function detail(id, silent = false) {
         return '<div class="brief-ai-row"><div class="signal-head"><strong>' + esc(theme) + '</strong>' + pill(signal?.signal || "insufficient") + '</div>' + (signal && signal.signal !== "insufficient" ? '<p class="meta"><strong>Source excerpt:</strong> ' + cite(signal.hypothesis || aiSourceExcerpt(signal.evidence) || "Specific activity documented") + ' ' + cite(signal.evidence) + '</p>' : '<p class="meta">Insufficient public evidence.</p>') + '</div>';
       }).join("")}
       ${compact ? "</details>" : ""}
+      <h3>Recommended stakeholders</h3>
+      ${(sources[0]?.recommended_stakeholders || []).map(h => '<div class="brief-signal"><strong>' + esc(h.name ? h.name + ' — ' + h.role : h.role + ' (name not verified)') + '</strong>' + (h.signals || []).map(signal => '<p>' + cite(signal) + '</p>').join('') + '</div>').join('') || '<p class="meta">No verified stakeholder recommendations saved. Refresh this account to discover relevant people and roles.</p>'}
       <details class="brief-details"><summary>Discovery questions</summary>
       ${compact ? listHtml(list(c.questions).slice(0, 3)) : listHtml(c.questions)}
       </details>
