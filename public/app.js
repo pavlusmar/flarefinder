@@ -94,7 +94,11 @@ function pursuitFor(c) {
 }
 function priorityFor(c) {
   const p = pursuitFor(c);
-  const score = c.status === "complete" && p?.status === "scored" ? (p.account?.total ?? p.total) : null;
+  const baseScore = c.status === "complete" && p?.status === "scored" ? (p.account?.total ?? p.total) : null;
+  const tas = tasTableValue(c);
+  // Illustrative planning bands, not official Cloudflare thresholds.
+  const tasScore = tas == null ? null : tas < 10000 ? 20 : tas < 25000 ? 40 : tas < 50000 ? 60 : tas < 100000 ? 80 : 100;
+  const score = baseScore == null ? null : tasScore == null ? baseScore : Math.round(baseScore * 0.85 + tasScore * 0.15);
   const opportunities = list(c.cloudflare_opportunities);
   const ai = list(c.ai_signals);
   const strong = ai.filter(x => x.signal === "strong" && /\[S\d+\]/.test(x.evidence || "") && !["AI Cost & Inference Economics", "Multi-Model Operations"].includes(x.theme));
@@ -111,7 +115,7 @@ function priorityFor(c) {
   const reason = score === null ? "Research required before prioritization" :
     [datedFunding, leading ? leading.pillar + ": " + leading.hypothesis : "", signal ? signal.theme + ": " + signal.hypothesis : ""].filter(Boolean).join(" · ").slice(0, 190) ||
     "No sufficiently sourced workload trigger; validate fit";
-  return {score,tier,reason,quality,pillar:leading?.pillar || "Unverified",ai:signal?.theme || "Not established"};
+  return {score,baseScore,tas,tasScore,tier,reason,quality,pillar:leading?.pillar || "Unverified",ai:signal?.theme || "Not established"};
 }
 function rankedTerritory() {
   const result = companies.map(c => ({...c, priority:priorityFor(c)}));
@@ -159,7 +163,7 @@ function render() {
       <td class="score">${c.rank ?? "—"}</td>
       <td><div class="company-name">${esc(c.name)}</div><div class="description">${esc(c.sector || c.description || "No description")}</div></td>
       <td><strong>${esc(c.priority.tier)}</strong><div class="description" title="${esc(c.priority.reason)}">${esc(c.priority.reason)}</div><div class="meta">${esc(c.priority.quality)}</div></td>
-      <td class="score">${c.priority.score ?? "—"}</td>\n      <td class="score" title="Illustrative annual overall TAS, not verified spend">${formatTas(tasTableValue(c))}</td>
+      <td class="score" title="${esc(c.priority.baseScore == null ? "Unassessed" : "Base attractiveness: "+c.priority.baseScore+"; "+(c.priority.tasScore == null ? "TAS unknown, no adjustment" : "85% base + 15% illustrative TAS band: "+c.priority.tasScore))}">${c.priority.score ?? "—"}</td>\n      <td class="score" title="Illustrative annual overall TAS, not verified spend">${formatTas(tasTableValue(c))}</td>
       <td>${esc(c.priority.pillar)}</td>
       <td>${esc(c.priority.ai)}</td>
       <td>${pill(c.status || "pending")}</td>
