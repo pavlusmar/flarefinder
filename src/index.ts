@@ -1462,7 +1462,7 @@ async function route(
     const rows = await env.DB.prepare(`
       SELECT c.*, r.status, r.digital_native,
              r.confidence, r.researched_at, r.error, r.ai_signals,
-             r.cloudflare_opportunities,
+             r.cloudflare_opportunities, r.sources,
              json_extract(r.sources, '$[0].pursuit_score') AS pursuit_score,
              r.growth_signals
       FROM companies c
