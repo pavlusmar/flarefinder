@@ -168,7 +168,7 @@ async function searchWeb(
     '"' + company.name + '" engineering infrastructure API security cloud architecture',
     '"' + company.name + '" AI agent MCP product launch model gateway security architecture',
     '"' + company.name + '" annual revenue turnover financial statements Companies House',
-    '"' + company.name + '" careers engineering AI product hiring',
+    '"' + company.name + '" "Senior AI Platform Engineer" OR "GenAI Platform" OR "platform engineering" careers hiring',
     '"' + company.name + '" CTO VP engineering head of AI platform leadership engineering blog interview'
   ];
   console.log("Tavily searches started:", company.id);
@@ -198,12 +198,12 @@ async function searchWeb(
       const host = parsed.hostname.toLowerCase().replace(/^www\./, "");
       const official = !!domain && (host === domain || host.endsWith("." + domain));
       const title = safe(r.title).slice(0, 200);
-      const snippet = safe(r.content).slice(0, 1400);
+      const snippet = safe(r.content).slice(0, 3000);
       const haystack = (title + " " + snippet + " " + host).toLowerCase();
       const employerNamed = tokens.length > 0 && tokens.every(t => haystack.includes(t));
       const jobSite = /(^|\.)(indeed\.com|glassdoor\.com|ziprecruiter\.com|linkedin\.com|greenhouse\.io|lever\.co|ashbyhq\.com|workable\.com)$/.test(host);
       const jobLike = /\b(job|jobs|careers|vacancy|hiring|apply|engineer|developer|architect)\b/i.test(title + " " + url);
-      const specificJob = jobLike && employerNamed && !/jobs?\s+(in|near|search|results|openings)\b/i.test(title);
+      const specificJob = jobLike && employerNamed && !/^(careers|open roles|open positions|.*\bjobs)$/i.test(title) && !/jobs?\s+(in|near|search|results|openings)\b/i.test(title);
       if ((!official && !employerNamed) || (jobSite && !specificJob && !(host.endsWith('linkedin.com') && parsed.pathname.startsWith('/in/'))) || snippet.length < 60) return [];
       const canonical = parsed.origin + parsed.pathname.replace(/\/$/, "").toLowerCase();
       if (seen.has(canonical)) return [];
@@ -222,8 +222,9 @@ async function searchWeb(
       Number(b.official)-Number(a.official) || Number(b.concreteEvent)-Number(a.concreteEvent) ||
       Number(a.lowQuality)-Number(b.lowQuality) || Number(b.core)-Number(a.core) ||
       Number(a.pricingOnly)-Number(b.pricingOnly) || a.searchIndex-b.searchIndex);
-    const chosen: typeof candidates = candidates.filter(x=>x.searchIndex === 6).slice(0,3);
+    const chosen: typeof candidates = [...candidates.filter(x=>x.specificJob && /\b(ai platform engineer|genai platform|ai engineering lead)\b/i.test(x.title)).slice(0,3), ...candidates.filter(x=>x.searchIndex === 6).slice(0,2)];
     const byHost = new Map<string,number>();
+    for (const hit of chosen) byHost.set(hit.host,(byHost.get(hit.host)||0)+1);
     for (const hit of candidates) {
       if (chosen.includes(hit)) continue;
       const count = byHost.get(hit.host) || 0;
@@ -665,7 +666,7 @@ function recoverEvidenceBackedOpportunities(report: Report, sources: Source[]): 
     const title = source.title || "", text = title + " " + (source.snippet || "");
     const article = /\b(raises?|funding|series [a-f]|investment|valuation|prnewswire|pymnts)\b/i.test(title);
     const engineering = /\b(engineering|architect|authenticat\w*|authori[sz]\w*|monolith|service boundary|platform engineer|technical blog|developer)\b/i.test(title);
-    const job = /\b(platform engineer|ai engineer|engineering lead|head of ai|ai infrastructure)\b/i.test(title);
+    const job = /\b(platform engineer|ai platform engineer|ai engineer|engineering lead|head of ai|ai infrastructure)\b/i.test(title);
     const aiPlatform = /\b(ai platform|generative ai|agentic ai|autonomous ai agents|ai infrastructure)\b/i.test(text) &&
       /\b(build\w*|design\w*|architect\w*|shared platform|reusable infrastructure)\b/i.test(text) &&
       /\b(engineer\w*|platform|infrastructure|architecture)\b/i.test(text);
@@ -725,6 +726,7 @@ function recoverEvidenceBackedOpportunities(report: Report, sources: Source[]): 
     if (!source) return 0;
     const title = source.title || "";
     if (/\b(raises?|funding|series [a-f]|investment|valuation|pymnts|prnewswire)\b/i.test(title)) return 10;
+    if (/AI Gateway/i.test(o.product_fit || "")) return 100;
     if (/\b(ai platform engineer|ai engineering|ai infrastructure)\b/i.test(title)) return 95;
     if (/\b(authenticat\w*|authori[sz]\w*|service boundary|monolith|engineering|architecture)\b/i.test(title)) return 70;
     return o.confidence === "high" ? 60 : 35;
@@ -734,11 +736,12 @@ function recoverEvidenceBackedOpportunities(report: Report, sources: Source[]): 
   const selected: Opportunity[] = [];
   for (const candidate of combined) {
     const o = candidate.opportunity;
+    const related = selected.find(x => x.pillar === o.pillar && /AI Gateway/i.test(x.product_fit || "") && /AI Gateway/i.test(o.product_fit || ""));
+    if (related) { related.evidence = [...new Set((related.evidence+" "+o.evidence).match(/\[S\d+\]/g)||[])].join(" "); continue; }
     const primaryRef = [...o.evidence.matchAll(/\[S(\d+)\]/g)][0]?.[0];
     if (selected.some(x => x.pillar === o.pillar && x.evidence.includes(primaryRef || "UNMATCHABLE") &&
       (x.product_fit || "").split(/[ —]/)[0].toLowerCase() === (o.product_fit || "").split(/[ —]/)[0].toLowerCase())) continue;
-    selected.push(o);
-    if (selected.length === 4) break;
+    if (selected.length < 4) selected.push(o);
   }
   report.cloudflare_opportunities = selected;
   report.questions = selected.length ? selected.map(o=>o.discovery_question || "").filter(Boolean) : report.questions;
@@ -799,7 +802,17 @@ function finalizeEvidenceReport(report: Report, sources: Source[]): Report {
     if (/\b(raises?|funding|series [a-f]|investment|valuation|pymnts|prnewswire)\b/i.test(title)) return 10;
     return o.confidence === "high" ? 65 : 35;
   };
-  report.cloudflare_opportunities.sort((a,b)=>priority(b)-priority(a));
+  report.cloudflare_opportunities.sort((a,b)=>(/AI Gateway/i.test(b.product_fit || "")?100:priority(b)) - (/AI Gateway/i.test(a.product_fit || "")?100:priority(a)));
+  for (const o of report.cloudflare_opportunities) {
+    const line = (o.signal || "") + " — " + (o.implication || "");
+    if (!report.technical_signals.includes(line)) report.technical_signals.push(line);
+  }
+  report.technical_signals = report.technical_signals.slice(0,8);
+  for (const theme of report.ai_signals) {
+    if (theme.signal !== "insufficient" || theme.theme === "Build & Scale AI Applications") continue;
+    const i = sources.findIndex(s => /\b(ai platform engineer|genai platform|ai engineering lead)\b/i.test(s.title) && AI_EVIDENCE_RULES[theme.theme].test(s.snippet));
+    if (i >= 0) { theme.signal = "possible"; theme.confidence = "medium"; theme.evidence = "[S"+(i+1)+"]"; theme.hypothesis = "Employer describes relevant planned capabilities or experience; deployed architecture, costs and requirements remain unverified."; }
+  }
   report.questions = report.cloudflare_opportunities.length
     ? report.cloudflare_opportunities.map(o=>o.discovery_question || "").filter(Boolean).slice(0,4)
     : ["Which current technical initiative has an owner and timeline?", "Which incumbent providers already address this workload?"];
@@ -840,6 +853,15 @@ function replaySavedResearch(row: unknown): Record<string, unknown> {
       // The original Clef score was calculated before the saved-source replay.
       // Never present it as a score recalculated from this revised brief.
       stored.brief_recomputed = true;
+      const stakeholders = sources[0].recommended_stakeholders || [];
+      for (const person of stakeholders) {
+        if (person.name) continue;
+        const role = person.role.toLowerCase();
+        const index = sources.findIndex(x => { const t = x.title.toLowerCase(); return role.includes("cto") ? /,\s*cto\b/.test(t) : /vp.*engineering/.test(role) && /,\s*vp.*engineering/.test(t); });
+        if (index >= 0) { const name = sources[index].title.split(",")[0].trim(); if (/^[\p{L}][\p{L} .’\x27-]{2,70}$/u.test(name)) { person.name = name; person.signals = [...new Set([...person.signals, "Leadership role [S"+(index+1)+"]"])]; } }
+      }
+      sources[0].recommended_stakeholders = stakeholders;
+      stored.sources = Array.isArray(stored.sources) ? sources : JSON.stringify(sources);
     }
     return stored;
 }
