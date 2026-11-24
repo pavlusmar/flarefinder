@@ -92,6 +92,25 @@ function pursuitFor(c) {
   }
   catch { return null; }
 }
+function engagementFor(c) {
+  const sources = list(c.sources);
+  const opportunities = list(c.cloudflare_opportunities).filter(o => /\[S\d+\]/.test(o.evidence || ""));
+  const text = sources.map(x => (x.title || "") + " " + (x.snippet || "")).join("\n");
+  const active = sources.some(x => /\b(engineer|engineering|jobs|careers)\b/i.test(x.title || "") && /\b(genai platform|ai platform engineer|developer portal|ci\/cd|model routing|shared ai platform)\b/i.test((x.title || "")+" "+(x.snippet || "")));
+  const timed = /\b(six months|6 months|currently hiring|open positions|we are looking for|we're looking for)\b/i.test(text);
+  const stakeholder = sources.some(x => /\b(cto|vp of engineering|vp engineering|engineering lead|head of ai)\b/i.test(x.title || ""));
+  const dimensions = [
+    {label:"Active technical initiative",weight:35,score:active?3:opportunities.length?1:0},
+    {label:"Relevant workload / solution hypothesis",weight:30,score:Math.min(3,new Set(opportunities.map(o=>o.pillar)).size+ (opportunities.length>1?1:0))},
+    {label:"Timing / engagement trigger",weight:25,score:active&&timed?3:active?2:0},
+    {label:"Identifiable stakeholder",weight:10,score:stakeholder?3:0}
+  ];
+  return {total:Math.round(dimensions.reduce((sum,d)=>sum+d.score*d.weight/4,0)),dimensions};
+}
+function igniteQuadrant(potential,readiness) {
+  if (potential == null || readiness == null) return "Unassessed";
+  return potential>=60 ? (readiness>=60?"Pursue":"Develop") : (readiness>=60?"Activate":"Nurture");
+}
 function priorityFor(c) {
   const p = pursuitFor(c);
   const baseScore = c.status === "complete" && p?.status === "scored" ? (p.account?.total ?? p.total) : null;
@@ -110,13 +129,16 @@ function priorityFor(c) {
   if (score !== null) {
     tier = !qualified ? "T4 · Validate fit" : score >= 75 && c.confidence !== "low" && (sourced.length || strong.length) ? "T1 · Prioritize" : score >= 55 ? "T2 · Qualify" : "T3 · Investigate";
   }
+  const potentialTier = tier;
+  const engagement = engagementFor(c);
+  tier = qualified ? igniteQuadrant(score, engagement.total) : "Unassessed";
   const datedFunding = c.last_funding_date && /^20\d\d/.test(c.last_funding_date) ? "Funding " + c.last_funding_date : "";
   const leading = sourced.sort((a,b) => ({high:3,medium:2,low:1}[b.confidence]||0)-({high:3,medium:2,low:1}[a.confidence]||0))[0];
   const signal = strong[0];
   const reason = score === null ? "Research required before prioritization" :
     [datedFunding, leading ? leading.pillar + ": " + leading.hypothesis : "", signal ? signal.theme + ": " + signal.hypothesis : ""].filter(Boolean).join(" · ").slice(0, 190) ||
     "No sufficiently sourced workload trigger; validate fit";
-  return {score,baseScore,tas,tasScore,tasWeight,tier,reason,quality,pillar:leading?.pillar || "Unverified",ai:signal?.theme || "Not established"};
+  return {score,baseScore,tas,tasScore,tasWeight,tier,potentialTier,engagement,reason,quality,pillar:leading?.pillar || "Unverified",ai:signal?.theme || "Not established"};
 }
 function rankedTerritory() {
   const result = companies.map(c => ({...c, priority:priorityFor(c)}));
@@ -442,7 +464,7 @@ async function detail(id, silent = false) {
     const compact = false; // Full research is available for every account.
     const sources = list(c.sources);
     const perspective = sources[0]?.customer_perspective || {};
-    const pursuit = sources[0]?.pursuit_score || null;
+    const pursuit = pursuitFor(c);
     const priorities = Array.isArray(perspective.priorities) ? perspective.priorities : [];
     const opportunities = list(c.cloudflare_opportunities);
     const aiSignals = list(c.ai_signals);
@@ -471,7 +493,7 @@ async function detail(id, silent = false) {
       : ([businessHighlights[0]?.priority ? businessHighlights[0].priority + " " + businessHighlights[0].evidence : "", mainOpportunity?.signal || "", mainOpportunity?.pillar ? mainOpportunity.pillar + " discovery hypothesis — not a verified requirement" : ""].filter(Boolean).join(" · ") || priority.reason);
     const scoredAt = sources[0]?.scored_at || c.researched_at;
     const revisedBrief = !!c.brief_recomputed;
-    const scoreCaveat = revisedBrief ? "Saved Clef score predates this evidence re-analysis; it has not been recalculated." : "Clef score reflects the research run; it is not verified buying intent.";
+    const scoreCaveat = revisedBrief ? "Account potential uses the saved Clef attractiveness score plus TAS; engagement readiness is recalculated from saved evidence without API calls." : "Clef score reflects the research run; it is not verified buying intent.";
     // Only surface details explicitly present in stored source excerpts.
     const jobSources = sources.map((source,i)=>({source,ref:"[S"+(i+1)+"]"}))
       .filter(x=>/\\b(ai platform engineer|ai infrastructure engineer|agent platform engineer)\\b/i.test(x.source.title || ""));
@@ -576,7 +598,7 @@ async function detail(id, silent = false) {
         <p><strong>Why this account:</strong> ${cite(reason)}</p>\n        <p class="meta">${esc(scoreCaveat)}</p>
         <p class="meta">Territory rank: ${rankedTerritory().find(x => x.id === c.id)?.rank ?? "Unranked"} · ${esc(priority.quality)} · Absolute score determines priority; rank compares researched accounts.</p>
       </div>
-      <div class="brief-stats"><span>Research: <strong>${esc(c.confidence || "unknown")} confidence</strong></span><span>Readiness: <strong>${esc(pursuit?.readiness?.tier || "unknown")}</strong></span></div>
+      <div class="brief-stats"><span>Research: <strong>${esc(c.confidence || "unknown")} confidence</strong></span><span>Readiness: <strong>${esc(priority.engagement.total)}/100</strong></span></div>
       <section class="brief-priorities">
         <h3>Company priorities &amp; strategic direction</h3>
         <p class="meta">Company-stated priorities are distinguished from inferred ones. These are outside-in findings, not confirmed customer conversations.</p>
@@ -619,21 +641,25 @@ async function detail(id, silent = false) {
       <details class="brief-details"><summary>Supporting commercial reasoning</summary>
       ${commercialNarrative.map(step => '<div class="brief-signal"><strong>' + esc(step.label) + '</strong><p>' + cite(step.value) + '</p></div>').join("")}
       </details>
-      <details class="brief-details"><summary>Detailed Clef scoring and readiness</summary>
+      <details class="brief-details"><summary>IGNITE scoring and saved Clef assessment</summary>
       <h3>Account attractiveness · Clef Flash</h3>
       ${pursuit?.status === 'scored' && pursuit.account ? `
-        <p><strong>${esc(pursuit.account.total)}/100 · ${esc(pursuit.tier)}</strong></p>
+        <p><strong>${esc(pursuit.account.total)}/100 base · ${esc(priority.score)}/100 TAS-adjusted potential</strong></p>
         <p class="meta">Is this company worth pursuing? Not a confirmed Cloudflare opportunity.</p>
         ${(pursuit.account.dimensions || []).map(d => `
           <div class="opportunity"><strong>${esc(d.label)}: ${esc(Math.round(d.score / 4 * d.weight))}/${esc(d.weight)} points</strong>
           <div class="meta">Clef rubric: ${esc(d.score)}/4</div></div>`).join('')}
-        <h3>Opportunity readiness · Clef Flash</h3>
+        <h3>Engagement readiness · IGNITE</h3>
+        <p><strong>${esc(priority.engagement.total)}/100 · ${esc(priority.tier)}</strong></p>
+        ${priority.engagement.dimensions.map(d=>`<p>${esc(d.label)}: ${Math.round(d.score*d.weight/4)}/${d.weight}</p>`).join("")}
+        <p class="meta">60/100 threshold on both axes. Engagement readiness is not verified buying intent.</p>
+        <h3>Historical Clef buying-readiness assessment (not used for IGNITE)</h3>
         <p><strong>${esc(pursuit.readiness?.total ?? '—')}/100 · ${esc(pursuit.readiness?.tier || 'Unknown')}</strong></p>
         <p class="meta">How much of the technical need, timing and access is actually evidenced?</p>
         ${(pursuit.readiness?.dimensions || []).map(d => `
           <div class="opportunity"><strong>${esc(d.label)}: ${esc(Math.round(d.score / 4 * d.weight))}/${esc(d.weight)} points</strong>
           <div class="meta">Clef rubric: ${esc(d.score)}/4</div></div>`).join('')}
-        <p><strong>Suggested next action:</strong> ${esc(pursuit.next_action || '')}</p>
+        <p><strong>Suggested next action:</strong> ${esc(({Pursue:"Prioritize AE discovery; involve SE after qualification.",Develop:"Develop account and validate initiative timing.",Activate:"Qualify efficiently against commercial potential.",Nurture:"Monitor triggers."})[priority.tier] || "Research required")}</p>
         <p><strong>Best-supported pillar:</strong> ${esc(pursuit.primary_pillar || 'Not established')}</p>
         <p class="meta">${esc(pursuit.caveat || '')}</p>
       ` : pursuit?.status === 'scored' ? `
