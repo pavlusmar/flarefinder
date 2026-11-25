@@ -107,13 +107,30 @@ function engagementFor(c) {
   ];
   return {total:Math.round(dimensions.reduce((sum,d)=>sum+d.score*d.weight/4,0)),dimensions};
 }
+function attractivenessFor(c) {
+  const saved = pursuitFor(c)?.account;
+  if (!saved?.dimensions?.length) return saved;
+  const sources = list(c.sources);
+  const has = re => sources.some(x => re.test(String(x.snippet || "")));
+  const platform = c.digital_native === "yes" && has(/(?:AI-powered analytics platform|AI-native platform|software platform|cloud-native platform)/i);
+  const explicitGateway = has(/(?:create|build|develop|design) shared components[^.]{0,250}AI gateways/i);
+  const documentedEdge = has(/CloudFront and WAF give us|behind CloudFront\/WAF|we use CloudFront/i);
+  const dimensions = saved.dimensions.map(d => {
+    let score = d.score, reason = "";
+    if (d.key === "digital_native_fit" && platform && score < 4) { score = 4; reason = "Documented platform-first business."; }
+    if (d.key === "product_relevance" && (explicitGateway || documentedEdge) && score < 3) { score = 3; reason = "Explicit planned platform capability or documented incumbent edge workload; not buying intent."; }
+    if (d.key === "product_relevance" && explicitGateway && documentedEdge && score < 4) { score = 4; reason = "Distinct planned AI gateway and documented production CDN/WAF architecture."; }
+    return {...d, score, reason};
+  });
+  return {...saved, dimensions, total:Math.round(dimensions.reduce((sum,d)=>sum+d.score*d.weight/4,0))};
+}
 function igniteQuadrant(potential,readiness) {
   if (potential == null || readiness == null) return "Unassessed";
-  return potential>=60 ? (readiness>=60?"Pursue":"Develop") : (readiness>=60?"Activate":"Nurture");
+  return potential>=70 ? (readiness>=70?"Pursue":"Develop") : (readiness>=70?"Activate":"Nurture");
 }
 function priorityFor(c) {
   const p = pursuitFor(c);
-  const baseScore = c.status === "complete" && p?.status === "scored" ? (p.account?.total ?? p.total) : null;
+  const baseScore = c.status === "complete" && p?.status === "scored" ? (attractivenessFor(c)?.total ?? p.total) : null;
   const tas = tasTableValue(c);
   // Illustrative planning bands, not official Cloudflare thresholds.
   const tasScore = tas == null ? null : tas < 10000 ? 20 : tas < 25000 ? 40 : tas < 50000 ? 60 : tas < 100000 ? 80 : 100;
@@ -642,17 +659,17 @@ async function detail(id, silent = false) {
       ${commercialNarrative.map(step => '<div class="brief-signal"><strong>' + esc(step.label) + '</strong><p>' + cite(step.value) + '</p></div>').join("")}
       </details>
       <details class="brief-details"><summary>IGNITE scoring and saved Clef assessment</summary>
-      <h3>Account attractiveness · Clef Flash</h3>
+      <h3>Account attractiveness · IGNITE (evidence-adjusted Clef)</h3>
       ${pursuit?.status === 'scored' && pursuit.account ? `
         <p><strong>${esc(pursuit.account.total)}/100 base · ${esc(priority.score)}/100 account potential</strong></p>
         <p class="meta">Is this company worth pursuing? Not a confirmed Cloudflare opportunity.</p>
-        ${(pursuit.account.dimensions || []).map(d => `
+        ${(attractivenessFor(c)?.dimensions || []).map(d => `
           <div class="opportunity"><strong>${esc(d.label)}: ${esc(Math.round(d.score / 4 * d.weight))}/${esc(d.weight)} points</strong>
-          <div class="meta">Clef rubric: ${esc(d.score)}/4</div></div>`).join('')}
+          <div class="meta">Rubric: ${esc(d.score)}/4 · ${esc(d.reason || "Saved assessment")}</div></div>`).join('')}
         <h3>Engagement readiness · IGNITE</h3>
         <p><strong>${esc(priority.engagement.total)}/100 · ${esc(priority.tier)}</strong></p>
         ${priority.engagement.dimensions.map(d=>`<p>${esc(d.label)}: ${Math.round(d.score*d.weight/4)}/${d.weight}</p>`).join("")}
-        <p class="meta">60/100 threshold on both axes. Engagement readiness is not verified buying intent.</p>
+        <p class="meta">70/100 threshold on both axes. Engagement readiness is not verified buying intent.</p>
         <h3>Historical Clef buying-readiness assessment (not used for IGNITE)</h3>
         <p><strong>${esc(pursuit.readiness?.total ?? '—')}/100 · ${esc(pursuit.readiness?.tier || 'Unknown')}</strong></p>
         <p class="meta">How much of the technical need, timing and access is actually evidenced?</p>
