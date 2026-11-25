@@ -24,3 +24,33 @@ Reasoning: qualify incremental gateway value over LiteLLM for company-operated c
 Research business and latest dated strategy first; investigate official architecture, named projects, hiring, incumbents, workload ownership and relevant decision-makers. Follow discoveries with targeted searches. Record source URL, excerpt, date if known, fact versus inference, counter-evidence and qualification question. Never equate hiring requirements with deployed technology. Rank primary entry point separately from expansion and ecosystem hypotheses. Unknowns remain unknown. Preserve cumulative evidence with freshness caveats.
 ## Evaluation
 Check factual grounding (25%), technical coverage (20%), commercial reasoning (20%), strategy (15%), actionability (10%), stakeholders (5%), sizing discipline (5%). Compare against evidence, not exact IGNITE numbers. Test unseen companies and low-fit cases. No forced pillar coverage.
+
+## Additional reference cases — preliminary research, November 2026
+Recheck linked primary sources before relying on these assessments. No exact IGNITE labels or scores are regression targets.
+
+### Wayve
+Qualified unicorn candidate; Develop hypothesis. Portal Data Transfer Hub engineering role describes Azure, distributed partner transfers, cost and throughput requirements, planned petabyte/day scale: https://jobs.ashbyhq.com/wayve/3ef8fd28-0831-44b8-b3db-deb18882aeec
+Investigate R2 and connectivity for partner data exchange, not core GPU training or onboard inference. Benchmark direct Azure transfers against intermediate storage, including data locality, operations, retention and origin costs. Transfer volume is not stored volume. Illustrative 100 TB average standard R2 storage at $0.015/GB/month is $18k/year before discounts and operations, not a forecast. Identify Portal engineering owner; open evaluation unknown.
+
+### Locai (LOC.AI LTD, 16471983)
+https://find-and-update.company-information.service.gov.uk/company/16471983
+https://locai.co.uk/
+https://locai.substack.com/p/press-release-locai-raises-1m-to
+Reported £1m pre-seed; local-first inference orchestration across customer devices, private infrastructure and external APIs. Registry and distribution are possible direct workloads; routing overlaps AI Gateway. Qualify managed control-plane ownership, actual registry utilization and customer counts. Nurture hypothesis, not proof of low spend. Published allowances are not consumption. Do not confuse with Locai Labs.
+
+### Locai Labs (LOCAI LABS LIMITED, 14229026)
+https://find-and-update.company-information.service.gov.uk/company/14229026
+https://www.locailabs.com/
+Previously Appella AI Limited; distinct registered entity and reported controlling ownership from LOC.AI LTD. On-premises AI appliances and software; customer-operated inference is not vendor cloud spend. Investigate model distribution, updates and managed services. Growth eligibility unverified; do not force qualification or disqualification.
+
+### Peak AI (09307701)
+https://find-and-update.company-information.service.gov.uk/company/09307701/filing-history
+https://peak.ai/uipath/
+Reported acquisition March 2025 and operating business transfer June 2025 to UiPath UK; verify filed accounts. Disqualify former standalone account if transfer confirmed; parent may own relevant workloads. No standalone TAS or IGNITE.
+
+### Humanloop
+https://humanloop.com/docs/changelog/2025/08
+Official sunset announcement reports standalone platform discontinuation September 2025 following team acquisition. Verify current product status before exclusion. Historical LLM tooling relevance cannot justify outreach to a discontinued product. No standalone TAS or IGNITE.
+
+### Qualification rules
+Check operating status, ownership, active product, UK nexus and growth eligibility before deep research. Distinguish disqualified, insufficient evidence, and eligible but low addressability. Identify payer, workload owner, incumbent, incremental value and open decision before scoring. Do not equate funding, valuation or total technology spend with Cloudflare-addressable spend. Investigate adjacent workloads before declaring low fit. Pasture Restaurant remains a basic industry-filter test only. Keep held-out discovery targets outside examples and seeds.
