@@ -117,7 +117,7 @@ function priorityFor(c) {
   const tas = tasTableValue(c);
   // Illustrative planning bands, not official Cloudflare thresholds.
   const tasScore = tas == null ? null : tas < 10000 ? 20 : tas < 25000 ? 40 : tas < 50000 ? 60 : tas < 100000 ? 80 : 100;
-  const tasWeight = tasRevenueScenario(c).budgetProxy ? 0.05 : 0.15;
+  const tasWeight = 0; // Unvalidated budget scenarios must not change account priority.
   const score = baseScore == null ? null : tasScore == null ? baseScore : Math.round(baseScore * (1-tasWeight) + tasScore * tasWeight);
   const opportunities = list(c.cloudflare_opportunities);
   const ai = list(c.ai_signals);
@@ -284,7 +284,7 @@ function tasRevenueScenario(c) {
     const lo = Number(match[1]), hi = match[2] ? Number(match[2]) : lo;
     if (lo > 0 && hi >= lo && hi <= 1000000) {
       const headcount = (lo + hi) / 2;
-      return {millions:headcount * 10000 / 1e6, budgetProxy:true, kind:"Headcount-based technology budget scenario (low confidence)",note:"No sourced USD annual revenue. Uses employee count "+raw+" and an illustrative $10,000 annual technology budget per employee. Not reported revenue, actual spend or a Cloudflare benchmark. Replace with a better budget estimate when available."};
+      return {millions:headcount * 10000 / 1e6, budgetProxy:true, kind:"Headcount-based technology budget scenario (low confidence)",note:"No sourced USD annual revenue. Uses employee count "+raw+" and an illustrative $10,000 annual technology budget per employee. Not reported revenue, actual spend or a Cloudflare benchmark. This is a broad company-size proxy, not engineering headcount or production usage. Replace with a validated workload estimate when available."};
     }
   }
   return {millions:null,note:"No sufficiently explicit USD annual revenue or usable employee count. Enter a sourced revenue figure manually.",kind:"Revenue not verified"};
@@ -316,7 +316,7 @@ function tasSection(c) {
       <label>AI Cloudflare-addressable low % <input id="tasAILow" type="number" min="0" max="100" step="0.1" value="2" style="width:75px"></label>
       <label>AI Cloudflare-addressable high % <input id="tasAIHigh" type="number" min="0" max="100" step="0.1" value="10" style="width:75px"></label>
       <details><summary class="meta">Method, assumptions and limitations</summary>
-        <p class="meta">Technology budget = annual revenue × technology spend %. Overall TAS = technology budget × 1–5% addressable share. AI budget = technology budget × 15% AI allocation. AI TAS = AI budget × 2–10% addressable share. Displayed central estimates are arithmetic midpoints of each range, not forecasts. AI TAS is already part of overall TAS and must not be added to it. All percentages are editable, illustrative planning assumptions; no validated AI budget, pricing, spend or official Cloudflare sizing methodology is implied. Funding is never treated as revenue. Revenue is only prefilled from source-reported USD revenue. If unavailable, a clearly labelled headcount-based technology budget scenario is used where possible; in that mode the budget is entered directly and the technology percentage is fixed at 100%. This proxy receives only 5% ranking weight, versus 15% for revenue-based scenarios. Manual edits are local calculator scenarios, not saved ranking inputs.</p>
+        <p class="meta">Technology budget = annual revenue × technology spend %. Overall TAS = technology budget × 1–5% addressable share. AI budget = technology budget × 15% AI allocation. AI TAS = AI budget × 2–10% addressable share. Displayed central estimates are arithmetic midpoints of each range, not forecasts. AI TAS is already part of overall TAS and must not be added to it. All percentages are editable, illustrative planning assumptions; no validated AI budget, pricing, spend or official Cloudflare sizing methodology is implied. Funding is never treated as revenue. Revenue is only prefilled from source-reported USD revenue. If unavailable, a clearly labelled headcount-based technology budget scenario is used where possible; in that mode the budget is entered directly and the technology percentage is fixed at 100%. Neither proxy affects IGNITE ranking. Revenue and headcount are scale indicators, not consumption forecasts. Manual edits are local calculator scenarios. Validate production request volume, compute, storage, security requirements and paid product pricing before sizing an opportunity.</p>
       </details>
     </div>
   </section>`;
@@ -339,8 +339,8 @@ function wireTas() {
     const overallMin = tech * low / 100;
     const overallMax = tech * high / 100;
     const aiBudget = tech * aiShare / 100;
-    const aiMin = aiBudget * aiLow / 100;
-    const aiMax = aiBudget * aiHigh / 100;
+    const aiMin = Math.min(overallMin, aiBudget * aiLow / 100);
+    const aiMax = Math.min(overallMax, aiBudget * aiHigh / 100);
     const fmt = n => "$" + Math.round(n).toLocaleString("en-US");
     const midpoint = (a,b) => fmt((a+b)/2);
     out.innerHTML =
@@ -349,7 +349,7 @@ function wireTas() {
       '<strong>AI TAS (subset): ' + midpoint(aiMin,aiMax) + '/yr</strong>' +
       '<div class="meta">Range: ' + fmt(aiMin) + '–' + fmt(aiMax) + '/yr</div>' +
       '<div class="meta">Assumed technology spend: ' + fmt(tech) + '/yr · AI budget: ' + fmt(aiBudget) + '/yr</div>' +
-      (aiMax > overallMax ? '<div class="meta">Warning: AI high scenario exceeds overall high scenario; review addressable-share assumptions.</div>' : '');
+      (aiBudget * aiHigh / 100 > overallMax || aiBudget * aiLow / 100 > overallMin ? '<div class="meta">AI scenario capped at corresponding overall bounds; review addressable-share assumptions.</div>' : '');
   };
   inputs.forEach(x => x.addEventListener("input", update));
   update();
@@ -493,7 +493,7 @@ async function detail(id, silent = false) {
       : ([businessHighlights[0]?.priority ? businessHighlights[0].priority + " " + businessHighlights[0].evidence : "", mainOpportunity?.signal || "", mainOpportunity?.pillar ? mainOpportunity.pillar + " discovery hypothesis — not a verified requirement" : ""].filter(Boolean).join(" · ") || priority.reason);
     const scoredAt = sources[0]?.scored_at || c.researched_at;
     const revisedBrief = !!c.brief_recomputed;
-    const scoreCaveat = revisedBrief ? "Account potential uses the saved Clef attractiveness score plus TAS; engagement readiness is recalculated from saved evidence without API calls." : "Clef score reflects the research run; it is not verified buying intent.";
+    const scoreCaveat = revisedBrief ? "Account potential uses the saved Clef attractiveness score; illustrative TAS is excluded from ranking; engagement readiness is recalculated from saved evidence without API calls." : "Clef score reflects the research run; it is not verified buying intent.";
     // Only surface details explicitly present in stored source excerpts.
     const jobSources = sources.map((source,i)=>({source,ref:"[S"+(i+1)+"]"}))
       .filter(x=>/\\b(ai platform engineer|ai infrastructure engineer|agent platform engineer)\\b/i.test(x.source.title || ""));
@@ -644,7 +644,7 @@ async function detail(id, silent = false) {
       <details class="brief-details"><summary>IGNITE scoring and saved Clef assessment</summary>
       <h3>Account attractiveness · Clef Flash</h3>
       ${pursuit?.status === 'scored' && pursuit.account ? `
-        <p><strong>${esc(pursuit.account.total)}/100 base · ${esc(priority.score)}/100 TAS-adjusted potential</strong></p>
+        <p><strong>${esc(pursuit.account.total)}/100 base · ${esc(priority.score)}/100 account potential</strong></p>
         <p class="meta">Is this company worth pursuing? Not a confirmed Cloudflare opportunity.</p>
         ${(pursuit.account.dimensions || []).map(d => `
           <div class="opportunity"><strong>${esc(d.label)}: ${esc(Math.round(d.score / 4 * d.weight))}/${esc(d.weight)} points</strong>
