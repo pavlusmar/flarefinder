@@ -208,8 +208,9 @@ async function searchWeb(
       const jobSite = /(^|\.)(indeed\.com|glassdoor\.com|ziprecruiter\.com|linkedin\.com|greenhouse\.io|lever\.co|ashbyhq\.com|workable\.com)$/.test(host);
       const jobLike = /\b(job|jobs|careers|vacancy|hiring|apply|engineer|developer|architect)\b/i.test(title + " " + url);
       const specificJob = jobLike && employerNamed && !/^(careers|open roles|open positions|.*\bjobs)$/i.test(title) && !/jobs?\s+(in|near|search|results|openings)\b/i.test(title);
+      if (/no longer accepting applications|job has expired/i.test(snippet)) return [];
       if ((!official && !employerNamed) || (jobSite && !specificJob && !(host.endsWith('linkedin.com') && parsed.pathname.startsWith('/in/'))) || snippet.length < 60) return [];
-      const canonical = parsed.origin + parsed.pathname.replace(/\/$/, "").toLowerCase();
+      const canonical = host + parsed.pathname.replace(/\/$/, "").toLowerCase();
       if (seen.has(canonical)) return [];
       seen.add(canonical);
       const pricingOnly = /\b(pricing|cost of|how much does|reviews?|alternatives?|competitors?|coupon)\b/i.test(title) && !official;
@@ -226,8 +227,8 @@ async function searchWeb(
       Number(b.official)-Number(a.official) || Number(b.concreteEvent)-Number(a.concreteEvent) ||
       Number(a.lowQuality)-Number(b.lowQuality) || Number(b.core)-Number(a.core) ||
       Number(a.pricingOnly)-Number(b.pricingOnly) || a.searchIndex-b.searchIndex);
-    const chosen: typeof candidates = [...candidates.filter(x=>x.specificJob && /\b(ai platform engineer|genai platform|ai engineering lead)\b/i.test(x.title)).slice(0,3), ...candidates.filter(x=>x.searchIndex === 6).slice(0,2)];
-    for (const index of [7,8,9,10]) { const hit = candidates.find(x=>x.searchIndex === index && !chosen.includes(x) && !x.lowQuality); if (hit) chosen.push(hit); }
+    const chosen: typeof candidates = [...candidates.filter(x=>x.technicalPrimary).slice(0,6), ...candidates.filter(x=>x.specificJob && /\b(ai platform engineer|genai platform|ai engineering lead)\b/i.test(x.title)).slice(0,2), ...candidates.filter(x=>x.searchIndex === 6).slice(0,2)].filter((x,i,a)=>a.indexOf(x)===i);
+    // Preferred publications compete on evidence quality, not mandatory quotas.
     const byHost = new Map<string,number>();
     for (const hit of chosen) byHost.set(hit.host,(byHost.get(hit.host)||0)+1);
     for (const hit of candidates) {
@@ -238,11 +239,12 @@ async function searchWeb(
       if (hit.lowQuality && chosen.some(s => s.lowQuality)) continue;
       chosen.push(hit);
       byHost.set(hit.host,count+1);
-      if (chosen.length >= 16) break;
+      if (chosen.length >= 24) break;
     }
     return chosen.map(({title,url,snippet})=>({title,url,snippet}));
   }
   const initial = (await Promise.all(queries.map(runSearch))).flat();
+  if (domain) initial.push(...await runSearch("site:"+domain+" "+company.name+" engineering architecture authentication authorisation CDN WAF API infrastructure", 11));
   let sources = filterSources(initial);
   const domains = () => new Set(sources.map(s=>new URL(s.url).hostname.replace(/^www\./,""))).size;
   const officialFound = () => sources.some(s => {
@@ -1205,7 +1207,7 @@ For hiring_signals, role is the actual job title, posted_date is YYYY-MM-DD only
 technologies contains only named requirements, evidence includes [S#], relevance is a cautious Cloudflare discovery angle.
 Return [] if no verified company-specific job posting is present.
 Include all five AI themes, with signal strong, possible, or insufficient. Keep evidence and hypotheses concise.
-Recommend up to three stakeholders relevant to the strongest opportunity signals. Use named people only when supplied sources explicitly support their name and role; otherwise use an empty name and a relevant role. Each signal must cite a source and explain relevance without asserting buying intent. Do not invent people or titles. Keep the JSON concise. No Markdown or explanations.
+Recommend up to three stakeholders relevant to the strongest opportunity signals. Prefer named CTO, VP Engineering and AI platform leaders over unrelated commercial roles. Use the actual title from the source. Prioritize the latest dated funding and expansion announcements over older rounds; historical architecture is evidence of past deployment, not proof of current deployment. Do not treat repeated job listings as independent evidence. Use named people only when supplied sources explicitly support their name and role; otherwise use an empty name and a relevant role. Each signal must cite a source and explain relevance without asserting buying intent. Do not invent people or titles. Keep the JSON concise. No Markdown or explanations.
 
 Company:
 ${JSON.stringify(companyData)}
@@ -1352,12 +1354,18 @@ async function researchCompany(env: Env, id: string) {
   try {
     const previous = await env.DB.prepare("SELECT sources FROM research WHERE company_id=?").bind(id).first<{sources:string}>();
     const sources = await searchWeb(env, company);
-    // Retain previously retrieved financial evidence, with original URL and text.
+    // Carry forward source evidence, never old citation IDs or generated conclusions.
     try {
       const old = JSON.parse(previous?.sources || "[]") as Source[];
-      for (const source of old.filter(x => /\b(annual revenue|annual turnover|group revenue|financial statements|annual report)\b/i.test(x.title+" "+x.snippet)).slice(0,3)) {
-        if (!sources.some(x=>x.url===source.url)) sources.push({title:source.title,url:source.url,snippet:source.snippet} as Source);
+      const key = (url:string) => { const u = new URL(url); return u.hostname.replace(/^www\./,"").toLowerCase()+u.pathname.replace(/\/$/,"").toLowerCase(); };
+      const important = (x:Source) => /\b(cloudfront|waf|architecture|authentication|authorisation|authorization|ai gateways?|annual revenue|annual turnover|group revenue|financial statements|annual report|cto|vp engineering|series [bcde])\b/i.test(x.title+" "+x.snippet);
+      const retained = old.filter(x=>validUrl(x.url) && important(x) && !/no longer accepting applications|job has expired/i.test(x.snippet));
+      const merged = new Map<string,Source>();
+      for (const x of [...retained,...sources,...old.filter(x=>validUrl(x.url) && !/no longer accepting applications|job has expired/i.test(x.snippet))]) {
+        const k=key(x.url); const prior=merged.get(k);
+        if (!prior || (sources.includes(x) && x.snippet.length>=prior.snippet.length)) merged.set(k,{title:x.title,url:x.url,snippet:x.snippet});
       }
+      sources.splice(0,sources.length,...Array.from(merged.values()).slice(0,36));
     } catch { /* malformed historical sources must not prevent fresh research */ }
 
     // Only fail if absolutely no company-specific evidence can be retrieved.
