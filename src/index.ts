@@ -684,6 +684,10 @@ function recoverEvidenceBackedOpportunities(report: Report, sources: Source[]): 
         "As you build shared AI platform services, which model-request controls are already covered, and which architecture decisions remain open?",
         "Your AI platform engineering initiative caught my attention. How are you approaching shared model-request controls and reusable platform services?");
     }
+    if (!article && engineering && !job && /\bCloudFront\b/i.test(text) && /\bWAF\b/i.test(text) && /\b(behind|we use|we used|implemented|deployed|terminates)\b/i.test(text)) {
+      add(index,"existing-edge",85,"Connect","CDN — benchmark incumbent delivery and total cost","Evaluate existing edge delivery against global expansion and cost requirements.","Engineering evidence describes incumbent CloudFront/WAF architecture.","No dissatisfaction or savings established; AWS origin egress and cacheability must be included.","Platform engineering lead","How does current delivery perform across regions, and what are the combined CDN, origin and security costs?","I read your engineering article on edge architecture and would welcome a discussion about delivery economics.");
+      add(index,"existing-edge-security",80,"Protect","WAF / API Shield — evaluate external application and API controls","Explore whether enterprise expansion introduces unmet external application security requirements.","Engineering evidence describes existing edge security.","Existing WAF and authentication may meet requirements; no security gap established.","Security engineering lead","How are external API and application security requirements changing as you expand?","Your published edge security architecture provides useful context for discussing evolving enterprise requirements.");
+    }
     if (!article && job && /\b(cloudfront|route53|route 53)\b/i.test(text)) {
       add(index,"delivery-stack",60,"Connect","CDN and DNS — compare existing delivery architecture only if requirements warrant","Qualify whether existing CDN and DNS services meet current delivery requirements.","Hiring lists relevant AWS technologies; this is an architecture discovery signal.","Listed skills do not establish deployment or dissatisfaction.","Platform engineering lead","How do you evaluate your current CDN and DNS architecture?","Your platform engineering role references delivery infrastructure; I would welcome a discussion of current requirements.");
     }
@@ -739,7 +743,7 @@ function recoverEvidenceBackedOpportunities(report: Report, sources: Source[]): 
     const related = selected.find(x => x.pillar === o.pillar && /AI Gateway/i.test(x.product_fit || "") && /AI Gateway/i.test(o.product_fit || ""));
     if (related) { related.evidence = [...new Set((related.evidence+" "+o.evidence).match(/\[S\d+\]/g)||[])].join(" "); continue; }
     const primaryRef = [...o.evidence.matchAll(/\[S(\d+)\]/g)][0]?.[0];
-    if (selected.some(x => x.pillar === o.pillar && x.evidence.includes(primaryRef || "UNMATCHABLE") &&
+    if (selected.some(x => x.pillar === o.pillar &&
       (x.product_fit || "").split(/[ —]/)[0].toLowerCase() === (o.product_fit || "").split(/[ —]/)[0].toLowerCase())) continue;
     if (selected.length < 4) selected.push(o);
   }
@@ -804,7 +808,7 @@ function finalizeEvidenceReport(report: Report, sources: Source[]): Report {
   };
   report.cloudflare_opportunities.sort((a,b)=>(/AI Gateway/i.test(b.product_fit || "")?100:priority(b)) - (/AI Gateway/i.test(a.product_fit || "")?100:priority(a)));
   for (const o of report.cloudflare_opportunities) {
-    const line = (o.signal || "") + " — " + (o.implication || "");
+    const line = (o.signal || "") + " — Discovery hypothesis (not deployed-stack evidence): " + (o.implication || "");
     if (!report.technical_signals.includes(line)) report.technical_signals.push(line);
   }
   report.technical_signals = report.technical_signals.slice(0,8);
@@ -814,7 +818,7 @@ function finalizeEvidenceReport(report: Report, sources: Source[]): Report {
     if (i >= 0) { theme.signal = "possible"; theme.confidence = "medium"; theme.evidence = "[S"+(i+1)+"]"; theme.hypothesis = "Employer describes relevant planned capabilities or experience; deployed architecture, costs and requirements remain unverified."; }
   }
   report.questions = report.cloudflare_opportunities.length
-    ? report.cloudflare_opportunities.map(o=>o.discovery_question || "").filter(Boolean).slice(0,4)
+    ? [...new Set(report.cloudflare_opportunities.map(o=>o.discovery_question || "").filter(Boolean))].slice(0,4)
     : ["Which current technical initiative has an owner and timeline?", "Which incumbent providers already address this workload?"];
   return report;
 }
@@ -1341,7 +1345,15 @@ async function researchCompany(env: Env, id: string) {
   console.log("Research started:", id);
 
   try {
+    const previous = await env.DB.prepare("SELECT sources FROM research WHERE company_id=?").bind(id).first<{sources:string}>();
     const sources = await searchWeb(env, company);
+    // Retain previously retrieved financial evidence, with original URL and text.
+    try {
+      const old = JSON.parse(previous?.sources || "[]") as Source[];
+      for (const source of old.filter(x => /\b(annual revenue|annual turnover|group revenue|financial statements|annual report)\b/i.test(x.title+" "+x.snippet)).slice(0,3)) {
+        if (!sources.some(x=>x.url===source.url)) sources.push({title:source.title,url:source.url,snippet:source.snippet} as Source);
+      }
+    } catch { /* malformed historical sources must not prevent fresh research */ }
 
     // Only fail if absolutely no company-specific evidence can be retrieved.
     // Sparse coverage still yields a clearly labeled partial brief, not a
