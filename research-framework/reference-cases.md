@@ -54,3 +54,27 @@ Official sunset announcement reports standalone platform discontinuation Septemb
 
 ### Qualification rules
 Check operating status, ownership, active product, UK nexus and growth eligibility before deep research. Distinguish disqualified, insufficient evidence, and eligible but low addressability. Identify payer, workload owner, incumbent, incremental value and open decision before scoring. Do not equate funding, valuation or total technology spend with Cloudflare-addressable spend. Investigate adjacent workloads before declaring low fit. Pasture Restaurant remains a basic industry-filter test only. Keep held-out discovery targets outside examples and seeds.
+
+
+## Six additional positive candidates (preliminary, no exact score targets)
+### ElevenLabs
+https://jobs.ashbyhq.com/elevenlabs/31a6f0f4-8e1d-4d77-9d00-026ed12213f2
+Infrastructure role describes GPU clusters, networking and migrations; GCP experience is a requirement, not proof of deployment. Qualify global API/audio delivery and security separately from specialized model compute. Ask infrastructure owner about regional latency, connection reliability and incumbent costs. No verified TAS.
+### Synthesia
+https://aws.amazon.com/solutions/case-studies/synthesia-case-study/
+https://aws.amazon.com/blogs/architecture/how-synthesia-optimizes-generative-ai-video-inference-on-amazon-ec2-g7e-instances/
+https://www.test-mux.com/case-studies/synthesia
+AWS GPU/S3 architecture and published Mux delivery partnership are counter-evidence to a greenfield pitch. Benchmark authenticated playback, storage and delivery only if a gap or open evaluation exists. Separate GPU-local bottlenecks from network delivery. Verify current incumbents. No verified TAS.
+### Attio
+https://jobs.ashbyhq.com/attio/12b5faed-50b9-4b7a-80e8-af17b621cbe2/
+Previously reviewed real-time CRM engineering role; recheck availability and scope. Qualify sync, database, integrations and API latency separately before recommending edge services. Identify real-time infrastructure owner. Architecture and buying trigger unverified.
+### Recraft
+https://www.recraft.ai/press-releases/series-b-announcement
+Historical adoption and funding indicate scale, not billable traffic. Investigate generated image storage, transformations and delivery; qualify asset size, retention, access patterns and incumbent costs. No validated current usage or open evaluation.
+### CodeWords
+https://claude.com/customers/codewords
+Published Claude integration and workflow generation case; verify current runtime ownership and execution requirements. Explore compatible workflow execution and operational controls without presuming multi-model demand or displacement. Founder-led startup engagement is a hypothesis, not buying intent.
+### Isometric
+https://isometric.com/writing-articles/intercontinental-exchange-backs-isometric-in-50m-series-a
+https://isometric.tools/carbon
+Digital verification and registry proposition; investigate public API delivery, document processing and company-operated AI workflows. Scientific verification integrity is not solved by network security. Confirm architecture, technical owner and actual commercial requirement.
