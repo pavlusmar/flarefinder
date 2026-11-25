@@ -169,7 +169,11 @@ async function searchWeb(
     '"' + company.name + '" AI agent MCP product launch model gateway security architecture',
     '"' + company.name + '" annual revenue turnover financial statements Companies House',
     '"' + company.name + '" "Senior AI Platform Engineer" OR "GenAI Platform" OR "platform engineering" careers hiring',
-    '"' + company.name + '" CTO VP engineering head of AI platform leadership engineering blog interview'
+    '"' + company.name + '" CTO VP engineering head of AI platform leadership engineering blog interview',
+    '"' + company.name + '" funding launch customers expansion',
+    '"' + company.name + '" startup profile investors funding',
+    '"' + company.name + '" founder accelerator portfolio investment',
+    '"' + company.name + '" developer launch adoption technical discussion'
   ];
   console.log("Tavily searches started:", company.id);
   type SearchHit = { title?: string; url?: string; content?: string; searchIndex: number };
@@ -178,7 +182,7 @@ async function searchWeb(
       const response = await fetch("https://api.tavily.com/search", {
         method: "POST",
         headers: { "content-type": "application/json", authorization: "Bearer " + env.SEARCH_API_KEY },
-        body: JSON.stringify({ query, topic: "general", search_depth: "advanced", max_results: 8, include_answer: false }),
+        body: JSON.stringify({ query, topic: "general", search_depth: "advanced", max_results: 8, include_answer: false, ...([7,8,9,10].includes(searchIndex) ? {include_domains: ({7:["techcrunch.com","sifted.eu","uktech.news","upstartsmedia.com","tech.eu"],8:["crunchbase.com","dealroom.co"],9:["ycombinator.com","indexventures.com","seedcamp.com","balderton.com","joinef.com","accel.com","localglobe.com"],10:["news.ycombinator.com","producthunt.com"]} as Record<number,string[]>)[searchIndex]} : {}) }),
         signal: AbortSignal.timeout(20000)
       });
       if (!response.ok) throw new Error("HTTP " + response.status);
@@ -223,6 +227,7 @@ async function searchWeb(
       Number(a.lowQuality)-Number(b.lowQuality) || Number(b.core)-Number(a.core) ||
       Number(a.pricingOnly)-Number(b.pricingOnly) || a.searchIndex-b.searchIndex);
     const chosen: typeof candidates = [...candidates.filter(x=>x.specificJob && /\b(ai platform engineer|genai platform|ai engineering lead)\b/i.test(x.title)).slice(0,3), ...candidates.filter(x=>x.searchIndex === 6).slice(0,2)];
+    for (const index of [7,8,9,10]) { const hit = candidates.find(x=>x.searchIndex === index && !chosen.includes(x) && !x.lowQuality); if (hit) chosen.push(hit); }
     const byHost = new Map<string,number>();
     for (const hit of chosen) byHost.set(hit.host,(byHost.get(hit.host)||0)+1);
     for (const hit of candidates) {
