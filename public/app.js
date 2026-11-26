@@ -400,6 +400,22 @@ function listHtml(value) {
     : "<p>No verified evidence found.</p>";
 }
 
+function renderResearchQuality(company) {
+  const q = company.quality;
+  const stage = company.stage ? '<p class="meta">Processing stage · ' + esc(company.stage.replace(/_/g, " ")) + '</p>' : "";
+  if (!q) return stage + '<p class="meta">Research quality · No independent review recorded</p>';
+  const dimensions = Object.entries(q.dimensions || {}).map(([key,value]) =>
+    '<li>' + esc(key.replace(/_/g, " ")) + ' · ' + esc(typeof value === "object" ? value?.score : value) + '</li>').join("");
+  return stage + `<details class="brief-details" ${q.status === "passed" ? "" : "open"}><summary>Research quality · ${esc(q.score ?? "Unscored")} · ${esc(q.status)}</summary>
+    <p>Initial score ${esc(q.initial_score ?? "—")} · Selected score ${esc(q.score ?? "—")} · ${esc(q.revision_count ?? 0)} revisions</p>
+    <p class="meta">Evidence collected ${esc(company.researched_at || "Unknown")} · Analyzed ${esc(company.analyzed_at || "Unknown")}</p>
+    <p class="meta">Analyst ${esc(q.analyst_model)} · Evaluator ${esc(q.evaluator_model)}</p>
+    <ul>${dimensions}</ul>
+    ${(q.warnings || []).map(w => '<p>' + esc(w) + '</p>').join("")}
+    <p>Reference cases · ${(q.references || []).map(r => esc(typeof r === "string" ? r : r.name)).join(", ") || "None"}</p>
+    <button type="button" id="versionHistory">Compare saved versions</button><div id="versionOutput"></div></details>`;
+}
+
 function researchButtonText(status) {
   switch (status) {
     case "complete":
@@ -429,56 +445,6 @@ async function detail(id, silent = false) {
     $("detailName").textContent = c.name;
     $("overlay").classList.remove("hidden");
 
-    // Present independently reviewed, source-matched evidence through the SAME
-    // standard account fields, never as a separate featured/verified panel.
-    // The review is scoped to existing citations; other accounts use the same UI.
-    if (/^polyai$/i.test(c.name.trim())) {
-      const src = list(c.sources);
-      const findRef = (pattern, officialOnly = false) => {
-        const i = src.findIndex(x => pattern.test((x.title || "") + " " + (x.snippet || "")) &&
-          (!officialOnly || /(?:^|\.)poly\.ai$|prnewswire\.com/i.test((() => { try { return new URL(x.url).hostname; } catch { return ""; } })())));
-        return i >= 0 ? "[S" + (i + 1) + "]" : "";
-      };
-      const round = findRef(/raised \$86 million in Series D|raised \$86 million in a Series D|raised \$86 million in Series D funding|raises \$86M/i, true);
-      const expansion = findRef(/Toronto technology hub|Toronto tech hub/i);
-      const customers = findRef(/200 enterprise customers|200\+ enterprise customers|2,000 live deployments|thousands of live deployments/i);
-      const platform = findRef(/agent development kit|open APIs|developer|public enterprise dialog platform/i, true);
-      const engineering = findRef(/grow PolyAI.s engineering organisation|engineering organisation from tens to hundreds/i);
-      const runtime = findRef(/runtime, inference, and data platforms|runtime, inference or data platforms/i);
-      const raw = list(c.growth_signals);
-      const growth = raw.filter(x => !/Reported financing round|Publicly reported customer or deployment scale|Engineering leadership recruitment/i.test(x));
-      if (round) growth.unshift("Dec 2025: $86M Series D to invest in Agent Studio and go-to-market expansion " + round);
-      if (expansion) growth.push("Toronto technology hub and international engineering expansion " + expansion);
-      if (customers) growth.push("Enterprise adoption: 200+ customers or thousands of live deployments (reported) " + customers);
-      if (engineering) growth.push("VP Engineering recruitment to scale engineering organisation " + engineering);
-      c.growth_signals = [...new Set(growth)].slice(0, 8);
-      const perspective = src[0]?.customer_perspective || {};
-      const newPriorities = [];
-      if (round) newPriorities.push({priority:"Expand Agent Studio and enterprise go-to-market",basis:"stated",why_it_matters:"Series D proceeds are directed toward product development and commercial expansion.",evidence:round});
-      if (platform) newPriorities.push({priority:"Grow enterprise developer and integration capabilities",basis:"inferred",why_it_matters:"Developer tooling and APIs suggest an opportunity to qualify adoption and integration priorities, not a confirmed infrastructure gap.",evidence:platform});
-      if (engineering) newPriorities.push({priority:"Scale engineering execution while balancing reliability and delivery speed",basis:"inferred",why_it_matters:"Engineering leadership hiring signals organisational scale-up; architecture and technical debt are not confirmed customer problems.",evidence:engineering});
-      if (newPriorities.length) {
-        src[0].customer_perspective = {...perspective, priorities:newPriorities, business_tension:"Potential trade-off: developer-platform growth versus integration, governance and engineering complexity (to validate)."};
-      }
-      const opportunities = list(c.cloudflare_opportunities);
-      if (platform && !opportunities.some(o => /developer-facing API/i.test(o.signal || ""))) {
-        opportunities.unshift({
-          pillar:"Build",signal:"Public developer tooling and APIs are part of PolyAI's platform " + platform,
-          implication:"A growing external builder audience may increase demands on developer onboarding and API delivery.",
-          hypothesis:"Qualify whether API delivery, developer experience or supporting edge workloads are active priorities as the platform expands.",
-          product_fit:"Workers for discrete API/edge workloads; API security if an actual requirement emerges; validate with an SE.",
-          limitations:"No confirmed Cloudflare gap, existing API architecture, vendor contract or developer bottleneck.",
-          stakeholder:"Developer platform product lead and runtime/platform engineering lead",
-          discovery_question:"As more developers integrate with PolyAI, which parts of API delivery, onboarding and governance are becoming priorities?",
-          outreach:"Your developer platform and APIs suggest a growing builder ecosystem " + platform + ". I'd value understanding what infrastructure priorities that creates.",
-          evidence:platform,confidence:"medium"
-        });
-      }
-      c.cloudflare_opportunities = opportunities.slice(0, 4);
-      if (platform) c.questions = [...new Set(["As more developers integrate with PolyAI, which parts of API delivery, onboarding and governance are becoming priorities?",...list(c.questions)])].slice(0, 6);
-      if (runtime) c.technical_signals = [...new Set(["Public hiring references runtime, inference and data-platform responsibilities " + runtime,...list(c.technical_signals)])].slice(0, 8);
-    }
-    const compact = false; // Full research is available for every account.
     const sources = list(c.sources);
     const perspective = sources[0]?.customer_perspective || {};
     const pursuit = pursuitFor(c);
@@ -488,8 +454,8 @@ async function detail(id, silent = false) {
     const hiring = sources.flatMap(source => Array.isArray(source.hiring_signals) ? source.hiring_signals : [])
       .filter((h, i, all) => all.findIndex(x => x.role === h.role && x.evidence === h.evidence) === i);
     const priority = priorityFor(c);
-    const pillars = ["Connect", "Protect", "Build"];
-    const aiThemes = ["Build & Scale AI Applications", "Secure AI Applications & Agents", "Optimise AI Inference & Delivery", "AI Cost & Inference Economics", "Multi-Model Operations"];
+    const pillars = [...new Set(["Connect", "Protect", "Build", ...opportunities.map(o => o.pillar)])];
+    const standardThemes = ["Build & Scale AI Applications", "Secure AI Applications & Agents", "Optimise AI Inference & Delivery", "AI Cost & Inference Economics", "Multi-Model Operations"];
     const link = validLink(c.crunchbase_url);
     const cite = value => esc(value || "").replace(/\[S(\d+)\]/g, (match, n) =>
       Number(n) > 0 && Number(n) <= sources.length ? '<a class="citation" href="#source-' + n + '">' + match + '</a>' : match);
@@ -506,29 +472,13 @@ async function detail(id, silent = false) {
     };
     const businessHighlights = priorities.filter(p => p.basis === "stated" && /\[S\d+\]/.test(p.evidence || "")).slice(0, 3);
     const mainOpportunity = opportunities.find(o => o.confidence !== "low" && /\[S\d+\]/.test(o.evidence || ""));
-    const reason = compact ? "Series D investment, developer platform expansion and enterprise adoption warrant discovery; infrastructure needs are unverified."
-      : ([businessHighlights[0]?.priority ? businessHighlights[0].priority + " " + businessHighlights[0].evidence : "", mainOpportunity?.signal || "", mainOpportunity?.pillar ? mainOpportunity.pillar + " discovery hypothesis — not a verified requirement" : ""].filter(Boolean).join(" · ") || priority.reason);
+    const reason = ([businessHighlights[0]?.priority ? businessHighlights[0].priority + " " + businessHighlights[0].evidence : "", mainOpportunity?.signal || "", mainOpportunity?.pillar ? mainOpportunity.pillar + " discovery hypothesis — not a verified requirement" : ""].filter(Boolean).join(" · ") || priority.reason);
     const scoredAt = sources[0]?.scored_at || c.researched_at;
     const revisedBrief = !!c.brief_recomputed;
     const scoreCaveat = revisedBrief ? "Account potential uses the saved Clef attractiveness score; illustrative TAS is excluded from ranking; engagement readiness is recalculated from saved evidence without API calls." : "Clef score reflects the research run; it is not verified buying intent.";
-    // Only surface details explicitly present in stored source excerpts.
-    const jobSources = sources.map((source,i)=>({source,ref:"[S"+(i+1)+"]"}))
-      .filter(x=>/\\b(ai platform engineer|ai infrastructure engineer|agent platform engineer)\\b/i.test(x.source.title || ""));
-    const jobInsights = jobSources.flatMap(({source,ref})=>{
-      const raw=String(source.snippet || "");
-      const details=[];
-      if (/\\b(six months|6 months|within (?:the )?first six months)\\b/i.test(raw) && /\\b(agent|platform|ship|production)\\b/i.test(raw))
-        details.push("Six-month AI agent delivery milestone " + ref);
-      if (/\\b(architectural decisions|architecture decisions|greenfield|from the ground up|still open)\\b/i.test(raw))
-        details.push("AI platform architecture still being defined " + ref);
-      if (/\\b(observability|tracing|evaluation|cost optimis|cost optimiz)\\b/i.test(raw))
-        details.push("Observability, tracing, evaluation and cost controls are in the platform remit " + ref);
-      if (/\\b(ai gateways?|model routing|model serving|orchestration)\\b/i.test(raw))
-        details.push("Model serving, gateway or orchestration capabilities feature in the platform remit " + ref);
-      return details;
-    }).filter((v,i,a)=>a.indexOf(v)===i).slice(0,4);
+    const relatedPriority = priorities.find(p => p.id && p.id === mainOpportunity?.priority_id);
     const commercialNarrative = mainOpportunity ? [
-      {label:"Business priority", value:businessHighlights[0] ? businessHighlights[0].priority + " — " + businessHighlights[0].why_it_matters + " " + businessHighlights[0].evidence : "No specific company-stated priority established"},
+      {label:"Business priority", value:relatedPriority ? relatedPriority.priority + " — " + relatedPriority.why_it_matters + " " + relatedPriority.evidence : "Priority linkage requires verification"},
       {label:"Technical initiative", value:mainOpportunity.signal || mainOpportunity.evidence},
       {label:"Potential consequence", value:mainOpportunity.implication},
       {label:"Cloudflare hypothesis", value:mainOpportunity.hypothesis + " Potential fit: " + mainOpportunity.product_fit},
@@ -548,10 +498,7 @@ async function detail(id, silent = false) {
     const headcountMatch = headcountFact?.text.match(/\b(\d{2,5})\s+(?:total\s+)?employees\b/i);
     const fundingCandidates = sourceFacts.filter(x => /\b(?:series [a-f]|funding round)\b/i.test(x.text) &&
       /\$\s?(\d+(?:\.\d+)?)\s?(?:million|m)\b/i.test(x.text));
-    const fundingFact = fundingCandidates.sort((a,b) => {
-      const official = x => /(?:poly\.ai|prnewswire\.com)/i.test(x.url) ? 1 : 0;
-      return official(b) - official(a);
-    })[0];
+    const fundingFact = fundingCandidates[0];
     const fundingMatch = fundingFact?.text.match(/(?:raised|raise|funding|round)[^$]{0,90}\$\s?(\d+(?:\.\d+)?)\s?(?:million|m)\b/i) ||
       fundingFact?.text.match(/\$\s?(\d+(?:\.\d+)?)\s?(?:million|m)\b/i);
     const headcountDisplay = c.employees ? esc(c.employees) : headcountMatch
@@ -603,12 +550,19 @@ async function detail(id, silent = false) {
       <div class="info">${esc(statusMessage)}</div>
 
       <button class="primary research-btn" id="researchOne"
-        ${c.status === "running"
+        ${["running","pending","queued"].includes(c.status)
           ? "disabled"
           : ""}>
         ${researchButtonText(c.status)}
       </button>
-      <p class="info" id="researchFeedback" role="status" aria-live="polite"></p>
+      ${sources.length ? `<details class="brief-details"><summary>Reanalyze saved evidence</summary>
+        <p class="meta">Use the saved sources for another analysis and independent review. This makes model calls and uses zero search calls.</p>
+        <label>Analyst model <input id="analysisModel" placeholder="Configured default"></label>
+        <label><input type="checkbox" id="analysisReferences" checked> Use reference reports</label>
+        <button type="button" id="reanalyze" ${["running","pending","queued"].includes(c.status) ? "disabled" : ""}>Run analysis</button>
+      </details>` : ""}
+      ${renderResearchQuality(c)}
+            <p class="info" id="researchFeedback" role="status" aria-live="polite"></p>
 
       <div class="priority-summary brief-hero">
         <div class="priority-head"><strong>${esc(priority.tier)}</strong><strong>${esc(priority.score ?? "—")}/100</strong></div>
@@ -619,41 +573,36 @@ async function detail(id, silent = false) {
       <section class="brief-priorities">
         <h3>Company priorities &amp; strategic direction</h3>
         <p class="meta">Company-stated priorities are distinguished from inferred ones. These are outside-in findings, not confirmed customer conversations.</p>
-        ${!compact && perspective.mission ? '<p><strong>What they are working toward:</strong> ' + cite(perspective.mission) + '</p>' : ''}
-        ${jobInsights.length ? `<div class="brief-signal"><strong>Engineering hiring signal · AI platform</strong>
-          ${jobInsights.map(x=>'<p class="meta">' + cite(x) + '</p>').join("")}
-          <p class="meta">Planned engineering work, not a confirmed vendor evaluation.</p>
-        </div>` : ""}
-        ${priorities.length ? (compact ? priorities.slice(0, 3) : priorities).map((p, i) => `
+        ${perspective.mission ? '<p><strong>What they are working toward:</strong> ' + cite(perspective.mission) + '</p>' : ''}
+        ${priorities.length ? priorities.map((p, i) => `
           <div class="brief-signal">
             <div class="signal-head"><strong>${i + 1}. ${esc(p.priority)}</strong><span class="mini-status">${esc(p.basis === "stated" ? "Company-stated" : "Inferred")}</span></div>
-            ${!compact && p.why_it_matters ? '<p>' + cite(p.why_it_matters) + '</p>' : ''}
+            ${p.initiative ? '<p><strong>Initiative:</strong> '+ cite(p.initiative) + '</p>' : ''}
+            ${p.why_it_matters ? '<p>' + cite(p.why_it_matters) + '</p>' : ''}
             <div class="meta">Evidence: ${cite(p.evidence || "Not established")}</div>
           </div>`).join("") : '<p class="meta">No sufficiently evidenced strategic priorities identified yet.</p>'}
-        ${!compact && perspective.business_tension ? '<p class="meta"><strong>Potential business tradeoff:</strong> ' + cite(perspective.business_tension) + '</p>' : ''}
+        ${perspective.business_tension ? '<p class="meta"><strong>Potential business tradeoff:</strong> ' + cite(perspective.business_tension) + '</p>' : ''}
       </section>
       <h3>Cloudflare opportunities</h3>
       <p class="meta">Outside-in hypotheses, not verified customer problems.</p>
       ${pillars.map(p => {
-        const matches = opportunities.filter(o => o.pillar === p && /\[S\d+\]/.test(o.evidence || ""));
-        return '<div class="brief-signal"><strong>' + p + '</strong>' +
-          (matches.length ? matches.slice(0, 2).map(o =>
+        const matches = opportunities.filter(o => o.pillar === p);
+        return '<div class="brief-signal"><strong>' + esc(p || 'Unclassified') + '</strong>' +
+          (matches.length ? matches.map(o =>
             '<p><strong>Research signal:</strong> ' + cite(o.signal || o.evidence) + '</p>' +
             '<p class="meta"><strong>Cloudflare fit:</strong> ' + esc(o.product_fit || "To qualify") + '</p>'
           ).join("") : '<p class="meta">No specific evidenced opportunity.</p>') + '</div>';
       }).join("")}
-      ${compact ? `<details class="brief-details"><summary>AI opportunity signals</summary>` : ""}
       <h3>AI opportunity signals</h3>
       <p class="meta">AI economics and multi-model signals are exploratory and not separately scored.</p>
-      ${aiThemes.map(theme => {
-        const signal = aiSignals.find(x => x.theme === theme);
-        return '<div class="brief-ai-row"><div class="signal-head"><strong>' + esc(theme) + '</strong>' + pill(signal?.signal || "insufficient") + '</div>' + (signal && signal.signal !== "insufficient" ? '<p class="meta"><strong>Source excerpt:</strong> ' + cite(signal.hypothesis || aiSourceExcerpt(signal.evidence) || "Specific activity documented") + ' ' + cite(signal.evidence) + '</p>' : '<p class="meta">Insufficient public evidence.</p>') + '</div>';
-      }).join("")}
-      ${compact ? "</details>" : ""}
+      ${[...aiSignals,...standardThemes.filter(theme=>!aiSignals.some(s=>s.theme===theme)).map(theme=>({theme,signal:"insufficient"}))].map(signal =>
+        '<div class="brief-ai-row"><div class="signal-head"><strong>' + esc(signal.theme) + '</strong>' + pill(signal.signal) + '</div><p class="meta">' +
+        cite(signal.hypothesis || aiSourceExcerpt(signal.evidence) || "Insufficient public evidence.") + ' ' + cite(signal.evidence) + '</p></div>'
+      ).join("")}
       <h3>Recommended stakeholders</h3>
       ${(sources[0]?.recommended_stakeholders || []).map(h => '<div class="brief-signal"><strong>' + esc(h.name ? h.name + ' — ' + h.role : h.role + ' (name not verified)') + '</strong>' + (h.signals || []).map(signal => '<p>' + cite(signal) + '</p>').join('') + '</div>').join('') || '<p class="meta">No verified stakeholder recommendations saved. Refresh this account to discover relevant people and roles.</p>'}
       <details class="brief-details"><summary>Discovery questions</summary>
-      ${compact ? listHtml(list(c.questions).slice(0, 3)) : listHtml(c.questions)}
+      ${listHtml(c.questions)}
       </details>
       <details class="brief-details"><summary>Supporting commercial reasoning</summary>
       ${commercialNarrative.map(step => '<div class="brief-signal"><strong>' + esc(step.label) + '</strong><p>' + cite(step.value) + '</p></div>').join("")}
@@ -718,14 +667,17 @@ async function detail(id, silent = false) {
       </details>
 \n      <details class="brief-details"><summary>Detailed research &amp; TAS · ${formatTas(tasTableValue(c))}/yr scenario</summary>
       ${pillars.map(p => {
-        const matches = opportunities.filter(o => o.pillar === p && /\[S\d+\]/.test(o.evidence || ""));
-        return '<div class="brief-signal"><strong>' + p + '</strong>' +
+        const matches = opportunities.filter(o => o.pillar === p);
+        return '<div class="brief-signal"><strong>' + esc(p || 'Unclassified') + '</strong>' +
           (matches.length ? matches.map(o =>
             '<p><strong>Research signal:</strong> ' + cite(o.signal || o.evidence) + '</p>' +
             '<p><strong>Why it matters:</strong> ' + cite(o.implication || "Not established") + '</p>' +
             '<p><strong>Hypothesis:</strong> ' + cite(o.hypothesis) + '</p>' +
             '<p><strong>Potential fit:</strong> ' + esc(o.product_fit || "Not established") + '</p>' +
             '<p><strong>What we do not know:</strong> ' + esc(o.limitations || "Not established") + '</p>' +
+            (o.initiative ? '<p><strong>Initiative:</strong> ' + cite(o.initiative) + '</p>' : '') +
+            (o.timing ? '<p><strong>Timing:</strong> ' + cite(o.timing) + '</p>' : '') +
+            (o.success_metric ? '<p><strong>Success measure:</strong> ' + cite(o.success_metric) + '</p>' : '') +
             '<p><strong>Who to approach:</strong> ' + esc(o.stakeholder || "Not established") + '</p>' +
             '<p><strong>Discovery:</strong> ' + esc(o.discovery_question || "Not established") + '</p>' +
             '<p><strong>Outreach example:</strong> ' + esc(o.outreach || "Not established") + '</p>' +
@@ -823,14 +775,21 @@ async function detail(id, silent = false) {
     const feedback = message => { const el = $("researchFeedback"); if (el) el.textContent = message; };
 
     if (button && !button.disabled) {
-      button.onclick = async () => {
+      const submitResearch = async (replay) => {
         if (activeResearchRequests.has(id)) return;
         activeResearchRequests.add(id);
+        const replayButton = $("reanalyze");
+        if (replayButton) replayButton.disabled = true;
         button.disabled = true;
         button.textContent = "Queuing research…";
-        feedback("Submitting one refresh request…");
+        feedback(replay ? "Submitting saved-evidence analysis…" : "Submitting research request…");
         try {
-          const result = await api("/api/research/" + encodeURIComponent(id), {method:"POST"});
+          const opts = {method:"POST"};
+          if (replay) {
+            const model = $("analysisModel").value.trim();
+            opts.body = JSON.stringify({...(model ? {analyst_model:model} : {}), use_references:$("analysisReferences").checked});
+          }
+          const result = await api("/api/research/" + encodeURIComponent(id) + (replay ? "/reanalyze" : ""), opts);
           const already = result.status === "already_queued";
           const message = already ? "Research is already queued or running. No extra click needed." : "Research queued. Waiting for the updated report…";
           feedback(message);
@@ -847,13 +806,14 @@ async function detail(id, silent = false) {
             catch (pollError) { feedback("Research submitted; status check failed: "+pollError.message); continue; }
             if (latest.status === "queued" || latest.status === "running" || latest.status === "pending") {
               sawActive = true;
-              feedback("Research "+latest.status+"… checking automatically.");
+              feedback("Current stage · " + (latest.stage || latest.status).replace(/_/g," "));
               button.textContent = "⏳ Research "+latest.status;
               continue;
             }
             if (latest.status === "failed") {
               feedback("Research failed: "+(latest.error||"Unknown error"));
               activeResearchRequests.delete(id);
+              if (replayButton) replayButton.disabled = false;
               button.disabled=false;
               button.textContent="↻ Retry research";
               return;
@@ -868,6 +828,7 @@ async function detail(id, silent = false) {
             }
           }
           feedback("Research request accepted but still processing. You can close this brief and return later; no repeated clicks are needed.");
+          activeResearchRequests.delete(id);
           button.textContent="⏳ Check back later";
         } catch (e) {
           const message = /Unauthorized/i.test(e.message)
@@ -876,12 +837,25 @@ async function detail(id, silent = false) {
           feedback(message);
           notice(message);
           activeResearchRequests.delete(id);
+          if (replayButton) replayButton.disabled = false;
           button.disabled=false;
           button.textContent=researchButtonText(c.status);
         }
       };
+      button.onclick = () => submitResearch(false);
+      if ($("reanalyze")) $("reanalyze").onclick = () => submitResearch(true);
     }
 
+    if ($("versionHistory")) $("versionHistory").onclick = async () => {
+      const output = $("versionOutput");
+      try {
+        const data = await api("/api/research/" + encodeURIComponent(id) + "/versions");
+        if (currentCompanyId !== id) return;
+        output.innerHTML = data.runs.map(run => `<details><summary>${esc(run.analyzed_at || run.run_id)} · ${esc(run.mode)} · ${esc(run.analyst_model)}</summary>
+          ${run.versions.map(v => `<details><summary>Version ${esc(v.version)} · ${esc(v.evaluation?.score ?? "Unevaluated")}</summary>
+            <pre style="white-space:pre-wrap">${esc(JSON.stringify({report:v.report,evaluation:v.evaluation},null,2))}</pre></details>`).join("")}</details>`).join("") || "No saved analysis versions.";
+      } catch (error) { output.textContent = error.message; }
+    };
     if (!silent && c.status === "failed" && c.error) {
       notice("Research failed: " + c.error);
     }

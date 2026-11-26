@@ -4,16 +4,17 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
-const ts = require('typescript');
+const {buildSync} = require('esbuild');
 const path = require('node:path');
-
-const source = fs.readFileSync(path.join(__dirname, '../src/index.ts'), 'utf8');
-const compiled = ts.transpileModule(source + '\nexports.__test = { validateOpportunityEvidence, evidenceGrounded, citedSourceText, scorePursuitWithClef, recoverEvidenceBackedOpportunities, finalizeEvidenceReport, normalizeReport, searchWeb, route };', {
-  compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 }
+const base = path.join(__dirname,'../src');
+const src = fs.readFileSync(path.join(base,'index.ts'),'utf8');
+const compiled = buildSync({
+  stdin:{contents:src+'\nexport {validateOpportunityEvidence,evidenceGrounded,citedSourceText,scorePursuitWithClef,recoverEvidenceBackedOpportunities,finalizeEvidenceReport,normalizeReport,searchWeb,route};',resolveDir:base,loader:'ts'},
+  bundle:true,write:false,format:'cjs',platform:'node'
 });
-const sandbox = { exports: {}, console, URL, Response, Request, Headers, TextEncoder, TextDecoder, AbortSignal };
-vm.runInNewContext(compiled.outputText, sandbox, { filename: 'index.transpiled.cjs' });
-const { validateOpportunityEvidence, evidenceGrounded, scorePursuitWithClef, recoverEvidenceBackedOpportunities, finalizeEvidenceReport, normalizeReport, searchWeb, route } = sandbox.exports.__test;
+const sandbox = {module:{exports:{}}, console, URL, Response, Request, Headers, TextEncoder, TextDecoder, AbortSignal};
+vm.runInNewContext(compiled.outputFiles[0].text,sandbox);
+const {validateOpportunityEvidence,evidenceGrounded,scorePursuitWithClef,recoverEvidenceBackedOpportunities,finalizeEvidenceReport,normalizeReport,searchWeb,route}=sandbox.module.exports;
 const sourceItem = snippet => ({ title: 'Company engineering announcement', snippet, url: 'https://example.com/company' });
 const opportunity = (pillar, product_fit) => ({
   pillar, product_fit, confidence: 'medium',
@@ -158,7 +159,7 @@ test('existing accepted opportunity is not duplicated by recovery', () => {
   assert.equal(r.cloudflare_opportunities.filter(x=>x.evidence==='[S3]' && x.pillar==='Build').length,1);
 });
 
-test('end-to-end offline: generated JSON -> normalization -> validated sourced 9fin brief', () => {
+test('end-to-end offline: finalization preserves analyst output without synthesizing new pitches', () => {
   const sources=[
     {title:'PYMNTS | 9fin Raises $50 Million for AI-Powered Analytics Platform',snippet:'Funding to build AI platform infrastructure and accelerate AI technology.',url:'https://pymnts.com/9fin'},
     ...ninefinSources
@@ -174,13 +175,10 @@ test('end-to-end offline: generated JSON -> normalization -> validated sourced 9
   };
   const r=normalizeReport(raw);
   finalizeEvidenceReport(r,sources);
-  assert.equal(r.cloudflare_opportunities.length,3);
-  assert.equal(r.cloudflare_opportunities[0].evidence,'[S4]');
-  assert.ok(r.cloudflare_opportunities.some(o=>o.pillar==='Protect'&&o.evidence==='[S2]'));
-  assert.ok(r.cloudflare_opportunities.some(o=>o.pillar==='Build'&&o.evidence==='[S3]'));
-  assert.ok(r.cloudflare_opportunities.every(o=>o.evidence!=='[S1]'));
-  assert.equal(r.ai_signals.find(x=>x.theme==='Build & Scale AI Applications').signal,'strong');
-  assert.equal(r.questions[0],r.cloudflare_opportunities[0].discovery_question);
+  assert.equal(r.cloudflare_opportunities.length,0);
+  assert.equal(r.ai_signals[0].signal,'insufficient');
+  assert.equal(r.questions.length,0);
+  assert.equal(r.growth_signals[0],'Series C investment [S1]');
 });
 test('end-to-end offline: no technical primary evidence produces no pitches', () => {
   const sources=[{title:'9fin raises $170M Series C to accelerate AI platform',snippet:'The company builds AI-powered debt analytics and plans to expand AI infrastructure.',url:'https://news.example.com/9fin'}];
@@ -194,6 +192,7 @@ test('end-to-end offline: no technical primary evidence produces no pitches', ()
 test('search selection retains a specific 9fin AI engineering role among abundant general news', async () => {
   let calls=0;
   sandbox.fetch=async (_url, opts)=>{
+    if (_url.endsWith('/extract')) return {ok:true,json:async()=>({results:[]})};
     const q=JSON.parse(opts.body).query;
     calls++;
     const results=Array.from({length:8},(_,i)=>({
@@ -214,9 +213,9 @@ test('search selection retains a specific 9fin AI engineering role among abundan
     return {ok:true,json:async()=>({results})};
   };
   const sources=await searchWeb({SEARCH_API_KEY:'mock'},mockCompany);
-  assert.equal(calls,6);
+  assert.equal(calls,13);
   assert.ok(sources.some(x=>x.title==='Senior AI Platform Engineer at 9fin'));
-  assert.ok(sources.length<=16);
+  assert.ok(sources.length<=30);
 });
 
 test('GET stored research replays evidence pipeline without Tavily, Workers AI or D1 writes', async () => {
@@ -237,11 +236,10 @@ test('GET stored research replays evidence pipeline without Tavily, Workers AI o
   const response=await route(new Request('https://flarefinder.example/api/companies/9fin'),env,{});
   assert.equal(response.status,200);
   const data=await response.json();
-  assert.equal(data.cloudflare_opportunities.length,3);
-  assert.equal(data.cloudflare_opportunities[0].evidence,'[S3]');
-  assert.equal(data.ai_signals[0].signal,'strong');
+  assert.equal(data.cloudflare_opportunities.length,0);
+  assert.equal(data.ai_signals[0].signal,'insufficient');
   assert.equal(writes,0);
-  assert.equal(data.brief_recomputed,true);
+  assert.ok(!data.brief_recomputed);
 });
 
 test('brief UI displays a sourced business-to-technical-to-Cloudflare reasoning chain', () => {
@@ -250,7 +248,7 @@ test('brief UI displays a sourced business-to-technical-to-Cloudflare reasoning 
   for (const label of ['Business priority','Technical initiative','Potential consequence','Cloudflare hypothesis','What could rule it out','How to qualify']) {
     assert.ok(ui.includes('label:"'+label+'"'),label);
   }
-  assert.ok(ui.includes('Saved Clef score predates this evidence re-analysis'));
+  assert.ok(ui.includes('Initial score'));
   assert.ok(!ui.includes('opportunities.find(o => o.confidence !== "low" && /\\[S\\d+\\]/.test(o.evidence || ""))?.hypothesis'));
 });
 
@@ -262,6 +260,22 @@ test('compact account brief shows only three primary sections; detailed reasonin
   assert.ok(ui.includes('<h3>Cloudflare opportunities</h3>'));
   assert.ok(ui.includes('<h3>AI opportunity signals</h3>'));
   assert.ok(!ui.includes('<h3>Other business signals</h3>'));
-  assert.ok(ui.includes('Six-month AI agent delivery milestone'));
-  assert.ok(ui.includes('Planned engineering work, not a confirmed vendor evaluation.'));
+  assert.ok(ui.includes('Reanalyze saved evidence'));
+  assert.ok(ui.includes('Compare saved versions'));
+});
+
+test('fixed 9fin punctuation preserves all five items and flags missing strategic linkage',()=>{
+  const fixed=require('./fixtures/9fin-fixed.json');
+  const r=finalizeEvidenceReport(normalizeReport(fixed.candidate),fixed.sources);
+  assert.deepEqual([r.growth_signals.length,r.technical_signals.length,r.customer_perspective.priorities.length,r.cloudflare_opportunities.length],[1,2,1,1]);
+  assert.match(r.cloudflare_opportunities[0].evidence,/\[S2\] \[S3\]/);
+  assert.ok(r.validation_issues.some(x=>x.includes('linked strategic priority')));
+});
+test('unknown IDs remain visible for correction and cannot be rewritten into valid evidence',()=>{
+  const fixed=require('./fixtures/9fin-fixed.json');
+  const input=structuredClone(fixed.candidate);
+  input.cloudflare_opportunities[0].source_ids=['S999'];
+  const r=finalizeEvidenceReport(normalizeReport(input),fixed.sources);
+  assert.ok(r.cloudflare_opportunities[0].source_ids.includes('S999'));
+  assert.ok(r.validation_issues.some(x=>x.includes('unknown source S999')));
 });

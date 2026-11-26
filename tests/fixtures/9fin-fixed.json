@@ -1,0 +1,19 @@
+{
+  "company":"9fin",
+  "provenance":"Four public source abstracts independently checked on 2026-11-26. This is a new frozen dossier. The historical production dossier was unavailable.",
+  "sources":[
+    {"id":"S1","title":"Series C announcement","url":"https://9fin.com/insights/9fin-raises-170m-to-lead-ai-transformation-of-debt-markets","date":"2026-03-31","snippet":"9fin announced USD 170m in Series C funding at a USD 1.3bn valuation, describing fragmented tools and manual work in credit markets."},
+    {"id":"S2","title":"Introducing Research Grid","url":"https://www.9fin.com/insights/introducing-research-grid","date":"2026-07-15","snippet":"The live Research Grid product initially allowed comparison of up to eight issuers using analysis across proprietary credit material, filings, earnings transcripts and offering documents."},
+    {"id":"S3","title":"Senior AI Platform Engineer","url":"https://builtin.com/job/senior-ai-platform-engineer/11217122","date":null,"snippet":"The job description seeks reusable components for serving models, gateways, evaluations and developer tooling shared across teams. The remit includes tracing and cost visibility. An advertised remit indicates intended work. Current vacancy status and deployed tools are unconfirmed."},
+    {"id":"S4","title":"First Chief Revenue Officer","url":"https://www.9fin.com/insights/9fin-appoints-amit-lalwani-as-chief-revenue-officer","date":"2026-06-22","snippet":"9fin appointed Amit Lalwani to unify its global commercial teams. It reported serving over 350 institutions, ARR growth and expansion into Latin America and Asia-Pacific."}
+  ],
+  "candidate":{
+    "summary":"9fin sells debt intelligence to institutional credit teams. Its move from delivering information to helping analysts compare issuers makes repeated use of source-grounded AI commercially important [S2] [S4]. Whether this improves retention is a hypothesis.",
+    "digital_native":"yes",
+    "growth_signals":["Amit Lalwani joined as CRO to unify commercial teams (S4)."],
+    "technical_signals":["Research Grid compares credit issuers using proprietary material (S2).","The advertised shared-platform remit includes model serving, gateways and evaluation (S3)."],
+    "customer_perspective":{"priorities":[{"priority":"Make multi-issuer comparisons part of customers' recurring research workflow","why_it_matters":"Reducing manual comparison effort could increase product usage across credit teams.","evidence":"Research Grid launch (S2)","basis":"inferred"}]},
+    "cloudflare_opportunities":[{"pillar":"Build","hypothesis":"Explore whether common request telemetry would free product teams to ship more credit workflows.","confidence":"medium","signal":"The platform job describes reusable AI components (S3).","evidence":"A live AI product and an advertised shared-platform engineering remit (S2, S3).","product_fit":"AI Gateway request-level telemetry on compatible provider traffic.","implication":"Compare engineer-days to instrument a second credit feature and cost attribution coverage.","limitations":"Verify incumbent telemetry, provider support and retention policy. The vacancy does not prove production design or vendor evaluation.","stakeholder":"AI platform engineering owner, role inferred","discovery_question":"What work would the next credit team repeat to add per-request cost monitoring?"}],
+    "questions":["Which provider requests are in scope and may their metadata leave the current trust boundary?"]
+  }
+}
