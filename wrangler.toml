@@ -1,5 +1,5 @@
 
-name = "flarefinder"
+name = "flarefinder-staging"
 main = "src/index.ts"
 compatibility_date = "2025-10-01"
 
@@ -10,8 +10,8 @@ run_worker_first = ["/api/*"]
 
 [[d1_databases]]
 binding = "DB"
-database_name = "flarefinder-db"
-database_id = "62a86a76-432e-4595-894f-4ba8bce97cd7"
+database_name = "flarefinder-staging-db"
+database_id = "72d83ea8-5e64-4bd3-8b3e-8eb14d70681e"
 migrations_dir = "migrations"
 
 [ai]
@@ -43,14 +43,14 @@ invocation_logs = true
 
 # Durable account-research processing: one account per queue delivery.
 [[queues.producers]]
-queue = "flarefinder-research"
+queue = "flarefinder-staging-research"
 binding = "RESEARCH_QUEUE"
 
 [[queues.consumers]]
-queue = "flarefinder-research"
+queue = "flarefinder-staging-research"
 max_batch_size = 1
 max_batch_timeout = 2
 max_retries = 4
 max_concurrency = 10
 retry_delay = 30
-dead_letter_queue = "flarefinder-research-dlq"
+dead_letter_queue = "flarefinder-staging-dlq"
