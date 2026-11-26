@@ -1,0 +1,287 @@
+{
+  "name": "Harmonic Security",
+  "model": "Enterprise workforce AI security packaged by coverage and enforcement",
+  "logic": "Customer-owned AI traffic is distinct from the security vendor’s own event delivery. A new SIEM integration permits a narrow reliability question, while workforce DLP directly overlaps its product.",
+  "patterns": [
+    "Competitive overlap",
+    "Owned versus observed traffic",
+    "SIEM connector delivery",
+    "Enterprise package expansion",
+    "Release versus procurement"
+  ],
+  "opportunities": [
+    "Qualify outbound detection delivery reliability against the current AWS-hosted sender. [S5] [S8] [S10]",
+    "Consider shared delivery only after validating another integration. [S1] [S5]",
+    "Workforce DLP overlaps the prospect’s product. [S6] [S13]"
+  ],
+  "limitations": [
+    "No evidence of event loss, buyer mandate, connector volumes, budget or dissatisfaction.",
+    "New subprocessor and residency requirements may erase incremental value."
+  ],
+  "evidence": [
+    {
+      "id": "S1",
+      "title": "Pricing and packages",
+      "url": "https://www.harmonic.security/pricing",
+      "date": null,
+      "verified": "2026-11-26",
+      "reliability": "Vendor packaging",
+      "fact": "Explore, Guide and Command increase coverage and control. Guide lists SIEM/SOAR webhooks. Numeric prices were not established.",
+      "classification": "direct",
+      "supports": [
+        "B",
+        "D",
+        "E",
+        "F",
+        "G",
+        "J",
+        "K"
+      ]
+    },
+    {
+      "id": "S2",
+      "title": "AI Usage Intelligence",
+      "url": "https://www.harmonic.security/solutions/ai-usage-intelligence",
+      "date": null,
+      "verified": "2026-11-26",
+      "reliability": "Vendor product description",
+      "fact": "Proprietary small models classify interactions into tasks and use cases. Explorer displays summaries; coverage varies by integration.",
+      "classification": "direct",
+      "supports": [
+        "A",
+        "B",
+        "C",
+        "D",
+        "G",
+        "K"
+      ]
+    },
+    {
+      "id": "S3",
+      "title": "AI Agent Security and MCP Gateway",
+      "url": "https://www.harmonic.security/solutions/ai-agent-security",
+      "date": null,
+      "verified": "2026-11-26",
+      "reliability": "Vendor product description",
+      "fact": "Harmonic documents discovery and action controls for supported MCP clients and servers in customer workflows.",
+      "classification": "direct",
+      "supports": [
+        "A",
+        "C",
+        "D",
+        "E",
+        "F",
+        "G"
+      ]
+    },
+    {
+      "id": "S4",
+      "title": "Harmonic Security raises $50 million",
+      "url": "https://www.securityweek.com/harmonic-security-raises-50-million-for-workforce-ai-protection/",
+      "date": "2026-10-14",
+      "verified": "2026-11-26",
+      "reliability": "Trade coverage of issuer announcement",
+      "fact": "A $50m Series B, $76m total capital and plans for expansion in the US and UK were reported.",
+      "classification": "direct",
+      "supports": [
+        "A",
+        "C",
+        "D",
+        "H"
+      ]
+    },
+    {
+      "id": "S5",
+      "title": "CrowdStrike Falcon Next-Gen SIEM integration",
+      "url": "https://www.harmonic.security/resources/harmonic-security-announces-new-integration-with-crowdstrike-falcon-r-next-gen-siem",
+      "date": "2026-11-23",
+      "verified": "2026-11-26",
+      "reliability": "Dated vendor announcement",
+      "fact": "A released connector streams detections with user, application and action context to the customer's SIEM.",
+      "classification": "direct",
+      "supports": [
+        "A",
+        "D",
+        "E",
+        "F",
+        "G",
+        "H",
+        "I",
+        "J",
+        "K"
+      ]
+    },
+    {
+      "id": "S6",
+      "title": "Harmonic vs. SASE and CASB",
+      "url": "https://www.harmonic.security/harmonic-vs-sase",
+      "date": null,
+      "verified": "2026-11-26",
+      "reliability": "Vendor competitive positioning",
+      "fact": "Harmonic makes an explicit comparison with Cloudflare. Vendor marketing is evidence of positioning, not an independent feature test.",
+      "classification": "direct",
+      "supports": [
+        "A",
+        "C",
+        "F"
+      ]
+    },
+    {
+      "id": "S7",
+      "title": "From AI Blind Spots to Usage Intelligence",
+      "url": "https://www.harmonic.security/resources/from-ai-blind-spots-to-usage-intelligence-apax",
+      "date": "2026-03-10",
+      "verified": "2026-11-26",
+      "reliability": "Named customer story, vendor-published",
+      "fact": "Apax describes needing use-case visibility and moving from hours to minutes to gather adoption information.",
+      "classification": "direct",
+      "supports": [
+        "B",
+        "C",
+        "D",
+        "I"
+      ]
+    },
+    {
+      "id": "S8",
+      "title": "Subprocessors",
+      "url": "https://www.harmonic.security/subprocessors",
+      "date": null,
+      "verified": "2026-11-26",
+      "reliability": "Operational disclosure",
+      "fact": "Lists AWS hosting, Auth0 for identity, ClickHouse for application data and Sentry for error management.",
+      "classification": "direct",
+      "supports": [
+        "B",
+        "D",
+        "E",
+        "F",
+        "G",
+        "H",
+        "J",
+        "K"
+      ]
+    },
+    {
+      "id": "S9",
+      "title": "About Harmonic",
+      "url": "https://www.harmonic.security/about",
+      "date": null,
+      "verified": "2026-11-26",
+      "reliability": "Vendor leadership and privacy statement",
+      "fact": "Names co-founders Paterson and Woolgar-O'Neil, dedicated tenancy and default EU hosting with US options.",
+      "classification": "direct",
+      "supports": [
+        "C",
+        "D",
+        "E",
+        "H",
+        "I"
+      ]
+    },
+    {
+      "id": "S10",
+      "title": "Queues delivery guarantees",
+      "url": "https://developers.cloudflare.com/queues/reference/delivery-guarantees/",
+      "date": "2026-04-21",
+      "verified": "2026-11-26",
+      "reliability": "Cloudflare product documentation",
+      "fact": "At-least-once delivery allows duplicates. Consumers need deduplication where duplicate effects are unacceptable.",
+      "classification": "direct",
+      "supports": [
+        "F",
+        "J"
+      ]
+    },
+    {
+      "id": "S11",
+      "title": "Dead-letter queues",
+      "url": "https://developers.cloudflare.com/queues/configuration/dead-letter-queues/",
+      "date": "2026-10-12",
+      "verified": "2026-11-26",
+      "reliability": "Cloudflare product documentation",
+      "fact": "A configured dead-letter queue captures messages after retry exhaustion; it shares the source jurisdiction.",
+      "classification": "direct",
+      "supports": [
+        "F",
+        "J"
+      ]
+    },
+    {
+      "id": "S12",
+      "title": "Queues limits",
+      "url": "https://developers.cloudflare.com/queues/platform/limits/",
+      "date": "2026-10-30",
+      "verified": "2026-11-26",
+      "reliability": "Cloudflare product documentation",
+      "fact": "The single message size limit is 128 KB. Backlog, retention and throughput are bounded.",
+      "classification": "direct",
+      "supports": [
+        "F"
+      ]
+    },
+    {
+      "id": "S13",
+      "title": "Scan HTTP traffic",
+      "url": "https://developers.cloudflare.com/cloudflare-one/data-loss-prevention/dlp-policies/",
+      "date": null,
+      "verified": "2026-11-26",
+      "reliability": "Cloudflare product documentation",
+      "fact": "Gateway HTTP policies can log or block requests matching a DLP profile, illustrating product scope overlap.",
+      "classification": "direct",
+      "supports": [
+        "F"
+      ]
+    }
+  ],
+  "sections": {
+    "A": {
+      "title": "Executive assessment",
+      "body": "Harmonic helps enterprises see how employees and their agents use AI tools, classify sensitive interactions and act on them. Its customers buy the ability to make those decisions across applications. The employee's model usage typically belongs to the customer or the external tool. Treating that token traffic as Harmonic's potential infrastructure spend materially overstates the account. [S1] [S2] [S3]\n\nTwo events put it on a territory watchlist. In October it announced a $50m Series B to expand engineering and commercial operations. On 23 November it announced that its detections can reach security operations teams through CrowdStrike Falcon Next-Gen SIEM. The second event is a stronger reason to speak to the people responsible for reliable outbound event delivery. Neither event demonstrates vendor evaluation. Harmonic explicitly positions its software against Cloudflare's workforce security offerings. Prioritise carefully where that commercial conflict outweighs any benefit. [S4] [S5] [S6]"
+    },
+    "B": {
+      "title": "Business model and commercial economics",
+      "body": "Explore exposes AI usage and risk. Guide adds endpoint coverage and coaching or enforcement in the user's workflow. Command adds controls over agent actions, including its local MCP gateway. This creates an enterprise sales motion in which the buyer can start with visibility, demonstrate demand to an AI steering committee and widen protection to additional workflows. It could support expansion revenue, but contract value, whether pricing is seat-based, net retention and enterprise discounts were not verified. The pricing page supports the packaging, not a dollar estimate. [S1] [S2]\n\nThe Apax customer story illustrates the economic case. Its IT team wanted to know whether approved AI licences were being adopted and which use cases employees actually pursued. Collecting data across separate dashboards took time. The customer reported moving from hours to minutes for adoption reporting. This is a customer statement published by Harmonic, not an audited performance benchmark for every deployment. Wider coverage matters when it improves those decisions or makes a buyer willing to roll the product out further. [S7]\n\nLikely supplier costs include maintaining endpoint integrations, classifying interactions, storing tenant data, and operating event delivery and customer support. They scale differently. Ten customers who generate the same number of events might require different implementation effort if their endpoint management and data-handling rules differ. Actual hosting, identity and data-platform relationships are documented in the subprocessor list. Contribution margin, expansion rate, revenue and paid procurement for a new infrastructure component remain unknown. [S1] [S2] [S8]"
+    },
+    "C": {
+      "title": "Market and competitive position",
+      "body": "The timing thesis is straightforward. A company can move from employees visiting a few AI sites to desktop tools and agents making calls on their behalf. URL visibility alone may tell a security team little about the business task involved. Harmonic's point of differentiation is to classify the interaction in context and decide whether to coach, warn or intervene. Apax's example supports that demand at one account. The incumbent alternatives include native admin reporting, an existing network security platform and simply restricting applications. Whether those alternatives suffice depends on the customer's deployed mix and its tolerance for friction. [S2] [S3] [S6] [S7]\n\nThe founders previously built Digital Shadows. A new financing round gives the team resources to extend delivery and go-to-market. Its higher packages depend on adding value beyond basic discovery. If broader platforms meet enough requirements in bundled contracts, Harmonic must prove that its incremental decisions are worth another endpoint component and security review. Harmonic's comparison with other vendors is evidence of its competitive positioning. Validate any disputed competitor feature independently. [S1] [S4] [S6] [S9]"
+    },
+    "D": {
+      "title": "Strategic priorities",
+      "body": "1. **Sell both responsible AI adoption and a view of licence value.** The Usage Intelligence product groups interactions into tasks and use cases. The analyst inference is that this widens the conversation from the security operations team to IT and AI programme leaders. Success depends on useful classifications and employee privacy safeguards. Activity summaries alone cannot prove causal productivity gains. [S2] [S7]\n2. **Extend governance to agent actions.** Command provides discovery of clients and servers, action permissions and interventions on tool calls. The premium package gains value when policy follows the user into agent workflows. Local enforcement, tool compatibility and low interruption matter. Customers may choose an incumbent control or decline instrumentation of sensitive workloads. [S1] [S3]\n3. **Make Harmonic's findings usable where security teams already respond.** The CrowdStrike integration carries detections and associated context into the buyer's existing SIEM. Easier onboarding and useful analyst context could lower adoption friction. Slow, missing or duplicated detections could undermine trust. Those are risks to measure, not reported failures. [S5]\n4. **Scale within enterprise privacy constraints as US and UK teams expand.** Harmonic describes dedicated tenancy, default EU hosting, optional US hosting and a commitment concerning training on customer data. The inference is that any architecture change must preserve the properties customers approved. The security and procurement effort of adding a new subprocessor can erase a modest engineering saving. [S4] [S8] [S9]"
+    },
+    "E": {
+      "title": "Execution and current architecture",
+      "body": "Separate three boundaries. The customer deploys supported endpoint components and chooses which AI applications employees can use. Harmonic supplies browser, endpoint and local MCP controls, classifies activity, and operates its service. A customer's connected systems and its SIEM have their own identities and retention rules. The announced connector sends detections to CrowdStrike. It does not put all Falcon traffic or the buyer's agent runtime under Harmonic's control. [S1] [S3] [S5]\n\nHarmonic lists AWS for application hosting, Auth0 for customer identity, ClickHouse for application data and Sentry for error management. These are affirmative deployment facts. The list does not identify a queue provider, classifier hardware, every CDN or how detection events are retried. Its regional commitments constrain both payloads and logs. Avoid suggesting a new network hop without knowing which components operate locally and which require a round trip. [S8] [S9]"
+    },
+    "F": {
+      "title": "Cloudflare commercial assessment",
+      "body": "**Primary discovery, conditional — Build, SIEM event delivery.** The 23 November connector provides a concrete workload outside the company's proprietary classification engine. The security operations buyer wants a finding to arrive with useful context after a transient destination outage. If maintaining separate retriers for multiple connectors diverts engineers from new integrations, Cloudflare Queues could supply managed buffering, bounded retries and a dead-letter path. Compare against the existing AWS-hosted application, native AWS queueing and the current sender. The differentiation would need to show up as less integration effort or better recovery across destinations. Queueing in another cloud can increase transfer, vendor review and operational complexity. A working connector was just shipped. Rebuilding its delivery layer needs a genuine constraint. [S5] [S8] [S10] [S11]\n\nAsk the integrations lead who owns a failed handoff and whether the team needs a shared delivery mechanism for its next destination. Possible metrics are time to recover queued events after destination unavailability, reconciliation completeness, duplicate detections presented to analysts and engineer-hours to add the next integration. Queues delivers at least once, so deduplication needs a stable event identity and destination support. The queue's 128 KB message limit matters when context contains more than event metadata. A durable reference is useful only if an authorised consumer can still resolve it in the appropriate region. Bounded retention and backlog size also matter during a prolonged outage. Confidence high that external delivery exists, low that Cloudflare adds value. [S5] [S10] [S11] [S12]\n\n**Adjacent and longer-term.** A shared event sender for additional customer destinations would be an expansion from one validated connector. Harmonic's pricing lists alert webhooks for SIEM and SOAR. The same fan-out economics might apply, but each destination has different acknowledgement semantics and data terms. Only qualify this after a measurable improvement on a representative connector and a second team prepared to adopt it. No distinct longer-term opportunity clears the evidence bar today. [S1] [S5]\n\n**Connect and Protect.** No service interruption or broken network path was found to qualify a traffic-management opportunity. A generic CDN cannot fix an offline customer endpoint or a backlog at an external SIEM. Harmonic explicitly compares itself to Cloudflare in workforce security. Cloudflare documents that its own Gateway can apply DLP profiles to HTTP traffic to log or block requests. Offering that as a substitute for Harmonic's core contextual control would put the supplier in competition with its prospective customer's business. Separate an internal corporate security purchase from an embedded product opportunity. There is no current mandate for either in this evidence. [S3] [S6] [S13]"
+    },
+    "G": {
+      "title": "AI workload boundaries",
+      "body": "Harmonic describes purpose-built small language models that group interactions into tasks and uses. This inference supports the product directly. The relevant outcome is whether security and IT teams can intervene or act on the result without slowing useful work. The product's advertised sub-200 ms inline coaching is a vendor claim about supported interactions, not an external benchmark or a latency budget available for another service. Customer content can be sensitive. The Usage Explorer describes summaries, role controls and masking. [S1] [S2]\n\nHarmonic's own model classification, a customer's employee using an external AI app, an MCP client's tool invocation, and a detection sent to a SIEM are four different workloads. No verified evidence places third-party model calls in Harmonic's control for all four. AI Gateway request telemetry cannot establish employee intent across its entire product, and Workers AI inference is not a justified replacement for the classifiers. Model training topology, weights, hosting costs and a plan to change serving infrastructure are unknown. [S2] [S3] [S5] [S8]"
+    },
+    "H": {
+      "title": "Commercial timing",
+      "body": "Momentum is observable in the October financing and November partner launch. Connector work is operational, but architecture selection may already have ended. The next external integration or a compliance-led regional rollout is a potential decision point if confirmed in discovery. A funding announcement alone supplies no willingness to replace AWS or accept another data processor. Buying readiness is unverified. [S4] [S5] [S8]"
+    },
+    "I": {
+      "title": "Stakeholders",
+      "body": "Bryan Woolgar-O'Neil, CTO and co-founder, is the named route to the engineering owner and a technical veto on payload handling. Ask for the connector or integrations engineering lead rather than presuming the CTO runs its operations. Alastair Paterson, CEO and co-founder, is relevant if integration time constrains the partner strategy. Michael Marriott, VP Marketing, authored the CrowdStrike announcement and speaks to its positioning. This does not establish infrastructure budget authority. Apax's Neil Patel is a customer reference, not a Harmonic employee or prospective internal champion. [S5] [S7] [S9]"
+    },
+    "J": {
+      "title": "Engagement",
+      "body": "Opening to Bryan — “Congratulations on getting Harmonic detections into Falcon. When a customer's SIEM is unavailable, what does your team commit to recovering, and does that work repeat for every new destination? If delivery is already covered by your AWS stack, that answers my question. If a second integration needs different guarantees, we could help compare the options on anonymised events.”\n\nAsk (1) Which part of the Falcon handoff can Harmonic measure end to end? (2) Which fields must remain inside a tenant or hosting region during retries? (3) How do you distinguish duplicate delivery from two genuine detections? (4) What currently takes longest when adding a destination? (5) Which upcoming integration creates a decision, and what result would justify adding another provider?\n\nIf the owner confirms a concrete constraint, bring an SE to compare a synthetic event stream with the existing sender. Simulate destination downtime, restore the receiver and measure recovery, duplicates after deduplication, engineering work and operating cost. Use synthetic identifiers only. Prove per-tenant boundaries and failure visibility before negotiating any deployment. Expand only when another integration shares the requirements. Otherwise retain a monitored account with no qualified opportunity. [S1] [S5] [S8] [S10] [S11]"
+    },
+    "K": {
+      "title": "Addressable spend",
+      "body": "Total cloud expenditure, existing Cloudflare use, volumes and a vendor budget remain unknown. The potentially addressable unit is delivery of accepted Harmonic detection events to customer-authorised systems. Count events, fan-out, payload size, retries and replays by tenant, plus outbound transfer and ongoing support at current contracted rates. One prompt can generate no detection, one detection or several. Applying an employee-seat multiplier to prompt volume would count an unrelated market. The existing implementation may cost less than the engineering time to switch. Defer a spend range until the owner supplies a representative distribution. [S1] [S2] [S5] [S8]"
+    },
+    "L": {
+      "title": "Evidence ledger and limitations",
+      "body": "Material sources opened on 26 November 2026. Vendor and customer case-study claims are attributed below. Operational pain, future contract dates, unit economics, and availability of a compatible region for the entire proposed path remain unresolved. A commercially valid conclusion is to decline the opportunity after discovery."
+    }
+  }
+}

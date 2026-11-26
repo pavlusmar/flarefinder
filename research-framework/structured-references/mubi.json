@@ -1,0 +1,147 @@
+{
+  "name": "MUBI",
+  "model": "Curated film memberships, theatrical distribution and production.",
+  "logic": "Optimise public discovery for eligible titles; separate it from rights, premium DRM and partner cinema inventory.",
+  "patterns": [
+    "Retain the legal-entity boundary in financial claims.",
+    "Test campaign traffic separately from protected premium video.",
+    "Distinguish digital eligibility from inventory at a partner venue."
+  ],
+  "opportunities": [
+    "Compare public campaign image delivery for an eligible release in one territory [S2][S5][S7].",
+    "Investigate membership claim failures only after separating app errors from sold-out screenings [S4].",
+    "Poor fit: infer premium catalogue migration from signed URL support [S3][S8][S9]."
+  ],
+  "limitations": [
+    "Unknown incumbent, volumes, engineering owner and contract timing.",
+    "UK entity revenue is not global revenue.",
+    "No verified evidence of AI procurement."
+  ],
+  "as_of": "2026-11-26",
+  "evidence": [
+    {
+      "id": "S1",
+      "title": "Summit Partners, MUBI financing, 2 June 2025.",
+      "url": "https://www.summitpartners.com/news/mubi-raises-100-million-in-growth-financing-led-by-sequoia-capital",
+      "fact": "Existing investor reported a $100m Sequoia-led investment, founder Efe Cakarel and the integrated business model. Direct statement, interested party.",
+      "date": "2025-06-02",
+      "verified_on": "2026-11-26",
+      "status": "Direct source statement",
+      "reliability": "Investor announcement",
+      "supports": "Business model and past investment"
+    },
+    {
+      "id": "S2",
+      "title": "MUBI, What is Premiere?, updated 18 November 2026.",
+      "url": "https://help.mubi.com/article/1524-draft-what-is-mubi-premiere",
+      "fact": "Bundled digital, cinema, print and shop benefits, plus early access to selected releases. Direct product policy.",
+      "date": "2026-11-18",
+      "verified_on": "2026-11-26",
+      "status": "Direct source statement",
+      "reliability": "Product FAQ",
+      "supports": "Current membership strategy"
+    },
+    {
+      "id": "S3",
+      "title": "MUBI terms of service, date not confirmed.",
+      "url": "https://mubi.com/en/terms_of_service",
+      "fact": "Territory and subscription conditions restrict viewing. Direct legal terms.",
+      "date": null,
+      "verified_on": "2026-11-26",
+      "status": "Direct source statement",
+      "reliability": "Legal terms",
+      "supports": "Rights"
+    },
+    {
+      "id": "S4",
+      "title": "How MUBI GO works, undated.",
+      "url": "https://help.mubi.com/article/157-how-does-mubi-go-work",
+      "fact": "Same-day QR redemption is subject to cinema availability and cannot reserve seats. Direct support guidance.",
+      "date": null,
+      "verified_on": "2026-11-26",
+      "status": "Direct source statement",
+      "reliability": "Support guide",
+      "supports": "Cinema boundary"
+    },
+    {
+      "id": "S5",
+      "title": "MUBI USA, November 2026 programming.",
+      "url": "https://embed.letterboxd.com/mubius/list/november-2026-on-mubi-us/detail/",
+      "fact": "Country-specific exclusive releases and dates illustrate campaign cadence. Company-operated channel.",
+      "date": "2026-11",
+      "verified_on": "2026-11-26",
+      "status": "Direct source statement",
+      "reliability": "Company account",
+      "supports": "Cadence"
+    },
+    {
+      "id": "S6",
+      "title": "MUBI UK Limited statutory accounts, year ending 31 December 2025, filed 30 September 2026.",
+      "url": "https://find-and-update.company-information.service.gov.uk/company/07385593/filing-history/MzU0ODU2MDgzNGFkaXF6a2N4/document",
+      "fact": "Note 3 disaggregates subscription, theatrical, management and other income. Primary filing, UK entity only.",
+      "date": "2026-09-30",
+      "verified_on": "2026-11-26",
+      "status": "Direct source statement",
+      "reliability": "Statutory filing",
+      "supports": "Economics"
+    },
+    {
+      "id": "S7",
+      "title": "Cloudflare Images, URL transformations, updated 25 November 2026.",
+      "url": "https://developers.cloudflare.com/images/optimization/transformations/url/",
+      "fact": "Size, format and quality transformations can use origin images. Direct capability documentation.",
+      "date": "2026-11-25",
+      "verified_on": "2026-11-26",
+      "status": "Direct source statement",
+      "reliability": "Vendor docs",
+      "supports": "Image capability"
+    },
+    {
+      "id": "S8",
+      "title": "MUBI browser and Widevine guidance, undated.",
+      "url": "https://help.mubi.com/article/1135-updating-browsers-and-widevine-cdm",
+      "fact": "Widevine and browser compatibility constrain some protected viewing. Direct support guidance.",
+      "date": null,
+      "verified_on": "2026-11-26",
+      "status": "Direct source statement",
+      "reliability": "Support guide",
+      "supports": "Playback compatibility"
+    },
+    {
+      "id": "S9",
+      "title": "Cloudflare Stream, Secure your Stream, updated 27 October 2026.",
+      "url": "https://developers.cloudflare.com/stream/viewing-videos/securing-your-stream/",
+      "fact": "Signed URLs control who may view private content. Direct capability documentation; no licensor certification established.",
+      "date": "2026-10-27",
+      "verified_on": "2026-11-26",
+      "status": "Direct source statement",
+      "reliability": "Vendor docs",
+      "supports": "Access control"
+    },
+    {
+      "id": "S10",
+      "title": "TheWrap, MUBI content leadership changes, 18 December 2025.",
+      "url": "https://www.thewrap.com/creative-content/movies/mubi-shuffles-content-leadership-jason-ropell-arianna-bocco/",
+      "fact": "Trade reporting attributed acquisition and distribution leadership to Arianna Bocco amid integration of Match Factory staff. Historical report based on a person familiar with the changes.",
+      "date": "2025-12-18",
+      "verified_on": "2026-11-26",
+      "status": "Direct source statement",
+      "reliability": "Trade reporting",
+      "supports": "Distribution leadership"
+    }
+  ],
+  "sections": {
+    "A. Executive account assessment": "MUBI buys and distributes independent films and sells a continuing relationship with film lovers. Members can encounter a title in a cinema, discover it through editorial programming and watch it at home. The Premiere plan bundles select early access with cinema, print and retail benefits where available. A timely opening is to ask where an interested fan fails to reach a benefit they can actually use. The UK account merits targeted discovery but the case for a major infrastructure sale is weak. [S1][S2][S3][S4]\n\nA poster can circulate widely even when the right to stream a film or claim a ticket differs by territory, date and subscriber. Increasing page speed while sending more visitors to a film unavailable in their market would be a commercial failure. Ask the membership owner for the country and cohort with the largest *eligible* drop-off. A public artwork experiment offers a reversible first step if performance contributes to that drop-off. [S2][S3][S5][S7]\n",
+    "B. Business model and commercial economics": "Members subscribe to curated streaming or purchase a broader plan. Premiere can include early access, magazine, merchandise credits and local cinema benefits. Production and theatrical distribution expose MUBI to different economics. Acquiring rights and promoting a release commit resources before its ultimate audience is known. A streaming exclusive can help win a subscriber or earn a renewal. The same film's cinema performance also depends on exhibitors and the local release programme. The reviewed sources do not establish retained proceeds from an individual ticket. [S1][S2][S4][S10]\n\nMUBI UK Limited's statutory accounts show 2025 subscription income of £6.34m versus £5.05m in 2024, and theatrical release income of £0.61m versus £2.59m. Management fees of £7.65m enter UK turnover of £15.61m for 2025. These are figures for one legal entity. The contrast between rising subscription income and falling theatrical income illustrates why one group growth figure would mask different operating drivers. Likely costs include rights, production, acquisition marketing, fulfilment, support and delivery. The available figures do not isolate an addressable CDN or software line. [S6]\n",
+    "C. Market dynamics and competitive positioning": "Cinema competes for a viewer's evening with generalist streaming and other leisure options. MUBI's advantage is editorial judgement, acquiring films people want and making membership feel valuable between releases. A cinephile near a participating theatre can use a benefit another equally engaged viewer cannot. Breadth of nominal benefits is a weaker measure than usage and renewal in each market. Premiere's early access is similarly valuable only when the viewer wants that particular film. [S1][S2][S4]\n\nTiming creates short windows of attention around festival, theatrical and streaming releases. Execution requires rights, programming, distribution and marketing to coordinate. Funding can support bigger bets but cannot guarantee a successful slate. Infrastructure affects the ability to capture existing demand; it cannot supply the creative differentiation that generated that demand. A poorly performing release does not demonstrate a platform failure. [S1][S5][S6][S10]\n",
+    "D. Customer strategy and strategic priorities": "**Strengthen membership beyond viewing — stated product direction.** Premiere brings digital and physical benefits into one offer. Activation now includes whether a subscriber understands their local benefits and can use the first one. The buyer might measure renewal or upsell, but public materials do not specify a numeric management target. [S2][S4]\n\n**Coordinate distribution across release windows — inferred.** MUBI advertises curated exclusive releases by country and has integrated distribution and acquisition leadership. Interest gained in a festival, on Letterboxd or in cinemas can lead to a streaming membership. The hypothesis needs campaign attribution and availability checks because a viewer interested in one film may have no interest in an ongoing subscription. [S1][S5][S10]\n\n**Keep licensed access trustworthy — contractual and inferred operating priority.** Rights vary geographically and protected playback depends on device compatibility. A subscriber who cannot play an eligible title needs a different response from a visitor who simply lacks local access. A product owner should be able to distinguish these outcomes before deciding whether to invest in network delivery, support, licensing or messaging. [S3][S8]\n",
+    "E. Execution initiatives and technical strategy": "Map a journey from discovery through login, entitlement, licence grant and media delivery. These are diagnostic boundaries, not a claim about MUBI's internal software. MUBI documents Widevine compatibility for some browsers. That establishes a real protected-playback dependency, but does not identify a primary CDN, internal encoder, current DRM contracts or technology across all TVs and devices. Premiere's early access adds a time condition for eligible members. It should remain under the authority of the team that manages rights. [S2][S3][S8]\n\nFor GO, the member selects a same-day showing to generate a QR code and the cinema exchanges it for admission if space remains. The code does not reserve a seat. Break a failed claim into code issuance, acceptance at the box office, sold-out inventory and unclear instructions. A combined failure rate could wrongly charge an exhibitor inventory problem to application engineering. Avoid assuming MUBI owns the gate, ticket inventory or point-of-sale software. [S4]\n",
+    "F. Cloudflare commercial opportunity analysis": "**Primary entry — Connect and Build, public artwork.** If users on mobile release pages wait for oversized artwork, compare the incumbent image delivery with Cloudflare Images transformations from an existing origin. Use one approved set of public posters in one market. Rendering format and image size can vary with the client, while editorial staff retain control over framing, colour and composition. Measure bytes, load time, progression to a trailer or signup and eligible paid starts. Hold promotion and placement constant. Brand damage or incorrect territorial display is grounds to stop. Existing image tooling may already achieve the same performance at lower cost. Confidence is medium in technical feasibility and low in present buying need. [S2][S3][S5][S7]\n\n**Adjacent — member experience and Protect.** Ask the membership team whether digital claim errors or misuse create material losses or support demand. Observe one claim boundary with the current owner and separate user mistakes and venue capacity from policy rejections. Only a measured unwanted request pattern would justify exploring additional controls. No evidence establishes an active security project, a shortage of protection or a reason to place a proxy on a third-party cinema system. Success would be fewer eligible claims rejected with unchanged unauthorised acceptances. [S2][S3][S4]\n\n**Speculative expansion and poor fit.** A marketing trailer could be independently addressable if MUBI controls the video, the current workflow creates a specific cost and rights permit moving distribution. Protected feature films are a different workload. Stream signed URLs establish an access-control mechanism. They do not establish licensor approval, support for all required device DRM, offline rights, accessibility tracks or acceptable economics across current contracts. Do not propose shifting the catalogue on the strength of MUBI's category alone. [S3][S8][S9]\n",
+    "G. AI opportunity analysis": "The evidence shows an editorial and rights-led business. It does not establish a commercial AI product, model-request volume, inference deployment, agentic workflow or procurement for AI governance. Film recommendations alone could reflect human selection, rules or software outside MUBI's control. Creative rights and editorial approval constrain generated material. Leave AI Gateway and model serving out of the current account opportunity. Reassess if an owner identifies a funded workflow and can establish who controls inputs, outputs, permissions and inference. [S1][S2][S3]\n",
+    "H. Commercial timing and buying readiness": "The Premiere FAQ updated 18 November 2026 provides a current reason to ask about activation. The November US release calendar shows a series of potential measurement windows but does not establish UK availability. Ask for a UK campaign with confirmed local rights. The 2025 investment is background, not evidence of an open CDN decision. No renewal date, vendor evaluation, delivery incident or budget was established. Defer if engagement depends primarily on programming or the current delivery path meets its targets. [S1][S2][S3][S5]\n",
+    "I. Stakeholder map": "Start with the **membership product lead** for a cohort and business target. Include the **web performance owner** for existing telemetry and the **rights and creative operations lead** for asset permissions. Founder and CEO **Efe Cakarel** is a possible sponsor once an issue crosses membership and distribution. Trade reporting named **Arianna Bocco** to lead acquisitions and distribution in December 2025. Her function can clarify the release calendar and rights constraints; reconfirm current remit before reaching out. The technical owners' names were not established. [S1][S2][S10]\n",
+    "J. Account engagement strategy": "Suggested opening: “Your Premiere offer connects a film someone sees advertised with cinema, early access and Notebook. Which part of that first visit most often stops an eligible viewer getting value? We could compare a single public campaign experience against your existing delivery while your team retains rights and playback decisions.” [S2][S4][S5]\n\n1. Which UK release has comparable audience cohorts and enough time for a measured test?\n2. Which images can be transformed, and who approves their creative and territorial use?\n3. How does trial conversion vary by traffic source, device and current load time?\n4. Which benefit complaints come from failed digital claims versus unavailable cinema seats?\n5. Which incumbent controls the constraint, and what result would justify changing it?\n\nBring in an SE after the product owner supplies the baseline, eligible traffic and an approved asset. Evaluate one campaign against the incumbent and review conversion, visual quality and error rates. Extend to a second market only after that market's rights owner confirms applicability. If users are choosing based on film selection, report the finding and stop the infrastructure trial.\n",
+    "K. Addressable spend": "Request current public image bytes, variants, eligible territories, requests and transformation counts, incumbent unit rates, bundled discounts and minimum commitments. Estimate only the movable public campaign workload. Value a conversion improvement using incremental *paid* starts or renewals with an appropriate counterfactual. Licence costs, box office, physical fulfilment and platform-wide video bytes are separate. No verified Cloudflare usage, approved purchase, current group technology spend or defensible contract estimate was found. [S2][S3][S4][S6][S7]\n",
+    "L. Evidence ledger and analytical limitations": "Existing playback contracts, technology ownership, release economics and actual performance require discovery. A legal-entity account does not establish group economics. Company channels describe released products and rights rules; investor announcements and trade reports have different evidentiary weight. The US release calendar illustrates cadence only. All claims of incremental value are analyst inferences.\n\n- **[S1] Summit Partners, MUBI financing, 2 June 2025.** Existing investor reported a $100m Sequoia-led investment, founder Efe Cakarel and the integrated business model. Direct statement, interested party. [Source](https://www.summitpartners.com/news/mubi-raises-100-million-in-growth-financing-led-by-sequoia-capital)\n- **[S2] MUBI, What is Premiere?, updated 18 November 2026.** Bundled digital, cinema, print and shop benefits, plus early access to selected releases. Direct product policy. [Source](https://help.mubi.com/article/1524-draft-what-is-mubi-premiere)\n- **[S3] MUBI terms of service, date not confirmed.** Territory and subscription conditions restrict viewing. Direct legal terms. [Source](https://mubi.com/en/terms_of_service)\n- **[S4] How MUBI GO works, undated.** Same-day QR redemption is subject to cinema availability and cannot reserve seats. Direct support guidance. [Source](https://help.mubi.com/article/157-how-does-mubi-go-work)\n- **[S5] MUBI USA, November 2026 programming.** Country-specific exclusive releases and dates illustrate campaign cadence. Company-operated channel. [Source](https://embed.letterboxd.com/mubius/list/november-2026-on-mubi-us/detail/)\n- **[S6] MUBI UK Limited statutory accounts, year ending 31 December 2025, filed 30 September 2026.** Note 3 disaggregates subscription, theatrical, management and other income. Primary filing, UK entity only. [Source](https://find-and-update.company-information.service.gov.uk/company/07385593/filing-history/MzU0ODU2MDgzNGFkaXF6a2N4/document)\n- **[S7] Cloudflare Images, URL transformations, updated 25 November 2026.** Size, format and quality transformations can use origin images. Direct capability documentation. [Source](https://developers.cloudflare.com/images/optimization/transformations/url/)\n- **[S8] MUBI browser and Widevine guidance, undated.** Widevine and browser compatibility constrain some protected viewing. Direct support guidance. [Source](https://help.mubi.com/article/1135-updating-browsers-and-widevine-cdm)\n- **[S9] Cloudflare Stream, Secure your Stream, updated 27 October 2026.** Signed URLs control who may view private content. Direct capability documentation; no licensor certification established. [Source](https://developers.cloudflare.com/stream/viewing-videos/securing-your-stream/)\n- **[S10] TheWrap, MUBI content leadership changes, 18 December 2025.** Trade reporting attributed acquisition and distribution leadership to Arianna Bocco amid integration of Match Factory staff. Historical report based on a person familiar with the changes. [Source](https://www.thewrap.com/creative-content/movies/mubi-shuffles-content-leadership-jason-ropell-arianna-bocco/)\n"
+  }
+}

@@ -1,0 +1,168 @@
+[
+  {
+    "principle": "Map the monetised event before modelling traffic.",
+    "examples": [
+      "Fresha",
+      "Form3"
+    ],
+    "comparison": "Fresha can earn a fee on an eligible first-client booking. Form3 moves from integration fees to live processing revenue.",
+    "conditions": "The company discloses a billable event, price mechanism or transition to recurring billing.",
+    "exception": "One booking or cleared payment may create multiple requests and may use an intermediary.",
+    "evidence": "Pricing terms, exclusions, integration owner and event denominators.",
+    "failure": "Multiplying payment value or visits by an assumed infrastructure share.",
+    "discovery": "Which completed event changes revenue, and how many calls on the path can your team actually influence?"
+  },
+  {
+    "principle": "Find the technical boundary of the competitive advantage.",
+    "examples": [
+      "Ably",
+      "Harmonic Security",
+      "Oxa"
+    ],
+    "comparison": "Ably sells reliable realtime transport. Harmonic sells employee AI security. Oxa sells autonomy where embedded operation and assurance matter.",
+    "conditions": "The proposed replacement touches the reason customers buy the product.",
+    "exception": "A separately operated integration, control plane or partner service may still be addressable.",
+    "evidence": "Customer value proposition, workload allocation and the incumbent design.",
+    "failure": "Pitching the core product back to its maker.",
+    "discovery": "Which supporting service would you buy if it released engineers for the part customers pay you to build?"
+  },
+  {
+    "principle": "Name the operator, budget owner and beneficiary separately.",
+    "examples": [
+      "ElevenLabs",
+      "Ably",
+      "Oxa"
+    ],
+    "comparison": "An ElevenLabs developer integration may generate downstream consumption. Oxa deployments can involve several operators and shared responsibilities.",
+    "conditions": "Customers, partners or private deployments operate a significant part of the production path.",
+    "exception": "Partner-enabled demand can be commercially valuable without being direct account spend.",
+    "evidence": "Deployment guide, responsibility boundaries, contract or operating owner.",
+    "failure": "Attributing all downstream accounts, traffic or devices to the platform vendor.",
+    "discovery": "Whose account pays for this component when an integration goes live?"
+  },
+  {
+    "principle": "Treat a product launch as evidence of a workflow change.",
+    "examples": [
+      "9fin",
+      "Attio",
+      "MUBI"
+    ],
+    "comparison": "Research Grid changes the credit analyst's comparison workflow. An Attio interface exposes a permissioned workspace. A MUBI release creates territory-specific eligibility.",
+    "conditions": "There is a live feature, release note or operator guide with a discernible user action.",
+    "exception": "A launch can run on an established platform with adequate controls and no new infrastructure decision.",
+    "evidence": "Release date, interaction path, dependency and observable failure or delay.",
+    "failure": "Equating an MCP server with inference routing or a release with budget.",
+    "discovery": "What does the new user action depend on, and which part limits adoption today?"
+  },
+  {
+    "principle": "Use hiring to investigate a shared capability.",
+    "examples": [
+      "9fin",
+      "Tessl"
+    ],
+    "comparison": "A shared platform remit at 9fin suggests a reusable component for several teams. Tessl's actual charging and retention policies give stronger evidence of workload boundaries.",
+    "conditions": "A dated, employer-specific role describes outcomes and internal consumers.",
+    "exception": "A role can be filled, cancelled or specify desired background unrelated to production.",
+    "evidence": "Original vacancy or identified mirror, remit, corroborating product and architecture evidence.",
+    "failure": "Treating a desired skill as a deployed vendor, open tender or signed budget.",
+    "discovery": "What do product teams repeat today, and which components have already been chosen?"
+  },
+  {
+    "principle": "Ask what incremental value survives the incumbent.",
+    "examples": [
+      "Attio",
+      "Form3",
+      "Harmonic Security"
+    ],
+    "comparison": "Attio lists Cloudflare as a subprocessor. Form3's isolation objectives constrain any shared dependency. Harmonic's SIEM handoff is narrower than workforce DLP replacement.",
+    "conditions": "Existing controls, providers or internal components are documented.",
+    "exception": "A vendor disclosure rarely identifies exact products, paths or purchased capacity.",
+    "evidence": "Subprocessor list, integration documentation, resilience design and baseline outcome.",
+    "failure": "Recommending a greenfield deployment to an existing customer or calling current controls inadequate.",
+    "discovery": "What would a new component improve against the current control, and what would it make harder?"
+  },
+  {
+    "principle": "Separate expansion from permission to serve a workload.",
+    "examples": [
+      "MUBI",
+      "ElevenLabs",
+      "Oxa"
+    ],
+    "comparison": "MUBI must honour territorial rights, voice processing may require regional routing and Oxa partner sites have local control boundaries.",
+    "conditions": "A proposed cross-region path depends on content rights, residency, contracts or operating authority.",
+    "exception": "Public assets or synthetic test traffic can have different constraints than restricted production data.",
+    "evidence": "Region-specific terms, entitlement checks, contract permissions and process owners.",
+    "failure": "Treating geographic growth as authorization to centralize sensitive workloads.",
+    "discovery": "Which traffic may cross this boundary and which must remain in the current region?"
+  },
+  {
+    "principle": "Distinguish retention, delivery and inference costs.",
+    "examples": [
+      "Tessl",
+      "ElevenLabs",
+      "9fin"
+    ],
+    "comparison": "Tessl's retention change affects accumulated byte-months. Speech compute and audio transport have different bottlenecks. A model gateway manages compatible requests.",
+    "conditions": "Fixed commitments, stored data, egress or compute scale with different workload units.",
+    "exception": "An existing bundled contract, locality rule or model-specific dependency can eliminate savings.",
+    "evidence": "Retention cohorts, reads, egress, call volume, supported models, current net contract rates.",
+    "failure": "Inferring model spend or GPU demand from a developer tool, asset or MCP launch.",
+    "discovery": "Which cost changes when users double or retention extends while daily runs stay flat?"
+  },
+  {
+    "principle": "Choose a measurable outcome on the purchasing team's path.",
+    "examples": [
+      "Fresha",
+      "Form3",
+      "MUBI"
+    ],
+    "comparison": "False positives can block authorised Fresha demand. Faster simulator qualification might bring a bank live sooner. MUBI needs conversion among eligible viewers.",
+    "conditions": "A technical measurement can be paired with a business event and a relevant control group.",
+    "exception": "Latency changes might have no impact on completion, certification or renewal.",
+    "evidence": "Baseline distribution, eligible cohort, owner, control path and success or abort criteria.",
+    "failure": "Claiming a faster endpoint automatically raises revenue.",
+    "discovery": "What comparison would show the engineering change caused a business improvement?"
+  },
+  {
+    "principle": "Separate growth evidence, initiative readiness and vendor timing.",
+    "examples": [
+      "9fin",
+      "Oxa",
+      "Harmonic Security"
+    ],
+    "comparison": "A financing announcement, a joint venture and a new security integration each justify different questions. None alone confirms a purchasing decision.",
+    "conditions": "Evidence dates identify current activity and a plausible stakeholder.",
+    "exception": "An implementation can already be contracted or an old hiring signal can be stale.",
+    "evidence": "Dated milestones, named owner, architectural decision window and evidence of evaluation or budget.",
+    "failure": "Treating investment size as a sales opportunity amount or close date.",
+    "discovery": "What decision remains open, when will it close and who can still influence it?"
+  },
+  {
+    "principle": "Land on a reversible workload and expand only after proof.",
+    "examples": [
+      "Form3",
+      "Attio",
+      "MUBI"
+    ],
+    "comparison": "A simulator, a single permissioned interface or a public artwork path can be tested without putting payment clearing, the CRM record or film entitlement at risk.",
+    "conditions": "A separable pilot has representative traffic, baseline, owner and rollback path.",
+    "exception": "A nonrepresentative sandbox can hide contractual, availability and volume constraints.",
+    "evidence": "Pilot acceptance criteria, stop condition and evidence the adjacent team has the same constraint.",
+    "failure": "Presenting a roadmap of product cross-sells before validating the first workload.",
+    "discovery": "Which single path would give a decision in one test, and which adjacent path would that evidence cover?"
+  },
+  {
+    "principle": "Build explicit stopping conditions into the account decision.",
+    "examples": [
+      "Ably",
+      "Harmonic Security",
+      "Oxa"
+    ],
+    "comparison": "Core overlap, customer ownership or absent authority can outweigh a strong technical similarity. A well-qualified decision to defer can be the best result.",
+    "conditions": "No owned commercial gap survives the incumbent, alternatives and ownership checks.",
+    "exception": "New ownership, a documented service failure or a distinct approved initiative can reopen the question.",
+    "evidence": "Negative evidence, unknowns and a specific observable reopening condition.",
+    "failure": "Adding another pillar solely to make the account appear attractive.",
+    "discovery": "What new evidence would change the decision to defer, and where would it appear?"
+  }
+]

@@ -1,0 +1,305 @@
+{
+  "name": "Tessl",
+  "model": "Usage-credit developer tooling with free distribution and enterprise governance",
+  "logic": "A November retention change extends the cost of keeping outputs even if daily run volume stays flat. Separate retained-byte economics, free distribution and paid evaluations before proposing a model gateway.",
+  "patterns": [
+    "Usage-based pricing",
+    "Free distribution and paid execution",
+    "Retention economics",
+    "Workload ownership",
+    "Controlled evaluations"
+  ],
+  "opportunities": [
+    "Test region-scoped R2 economics for long-lived run attachments. [S3] [S10] [S11]",
+    "Qualify public registry caching only if download latency or origin cost affects installs. [S2] [S13]",
+    "Compare gateway telemetry against internal harness traces on compatible hosted requests only. [S9] [S14]"
+  ],
+  "limitations": [
+    "Incumbent object store, volumes, open decision and budget unknown.",
+    "Hosted runs, BYOK and local agents have different ownership and data boundaries."
+  ],
+  "evidence": [
+    {
+      "id": "S1",
+      "title": "Pricing and credits",
+      "url": "https://tessl.io/pricing",
+      "date": null,
+      "verified": "2026-11-26",
+      "reliability": "Primary pricing",
+      "fact": "Free publishing and installation are separate from charged evaluations, reviews and agent sessions. Team lists 5,000 credits for $100 per month.",
+      "classification": "direct",
+      "supports": [
+        "B",
+        "D",
+        "F",
+        "G",
+        "K"
+      ]
+    },
+    {
+      "id": "S2",
+      "title": "What is Tessl?",
+      "url": "https://docs.tessl.io/",
+      "date": null,
+      "verified": "2026-11-26",
+      "reliability": "Product documentation",
+      "fact": "Public and private registry, governance, agent evaluation, observability and the beta agent are distinct product capabilities.",
+      "classification": "direct",
+      "supports": [
+        "A",
+        "B",
+        "D",
+        "E",
+        "F",
+        "G"
+      ]
+    },
+    {
+      "id": "S3",
+      "title": "Web changelog",
+      "url": "https://docs.tessl.io/changelog-web",
+      "date": "2026-11-20",
+      "verified": "2026-11-26",
+      "reliability": "Dated release notes",
+      "fact": "New attachments persist for the life of a workspace, replacing 30-day expiry; recent changes include custom event triggers.",
+      "classification": "direct",
+      "supports": [
+        "A",
+        "D",
+        "E",
+        "F",
+        "H",
+        "J",
+        "K"
+      ]
+    },
+    {
+      "id": "S4",
+      "title": "Projects overview",
+      "url": "https://docs.tessl.io/projects/overview",
+      "date": null,
+      "verified": "2026-11-26",
+      "reliability": "Product documentation",
+      "fact": "Evaluations stay associated with a project and repository for comparison across runs.",
+      "classification": "direct",
+      "supports": [
+        "B",
+        "D",
+        "E",
+        "G"
+      ]
+    },
+    {
+      "id": "S5",
+      "title": "Leadership",
+      "url": "https://tessl.io/about",
+      "date": null,
+      "verified": "2026-11-26",
+      "reliability": "Company leadership disclosure",
+      "fact": "Names Guy Podjarny, Dru Knox, Maurilio Cometto, Stephanie Dominy and Simon Maple with their respective responsibilities.",
+      "classification": "direct",
+      "supports": [
+        "B",
+        "C",
+        "I"
+      ]
+    },
+    {
+      "id": "S6",
+      "title": "Tessl funding announcement",
+      "url": "https://www.prweb.com/releases/tessl-raises-125m-to-build-ai-native-software-development-302305976.html",
+      "date": "2024-11-14",
+      "verified": "2026-11-26",
+      "reliability": "Issuer release, syndicated",
+      "fact": "Tessl announced a $25m seed and $100m Series A with an original focus on spec-centric development.",
+      "classification": "direct",
+      "supports": [
+        "B",
+        "C"
+      ]
+    },
+    {
+      "id": "S7",
+      "title": "FAQs",
+      "url": "https://docs.tessl.io/support/faqs",
+      "date": null,
+      "verified": "2026-11-26",
+      "reliability": "Product documentation",
+      "fact": "Documents paired evaluations, repository versioning and local agent-specific installation directories.",
+      "classification": "direct",
+      "supports": [
+        "C",
+        "D",
+        "E",
+        "F",
+        "G"
+      ]
+    },
+    {
+      "id": "S8",
+      "title": "Using the EU region",
+      "url": "https://docs.tessl.io/administrators/eu-region",
+      "date": null,
+      "verified": "2026-11-26",
+      "reliability": "Product documentation",
+      "fact": "Repository and session settings select the EU or US region, with documented overrides.",
+      "classification": "direct",
+      "supports": [
+        "D",
+        "E",
+        "F",
+        "G",
+        "J"
+      ]
+    },
+    {
+      "id": "S9",
+      "title": "Research engineer, harness engineering and agentic orchestration",
+      "url": "https://www.indexventures.com/startup-jobs/tessl-io/member-of-technical-staff-research-engineer-harness-engineering-and-agentic-orchestration/",
+      "date": "2026-10-30",
+      "verified": "2026-11-26",
+      "reliability": "Employer vacancy on investor site",
+      "fact": "Recruiting for work connecting harnesses, evaluations and traces. Does not establish deployment or hiring outcome.",
+      "classification": "direct",
+      "supports": [
+        "D",
+        "F",
+        "G"
+      ]
+    },
+    {
+      "id": "S10",
+      "title": "R2 pricing",
+      "url": "https://developers.cloudflare.com/r2/pricing/",
+      "date": "2026-10-30",
+      "verified": "2026-11-26",
+      "reliability": "Cloudflare product documentation",
+      "fact": "Standard storage lists $0.015/GB-month, plus operations, with no direct internet egress charge.",
+      "classification": "direct",
+      "supports": [
+        "F",
+        "J",
+        "K"
+      ]
+    },
+    {
+      "id": "S11",
+      "title": "R2 data location",
+      "url": "https://developers.cloudflare.com/r2/reference/data-location/",
+      "date": null,
+      "verified": "2026-11-26",
+      "reliability": "Cloudflare product documentation",
+      "fact": "Jurisdiction restrictions govern object storage location while ordinary location hints are best effort.",
+      "classification": "direct",
+      "supports": [
+        "F",
+        "J"
+      ]
+    },
+    {
+      "id": "S12",
+      "title": "R2 presigned URLs",
+      "url": "https://developers.cloudflare.com/r2/api/s3/presigned-urls/",
+      "date": null,
+      "verified": "2026-11-26",
+      "reliability": "Cloudflare product documentation",
+      "fact": "An expiring bearer URL authorises a specific operation on one object. Workspace access must still be enforced.",
+      "classification": "direct",
+      "supports": [
+        "F",
+        "J"
+      ]
+    },
+    {
+      "id": "S13",
+      "title": "Investigate uncached responses",
+      "url": "https://developers.cloudflare.com/cache/troubleshooting/investigating-uncached-responses/",
+      "date": null,
+      "verified": "2026-11-26",
+      "reliability": "Cloudflare product documentation",
+      "fact": "Cache eligibility depends on methods, rules and headers. Explicit bypass and public-only scope matter.",
+      "classification": "direct",
+      "supports": [
+        "F"
+      ]
+    },
+    {
+      "id": "S14",
+      "title": "AI Gateway logging",
+      "url": "https://developers.cloudflare.com/ai-gateway/observability/logging/",
+      "date": null,
+      "verified": "2026-11-26",
+      "reliability": "Cloudflare product documentation",
+      "fact": "Logs may include request and response content, provider, cost and token usage. Log settings and exports have separate controls.",
+      "classification": "direct",
+      "supports": [
+        "F",
+        "G"
+      ]
+    },
+    {
+      "id": "S15",
+      "title": "When everyone speaks software",
+      "url": "https://www.indexventures.com/perspectives/when-everyone-speaks-software-tessls-vision-for-ai-native-development/",
+      "date": "2024-11-14",
+      "verified": "2026-11-26",
+      "reliability": "Investor thesis, interested party",
+      "fact": "Index describes Podjarny's developer-community experience and the original spec-centric thesis.",
+      "classification": "direct",
+      "supports": [
+        "B",
+        "C"
+      ]
+    }
+  ],
+  "sections": {
+    "A": {
+      "title": "Executive assessment",
+      "body": "Tessl sells developers a way to distribute instructions for coding agents, measure whether those instructions improve outcomes and govern their use across repositories. An individual developer can start for free. A platform team can adopt it across an organisation. The commercially interesting transition is from trying someone else's skill to repeatedly evaluating or running it inside a team's actual workflow. Those runs draw on purchased credits. A registry install by itself generates no usage charge. [S1] [S2]\n\nThere is a timely engineering question with a specific owner. On 20 November Tessl reported that new files attached to runs would live as long as the workspace, replacing a 30-day expiry. Teams can preview or download the outputs. That changes the cost and deletion obligations of a successful account as its history grows. Test whether this changes the business case for how Tessl stores and serves those files. The release proves that a product decision has been made. Infrastructure supplier selection, cost pressure and migration appetite remain unknown. [S3]"
+    },
+    "B": {
+      "title": "Business model and economics",
+      "body": "Tessl prices reviews, evaluations and agent sessions against a shared credit balance. Public publishing and installation are free. Its pricing page lists 1,000 credits per month on Free and 5,000 on the $100 monthly Team plan. Enterprise combines a custom platform fee with volume credits and optional contractual features. Premium model choice changes credit consumption. Dividing $100 by 5,000 would describe a bundle, not the realised margin or the price of an inference token. Free credits, overages and private contracts all change the calculation. [S1]\n\nAn inferred acquisition loop runs from finding a public plugin to proving its effect on a task, then gaining approval to use it across a team. Version histories, repository-linked experiments and workspace policies could support retention by making repeated decisions easier to audit. No public conversion or retention rate was established. In 2024 Tessl announced a $25m seed and $100m Series A. The historical capital and the investor's positive view of the founder establish the means and original thesis, not recurring revenue, current runway or a 2026 storage budget. [S1] [S2] [S4] [S5] [S6] [S15]\n\nSeparate the costs of serving free downloads, comparing task variants, running models, supporting enterprise requirements and keeping generated outputs. A popular package could attract hundreds of free installations and very few paid evaluations. Conversely a private team may consume substantial credits with little public registry traffic. These are scenarios to investigate, not company metrics. [S1] [S2]"
+    },
+    "C": {
+      "title": "Market and competitive position",
+      "body": "Timing favours a product that works across coding agents when an engineering organisation has several agents and many copies of its instructions. A team using one editor and a handful of files can keep those files in Git. A discovery directory is another sufficient alternative if all the developer wants is a pointer to an existing skill. Tessl's case gets stronger when a buyer must demonstrate which change helped, roll it back and apply it across teams. Its controls, paired task evaluations and integration across tools underpin that positioning. The founder's developer-tool experience and investor backing help distribution and execution. Neither proves that teams will centralise their own development practices. [S2] [S5] [S6] [S7]"
+    },
+    "D": {
+      "title": "Strategy and priorities",
+      "body": "1. **Make a skill's impact demonstrable.** Tessl documents comparisons with and without the skill. Project records tie results to a repository. A paid run becomes easier to justify when the reviewer can see what the agent produced and why the change helped. Task selection, consistent run conditions and usable historical outputs matter. No infrastructure change can rescue an unrepresentative evaluation. [S2] [S4] [S7]\n2. **Extend use from individuals to enterprise teams.** The product offers workspace governance and an EU region. A repository can specify its region so CI and developers use the same environment. The inferred commercial objective is to earn deployment approval in accounts that would otherwise restrict private code or artifacts. Access revocation, deletion and regional handling apply throughout the workflow. Eligibility for a specific customer contract requires review. [S1] [S2] [S8]\n3. **Move from occasional experiments to repeatable development workflows.** Recent releases introduce external events, selectable triggers and durable run outputs. The inferred objective is to put Tessl into repeated work that consumes credits and provides useful feedback. A failed trigger or an output that cannot be retrieved can erode trust in the workflow even when the model performed well. New customer demand by segment remains unquantified. [S1] [S3]\n4. **Improve the agent execution and evaluation loop.** A late-October research engineering listing describes work connecting harnesses, evaluations and production traces. This is evidence of investment in an internal capability. It gives an external supplier a high bar to demonstrate additional value, particularly around observability. A vacancy alone establishes neither a deployed tracing vendor nor an open procurement. [S9]"
+    },
+    "E": {
+      "title": "Execution and architecture",
+      "body": "A developer installs context for a chosen agent. The registry contains public and private material. Tessl can attach an evaluation to the relevant repository and compare future results. Its product documents security scoring integrated with Snyk, role-based controls and install policies. Supported local clients are distinct from Tessl-hosted cloud runs. Tessl's changelog describes project event endpoints and files attached by a run. The documented EU and US environments give the engineering team region-specific requirements. The storage provider, delivery layer and size distribution of these attachments were not established. An AWS-style region alias accepted by the CLI is an input convention, insufficient to establish ownership of every component. [S2] [S3] [S4] [S7] [S8]"
+    },
+    "F": {
+      "title": "Cloudflare opportunity assessment",
+      "body": "**Primary entry — Build, retained run outputs.** The November change makes historical evidence a longer-lived part of the product. If outputs are numerous, frequently opened, or expensive to serve, R2 Standard could offer predictable object and request pricing with no internet egress fee for direct R2 delivery. This supports the economics of keeping previews and downloads accessible. Existing object storage, discounted transfer, low read volume or lifecycle policies at the incumbent could already make the current design cheaper. Ask the engineering owner for new bytes per run and the read distribution by artifact age before modelling a gain. Compare fully loaded cost per retained workspace and p95 download time. Check deletion including backups, access revocation, scoped credentials and the required jurisdiction. An R2 location hint is best effort. An EU jurisdiction restriction constrains object storage, but the complete application path needs its own review. Hypothesis confidence moderate on workload, low on incremental value. [S3] [S8] [S10] [S11] [S12]\n\n**Adjacent — Connect, repeat access to public versioned registry files.** Use separate traffic counters for immutable public packages, private workspace files and metadata. If repeated public reads drive origin load, narrowly scoped CDN rules could accelerate installs and reduce origin requests. Compare against existing CDN and client-side caching. Install time can also be dominated by local setup or dependency resolution. The metric is end-to-end install time and origin bytes per successful install. Caching private or mutable content under a shared public key is disqualifying. The public/private boundary is documented. Traffic pressure and incumbent performance remain unknown. Route to the registry owner only after establishing a bottleneck. [S2] [S7] [S13]\n\n**Longer-term — Build, request-level model telemetry.** Paid model selection increases the importance of measuring provider usage per successful evaluation. A compatible AI Gateway path could contribute request metadata, duration and provider cost where a Tessl-hosted runner controls the endpoint. Compare with provider billing and existing internal traces before adding another intermediary. Logging can include prompts and responses, and export configuration requires separate examination. Limit a comparison to synthetic tests. Additional metadata has commercial value only if it reduces reconciliation work or changes a pricing or routing decision. The AI Research lead and engineering owner would need to confirm gaps. Confidence low. [S1] [S3] [S9] [S14]\n\n**Protect and poor fit.** Snyk scoring evaluates published content. An application firewall cannot determine whether a skill improves software quality. There is no cited abuse incident, open security project or buyer for a new control. No Protect opportunity qualifies here. The eval harness and product's own task scoring are part of Tessl's differentiation. The existence of an agent does not imply migrating the harness, model training or developers' own inference to Workers. [S2] [S7] [S9]"
+    },
+    "G": {
+      "title": "AI workload boundaries",
+      "body": "Model choice is customer-visible and can change how quickly credits are used. Tessl owns the evaluation experience, result linkage and orchestration for its hosted product. A developer installing context into a local agent may separately contract for that agent's model access. Enterprise BYOK is available on request. The provider, endpoint control, cost bearer and retention permissions can therefore vary by workflow. Before proposing model routing, diagram one hosted evaluation, one enterprise BYOK evaluation and one local install. Measure a score per valid completed comparison alongside provider expense. Reusing a cached result in a controlled test could invalidate what the test purports to measure. Training spend and proprietary model hosting are unverified. [S1] [S2] [S4] [S7] [S9]"
+    },
+    "H": {
+      "title": "Timing and buying readiness",
+      "body": "The released retention change supplies a reason to discuss growth of historical artifacts this month. It may equally mean Tessl has already selected a satisfactory design. Ask whether an architecture review, cost threshold or enterprise procurement question creates a decision date. Current momentum is strong at product level. Evidence for an open infrastructure evaluation, budget holder, procurement or dissatisfaction is absent. [S3] [S8]"
+    },
+    "I": {
+      "title": "Stakeholders",
+      "body": "Maurilio Cometto, Head of Engineering, is the first contact for storage ownership and engineering trade-offs. Dru Knox, Head of Product, can clarify which historical outputs drive adoption or renewal. Stephanie Dominy, General Counsel and Head of Operations, is relevant if an enterprise contract makes residency or retention decisive. Simon Maple, Head of DevRel, could help distinguish first-install friction from infrastructure latency. Founder and CEO Guy Podjarny is a strategic sponsor if a quantified impact warrants escalation. None is established as a named buyer of Cloudflare. [S5]"
+    },
+    "J": {
+      "title": "Engagement",
+      "body": "Suggested message to Maurilio — “I saw your November change keeping run outputs for a workspace's lifetime. Do teams tend to reopen older outputs to compare runs, or is the value mostly keeping an audit record? Those imply different storage and delivery economics. If you're modelling the change, we could compare a representative workspace against your existing setup.”\n\nAsk (1) Which attachments materially help a customer repeat or approve a change? (2) What are the size and read-age distributions by workspace tier? (3) How does regional entitlement flow through preview, download and deletion? (4) Which costs remain after applying existing cloud commitments? (5) Who decides whether an improvement in retained-workspace margin justifies engineering time?\n\nInvolve an SE once the owner supplies an anonymised volume distribution and a specific decision. Use generated dummy artifacts under two mock tenants, model a year of retained data and compare current contracted rates against R2. Treat tenant isolation, deletion and agreed region as pass/fail. Then compare total monthly cost, p95 preview latency and implementation effort. Expand to public registry delivery only with independent volume and origin evidence. [S1] [S3] [S8] [S10] [S11] [S12]"
+    },
+    "K": {
+      "title": "Addressable spend",
+      "body": "Total technology spend, contracted cloud rates and current Cloudflare usage are unknown. Establish monthly retained GB by tier and age, uploads, reads, direct internet transfer, average output size, churn/deletion and engineering overhead. For orientation only, 10,000 GB continuously held for one month at the R2 Standard list rate of $0.015 per GB-month gives $150 for storage before allowances, operations, ancillary services, tax and negotiated terms. That modest number is a reason to qualify volume and mandate before committing sales resources. A high model bill would not increase the addressable storage base. [S1] [S10]"
+    },
+    "L": {
+      "title": "Evidence ledger and limitations",
+      "body": "All sources below were opened on 26 November 2026. Product documentation describes advertised capabilities. Analysis and commercial hypotheses in sections A–K are inferences where indicated. The facts establish the workload and recent changes. None establishes its volume, dissatisfaction, vendor shortlist or an open contract."
+    }
+  }
+}
