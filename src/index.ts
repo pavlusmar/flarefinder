@@ -158,6 +158,9 @@ const idFor = (name: string) =>
     .slice(0, 80);
 
 function authorized(request: Request, env: Env) {
+  // Temporary staging-only access for acceptance testing. Remove before sharing staging.
+  // Production and all other hostnames still require the configured admin token.
+  if (new URL(request.url).hostname === "flarefinder-staging.catmarine2015.workers.dev") return true;
   return !!env.ADMIN_TOKEN &&
     request.headers.get("authorization") ===
     `Bearer ${env.ADMIN_TOKEN}`;
