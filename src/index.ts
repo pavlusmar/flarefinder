@@ -1016,11 +1016,12 @@ async function modelOutput(env:Env, model:string, system:string, user:string, bu
     temperature:0.1
   } as never) as unknown;
   const result=record(response), choice=record(Array.isArray(result.choices)?result.choices[0]:null);
+  if(result.error) { const e=record(result.error); throw new Error("Model "+model+" returned an error: "+safeResearchError(e.message||result.error,env)); }
   const msg=record(choice.message);
   const final=rows(result.output).filter(x=>x.type==="message").flatMap(x=>rows(x.content))
     .filter(x=>x.type==="output_text").map(x=>str(x.text)).join("\n");
   const text=[msg.content,result.response,record(result.result).response,final].find(x=>typeof x==="string" && x.trim());
-  if(typeof text!=="string" || choice.finish_reason==="length") throw new Error("Model completion missing or truncated.");
+  if(typeof text!=="string" || choice.finish_reason==="length") throw new Error("Model "+model+" completion missing or truncated; finish_reason="+String(choice.finish_reason??"unknown")+"; response fields="+Object.keys(result).join(",")+"; message fields="+Object.keys(msg).join(","));
   const usage=record(result.usage);
   return {text,usage:{model,input_tokens:num(usage.prompt_tokens??usage.input_tokens),output_tokens:num(usage.completion_tokens??usage.output_tokens),elapsed_ms:Date.now()-start} as Usage};
 }
@@ -1174,7 +1175,19 @@ async function researchStep(env:Env, body:ResearchMessage, attempts:number) {
           let usage:Usage|null=null;
           const evaluation=await evaluateReport({analystModel:state.analyst_model,evaluatorModel:state.evaluator_model,
             report:latest.report,dossier,references:refs,methodology,validationIssues:latest.report.validation_issues,threshold:conf.threshold,
-            invoke:async(model,system,user)=>{const res=await modelOutput(env,model,system,user,8000);usage=res.usage;return res.text;}});
+            invoke:async(model,system,user)=>{
+              console.log("Evaluator inference started",JSON.stringify({company_id:id,run_id:run,model,input_chars:system.length+user.length,max_output_tokens:8000}));
+              try {
+                const res=await modelOutput(env,model,system,user,8000);
+                usage=res.usage;
+                console.log("Evaluator inference completed",JSON.stringify({company_id:id,run_id:run,...usage}));
+                return res.text;
+              } catch(err) {
+                const detail=safeResearchError(err,env);
+                console.warn("Evaluator inference failed",JSON.stringify({company_id:id,run_id:run,model,error:detail}));
+                throw new Error(detail);
+              }
+            }});
           pending.push(env.DB.prepare(`UPDATE analysis_versions SET evaluation=?,usage=? WHERE run_id=? AND version=? AND ${active}`)
             .bind(JSON.stringify(evaluation),JSON.stringify({...latest.usage,...(state.stage==="Evaluate supplemented dossier"?{initial_evaluation:latest.evaluation,initial_evaluator_usage:latest.usage.evaluator}:{}),evaluator:usage}),run,latest.version,run,lease));
           next=needsRevision(evaluation,versions.length-1,conf.revisions,conf.threshold)?"Revision":"Report selection";
