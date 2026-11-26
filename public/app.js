@@ -402,7 +402,7 @@ function listHtml(value) {
 
 function renderResearchQuality(company) {
   const q = company.quality;
-  const stage = company.stage ? '<p class="meta">Processing stage · ' + esc(company.stage.replace(/_/g, " ")) + '</p>' : "";
+  const stage = company.stage ? '<p class="meta" id="processingStage">Processing stage · ' + esc(company.stage.replace(/_/g, " ")) + '</p>' : "";
   if (!q) return stage + '<p class="meta">Research quality · No independent review recorded</p>';
   const dimensions = Object.entries(q.dimensions || {}).map(([key,value]) =>
     '<li>' + esc(key.replace(/_/g, " ")) + ' · ' + esc(typeof value === "object" ? value?.score : value) + '</li>').join("");
@@ -550,7 +550,7 @@ async function detail(id, silent = false) {
       <div class="info">${esc(statusMessage)}</div>
 
       <button class="primary research-btn" id="researchOne"
-        ${["running","pending","queued"].includes(c.status)
+        ${["running","queued"].includes(c.status)
           ? "disabled"
           : ""}>
         ${researchButtonText(c.status)}
@@ -559,7 +559,7 @@ async function detail(id, silent = false) {
         <p class="meta">Use the saved sources for another analysis and independent review. This makes model calls and uses zero search calls.</p>
         <label>Analyst model <input id="analysisModel" placeholder="Configured default"></label>
         <label><input type="checkbox" id="analysisReferences" checked> Use reference reports</label>
-        <button type="button" id="reanalyze" ${["running","pending","queued"].includes(c.status) ? "disabled" : ""}>Run analysis</button>
+        <button type="button" id="reanalyze" ${["running","queued"].includes(c.status) ? "disabled" : ""}>Run analysis</button>
       </details>` : ""}
       ${renderResearchQuality(c)}
             <p class="info" id="researchFeedback" role="status" aria-live="polite"></p>
@@ -800,7 +800,7 @@ async function detail(id, silent = false) {
           let sawActive = !already;
           for (let attempt=0;attempt<90;attempt++) {
             await new Promise(resolve=>setTimeout(resolve,4000));
-            if (currentCompanyId !== id) return;
+            if (currentCompanyId !== id) { activeResearchRequests.delete(id); return; }
             let latest;
             try { latest = await api("/api/companies/"+encodeURIComponent(id)); }
             catch (pollError) { feedback("Research submitted; status check failed: "+pollError.message); continue; }
@@ -881,10 +881,9 @@ async function refreshStatus() {
       currentCompanyId &&
       !$("overlay").classList.contains("hidden")
     ) {
-      // The per-account refresh poll owns the brief until research finishes.
-      // Do not replace its button or feedback during a background status tick.
-      // Keep the open report as a stable snapshot. Reload is explicitly user-controlled.
-      // Background table refresh must never replace selected text or expanded sections.
+      const latest = companies.find(company => company.id === currentCompanyId);
+      const stage = $("processingStage");
+      if (stage && latest?.stage) stage.textContent = "Processing stage · " + latest.stage;
     }
   } finally {
     refreshBusy = false;

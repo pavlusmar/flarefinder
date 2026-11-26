@@ -1,0 +1,30 @@
+[
+  {
+    "company": "Paddle",
+    "assessment": "Discovery with the developer integration owner",
+    "business_strategy": "As merchant of record Paddle earns 5% plus $0.50 per checkout at its published pay-as-you-go rate [S1]. Converting a checkout integration into a functioning subscription business matters because merchants must also grant access and keep entitlements aligned after payment [S3]. A checkout fee does not imply revenue per webhook.",
+    "hypothesis": "A merchant-side reference receiver on Workers with durable asynchronous handling could help merchants acknowledge inside five seconds and process repeated or out-of-order events correctly [S2][S3]. Fast acknowledgements alone cannot establish correct entitlement state. Validate compatibility, durability before acknowledgement and merchant implementation burden with an SE. Existing merchant endpoints and Paddle retries are the baseline. The merchant typically owns this workload.",
+    "engagement": "Ask developer experience which merchant integration step delays first live checkout. Measure merchant time to go live, late acknowledgements and duplicate entitlement effects in a test cohort. No direct vendor evaluation, demand volume, named buyer or deadline evidenced."
+  },
+  {
+    "company": "tldraw",
+    "assessment": "Existing usage and downstream enablement",
+    "business_strategy": "tldraw licenses its canvas SDK for production, including multiplayer sync. Customers can host anywhere [S1]. Easier deployment may help trial customers obtain a production licence, while retaining infrastructure choice.",
+    "hypothesis": "The documented template already uses Durable Objects for room state and R2 for binary objects, matching tldraw.com\u2019s deployment [S2]. A new platform migration duplicates an existing design. Investigate whether a production integration example for tenant-specific authentication reduces customer onboarding work; customer teams supply their own policies and may use other WebSocket servers [S2]. This is a developer adoption hypothesis.",
+    "engagement": "Ask the SDK owner which steps cause licensed customers to abandon the template. Compare time to a correctly authorised multi-user room and support requests against the current template. Separate tldraw.com expansion from customer accounts and disqualify if onboarding is already straightforward. No budget, spend or purchase timing evidenced."
+  },
+  {
+    "company": "Fastly",
+    "assessment": "Low incremental fit in evidenced workload",
+    "business_strategy": "Fastly markets its own globally distributed Wasm compute environment with isolation and integrated storage [S1]. Programmable edge execution is part of the product customers buy. Pricing and commercial trajectory are unknown.",
+    "hypothesis": "Cloudflare Workers would overlap with the documented offering. A replacement pitch lacks a business rationale and could undercut a source of differentiation. No independently owned adjacent workload appears in the evidence.",
+    "engagement": "Deprioritise. Reopen only with evidence of a separate business initiative, workload owner and incremental benefit. No named buyer, timing or spend identified."
+  },
+  {
+    "company": "Synthetic sparse account",
+    "assessment": "Insufficient evidence",
+    "business_strategy": "A fictional company announced a website [S1]. Business model, customer segment, traffic, operating constraints and strategic priorities are unknown.",
+    "hypothesis": "No supported commercial hypothesis. A website launch alone supplies no evidence of a performance issue, infrastructure ownership or purchasing process.",
+    "engagement": "If this were a real account, establish identity, product, monetisation and a verified current initiative before assigning an owner or estimating spend."
+  }
+]

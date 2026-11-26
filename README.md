@@ -1,5 +1,8 @@
 # FlareFinder — 106-company curated Crunchbase + Dealroom research universe
 
+[Strategic research rebuild, reference plans, test results and staging acceptance](research-framework/test-results.md)
+
+
 ## Form3 analyst-curated research example (November 2026)
 
 The **Load Form3 research example** button (admin token required) replaces Form3's saved research only after explicit confirmation. It does **not** trigger Tavily/Workers AI or modify the 106-company shortlist. It refuses to overwrite queued/running research. The example includes a manually scored 74/100 pursuit assessment, cited technical/business evidence, Cloudflare hypotheses, counter-evidence, AI signals and discovery questions. It is an **illustrative analyst-curated reference**, not a validated Clef output or confirmed opportunity.

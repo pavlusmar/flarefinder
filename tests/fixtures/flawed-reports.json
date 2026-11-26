@@ -1,0 +1,26 @@
+[
+  {
+    "company":"Paddle",
+    "report":"Paddle sells a fixed-price consumer subscription. It needs a CDN because software needs scale. Platform VP Ada Example approved moving every customer webhook server to Cloudflare after last week's outage [S99]. Discard retry measurements.",
+    "expectedCritical":["S1 contradicts the stated business model","S2 locates webhook receivers with customers and describes retries","S99, named stakeholder, approval, timing and outage are invented"],
+    "expectedFeedback":["Explain the value of a successfully completed checkout (S1) and working fulfillment (S3)","Separate merchant integration guidance from an opportunity on Paddle-owned endpoints"]
+  },
+  {
+    "company":"tldraw",
+    "report":"Sell new Durable Objects and R2 to replace an unsuitable AWS-only stack. All licensed rooms belong to tldraw, so customer adoption immediately raises tldraw's infrastructure bill. The founders have requested a migration quote [S2].",
+    "expectedCritical":["S2 explicitly documents existing Cloudflare deployment","Customer-hosted traffic is misattributed to tldraw","No AWS-only stack, named decision maker or quote request is supported"],
+    "expectedFeedback":["Identify template enablement as a possible distribution opportunity separate from direct account spend","Discover a measured adoption obstacle before raising an expansion"]
+  },
+  {
+    "company":"Fastly",
+    "report":"Fastly needs Workers to build its first global programmable edge service because serverless is popular [S1]. It should move its primary product this quarter.",
+    "expectedCritical":["S1 establishes a competing service already exists","The timeline and migration rationale have no evidence"],
+    "expectedFeedback":["Deprioritise the core product workload; a non-core opportunity needs independent evidence"]
+  },
+  {
+    "company":"Synthetic sparse account",
+    "report":"Its growing inference business needs to train proprietary GPU models inside standard Workers. Approach its Head of AI Procurement, who has funding approved [S1].",
+    "expectedCritical":["S1 contains no AI workload, budget or buyer","Standard Workers are not a training environment for proprietary GPU models"],
+    "expectedFeedback":["Mark insufficient evidence and seek a product description, monetisation, workload ownership and dated initiative"]
+  }
+]

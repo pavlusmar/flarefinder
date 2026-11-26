@@ -1,0 +1,25 @@
+[
+  {
+    "company": "Paddle",
+    "sources": [
+      {"id":"S1","url":"https://www.paddle.com/pricing","title":"Paddle pricing","snippet":"The merchant of record provides checkout, billing, tax compliance, fraud support and payments. Its published pay-as-you-go price is 5% plus USD 0.50 per checkout transaction."},
+      {"id":"S2","url":"https://developer.paddle.com/webhooks/about/respond-to-webhooks/","title":"Handle webhook delivery","snippet":"A merchant's receiving server must acknowledge a webhook within five seconds. Paddle retries failed deliveries, potentially up to 60 attempts for live accounts. Deliveries can repeat or arrive out of order."},
+      {"id":"S3","url":"https://developer.paddle.com/build/go-live-checklist/","title":"Go-live checklist","snippet":"Paddle tells integrating teams to use webhooks to grant access after checkout and maintain subscription state, including upgrades and cancellations."}
+    ]
+  },
+  {
+    "company": "tldraw",
+    "sources": [
+      {"id":"S1","url":"https://tldraw.dev/pricing","title":"SDK pricing and licensing","snippet":"A value-priced production license includes the canvas SDK and multiplayer sync. Customers can host the system anywhere."},
+      {"id":"S2","url":"https://tldraw.dev/docs/sync","title":"tldraw sync","snippet":"The template for customers hosting their own sync uses Durable Objects for per-room synchronization and R2 for large binary files. The documentation describes this as the same setup deployed by tldraw.com. Other JavaScript WebSocket servers are supported. Authentication and authorization are examples of capabilities customers may add to the template."}
+    ]
+  },
+  {
+    "company":"Fastly",
+    "sources":[{"id":"S1","url":"https://www.fastly.com/products/edge-compute","title":"Edge Compute","snippet":"Fastly markets its own globally distributed programmable compute environment based on WebAssembly. Its pitch includes isolated request execution, global deployment and integrated storage."}]
+  },
+  {
+    "company":"Synthetic sparse account",
+    "sources":[{"id":"S1","title":"Identity-only fixture","url":"https://example.invalid/about","snippet":"A fictional software company has announced a new website. No further facts are supplied."}]
+  }
+]

@@ -279,3 +279,31 @@ test('unknown IDs remain visible for correction and cannot be rewritten into val
   assert.ok(r.cloudflare_opportunities[0].source_ids.includes('S999'));
   assert.ok(r.validation_issues.some(x=>x.includes('unknown source S999')));
 });
+
+test('ten runtime reference files each have a complete plan and a consistent source ledger',()=>{
+  const dir=path.join(__dirname,'../research-framework');
+  const files=fs.readdirSync(path.join(dir,'structured-references')).filter(f=>f.endsWith('.json'));
+  assert.equal(files.length,10);
+  for (const file of files) {
+    const ref=JSON.parse(fs.readFileSync(path.join(dir,'structured-references',file),'utf8'));
+    const md=fs.readFileSync(path.join(dir,'references',file.replace('.json','.md')),'utf8');
+    assert.equal((md.match(/^## [A-L][.)]/gm)||[]).length,12,file);
+    const ids=new Set(ref.evidence.map(e=>e.id));
+    assert.equal(ids.size,ref.evidence.length,file);
+    for (const match of md.matchAll(/\[(S\d+)\]/g)) assert.ok(ids.has(match[1]),file+' '+match[1]);
+    for (const e of ref.evidence) assert.ok(e.fact && e.title && /^https?:\/\//.test(e.url),file);
+  }
+});
+test('runtime retrieval uses other companies and passes evidence, full passages and counterarguments',()=>{
+  const output=buildSync({entryPoints:[path.join(base,'analysis/references.ts')],bundle:true,write:false,format:'cjs',platform:'node'});
+  const context={module:{exports:{}}};vm.runInNewContext(output.outputFiles[0].text,context);
+  const fixed=require('./fixtures/9fin-fixed.json');
+  const refs=context.module.exports.retrieveStrategyReferences({name:'9fin Ltd'},fixed.sources);
+  assert.ok(refs.length>=2 && refs.length<=4);
+  for(const ref of refs){
+    assert.notEqual(ref.name,'9fin');assert.equal(Object.keys(ref.sections).length,4);
+    assert.ok(ref.methodology.length && ref.why && ref.limitations.length);
+    assert.ok(ref.evidence.every(e=>e.id.startsWith('REF-')));
+    assert.doesNotMatch(JSON.stringify(ref.sections),/\[S\d+\]/);
+  }
+});
