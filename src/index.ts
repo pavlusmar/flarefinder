@@ -170,6 +170,15 @@ function authorized(request: Request, env: Env) {
 // TAVILY SEARCH
 // --------------------------------------------------
 
+// Diagnostic messages must not expose configured credentials or bearer tokens.
+function safeResearchError(err: unknown, env: Env): string {
+  let message = err instanceof Error ? err.message : String(err);
+  for (const secret of [env.SEARCH_API_KEY, env.ADMIN_TOKEN]) {
+    if (secret) message = message.split(secret).join("[REDACTED]");
+  }
+  return message.replace(/Bearer\s+[^\s,;]+/gi, "Bearer [REDACTED]").slice(0, 600);
+}
+
 async function searchWeb(
   env: Env,
   company: Company,
@@ -215,6 +224,7 @@ async function searchWeb(
     15:["finextra.com","fintechfutures.com","venturebeat.com","latent.space","deeplearning.ai","darkreading.com","securityweek.com","streamingmedia.com","datacenterdynamics.com","computerweekly.com","digitalhealth.net","mobihealthnews.com"]
   };
   console.log("Tavily searches started:", company.id);
+  const searchErrors: string[] = [];
   type SearchHit = { title?: string; url?: string; content?: string; searchIndex: number };
   async function runSearch(query: string, searchIndex: number): Promise<SearchHit[]> {
     try {
@@ -229,7 +239,9 @@ async function searchWeb(
       const data = await response.json() as { results?: Array<{ title?: string; url?: string; content?: string }> };
       return (data.results || []).map(hit => ({ ...hit, searchIndex }));
     } catch (e) {
-      console.warn("Search failed:", company.id, searchIndex, e instanceof Error ? e.message : String(e));
+      const detail = safeResearchError(e, env);
+      searchErrors.push(detail);
+      console.warn("Search failed:", company.id, searchIndex, detail);
       return [];
     }
   }
@@ -320,6 +332,9 @@ async function searchWeb(
   await progress("Follow-up research");
   const additional = (await Promise.all(followups.slice(0,6).map((q,i)=>runSearch(q,20+i)))).flat();
   sources=filterSources(initial.concat(additional));
+  if (!sources.length && searchErrors.length) {
+    throw new Error("Tavily returned no usable evidence; " + searchErrors.length + " search failures: " + [...new Set(searchErrors)].join("; "));
+  }
 
   // Read the highest-ranked pages via the search provider. Treat the retrieved text as
   // evidence, retain the original discovery excerpt and label inaccessible pages.
@@ -1196,6 +1211,8 @@ async function researchStep(env:Env, body:ResearchMessage, attempts:number) {
     const saved=await env.DB.batch(pending);
     if(saved[saved.length-1].meta.changes) await publishStep(env,id,run,state.step+1);
   } catch (err) {
+    const detail = safeResearchError(err, env);
+    console.warn("Research stage failure", JSON.stringify({company_id:id,run_id:run,stage:state.stage,stage_attempt:state.attempts,queue_attempt:attempts,error:detail}));
     // Keep the preceding published report and all checkpointed versions on failure.
     if(state.attempts>=4 || attempts>=4) {
       if(state.stage==="Revision") {
@@ -1205,7 +1222,7 @@ async function researchStep(env:Env, body:ResearchMessage, attempts:number) {
         return;
       }
       await env.DB.batch([env.DB.prepare(`UPDATE research SET status='failed',stage='Failed',error=?,active_run=NULL,updated_at=datetime('now')
-        WHERE company_id=? AND active_run=? AND ${active}`).bind(state.stage+" failed after bounded retries.",id,run,run,lease),
+        WHERE company_id=? AND active_run=? AND ${active}`).bind(state.stage+" failed after bounded retries: "+detail,id,run,run,lease),
         env.DB.prepare("UPDATE analysis_runs SET stage='Failed',lease=NULL,lease_until=NULL WHERE run_id=? AND lease=?").bind(run,lease)]);
       return;
     }
@@ -1548,8 +1565,8 @@ export default {
       try {
         await researchStep(env,body as ResearchMessage,message.attempts);
         message.ack();
-      } catch {
-        console.warn("Research stage retry",id,message.attempts);
+      } catch (err) {
+        console.warn("Research stage retry",id,message.attempts,safeResearchError(err,env));
         message.retry({delaySeconds:Math.min(30*message.attempts,120)});
       }
     }
