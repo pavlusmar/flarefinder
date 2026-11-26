@@ -1,0 +1,176 @@
+{
+  "name": "9fin",
+  "model": "Recurring institutional credit intelligence and licensed data distribution",
+  "logic": "Proprietary credit analysis and entitlement-aware workflows defend subscriptions. A shared agent-platform V1 creates a timely build-versus-buy discussion for one compatible request-management component. Existing AWS processing and contractual confidentiality constrain the design. Externally consumed data APIs are a distinct workload with existing access controls.",
+  "patterns": [
+    "Distinguish reusable engineering services from the proprietary vertical workflow they support.",
+    "Read platform hiring as a scoped decision signal; establish what V1 already handles and who decides V2.",
+    "Distinguish model-provider retention, application chat retention, and customer MCP restrictions.",
+    "Use credential transition and published schemas to qualify incremental operational value; existing controls are counterevidence."
+  ],
+  "opportunities": [
+    "Primary: compare one metadata-only AI Gateway route against V1 on onboarding time, cost visibility, latency and approved data handling [S3][S8][S11].",
+    "Adjacent: monitor schema drift on one eligible API with API Shield; retain application entitlements and benchmark false positives [S7][S9][S10][S12].",
+    "Poor fit: routing or data migration without a measured constraint; third-party model training on confidential data [S2][S8]."
+  ],
+  "limitations": [
+    "No verified vendor evaluation, procurement date, current contract, request volumes or public unit prices.",
+    "Recruitment materials describe a roadmap and an existing first version, not the current state of individual components. Source statements on growth and adoption are company-reported."
+  ],
+  "evidence": [
+    {
+      "id": "S1",
+      "title": "Series C and business strategy",
+      "url": "https://9fin.com/insights/9fin-raises-170m-to-lead-ai-transformation-of-debt-markets",
+      "date": "2026-03-31",
+      "reliability": "primary CEO account",
+      "fact": "HarbourVest led a $170m Series C at $1.3bn; a client participated. Management describes convergence in credit workflows.",
+      "interpretation": "Direct source statement",
+      "supports": "market strategy and financing"
+    },
+    {
+      "id": "S2",
+      "title": "Research Grid launch",
+      "url": "https://9fin.com/insights/introducing-research-grid",
+      "date": "2026-07-15",
+      "reliability": "primary product release",
+      "fact": "The launched comparison workflow combines source documents, specialist questions and reusable user frameworks.",
+      "interpretation": "Direct source statement",
+      "supports": "workflow differentiation and repeat use"
+    },
+    {
+      "id": "S3",
+      "title": "Senior AI Platform Engineer",
+      "url": "https://www.welcometothejungle.com/en-GB/companies/9fin/jobs/senior-ai-platform-engineer_london_n2vcjz7h",
+      "date": null,
+      "reliability": "company hiring copy on recruitment site, intent only",
+      "fact": "The role describes an existing V1, future shared agent components, gateways, evaluations, model-serving work and a 2027 orchestration priority.",
+      "interpretation": "Direct source statement",
+      "supports": "engineering timing and internal alternative"
+    },
+    {
+      "id": "S4",
+      "title": "Leadership roster",
+      "url": "https://www.9fin.com/about",
+      "date": null,
+      "reliability": "primary company directory",
+      "fact": "Sean Löfgren leads engineering; Huss El-Sheikh is technology co-founder and CTO.",
+      "interpretation": "Direct source statement",
+      "supports": "stakeholder routing"
+    },
+    {
+      "id": "S5",
+      "title": "Global revenue leadership appointment",
+      "url": "https://www.9fin.com/insights/9fin-appoints-amit-lalwani-as-chief-revenue-officer",
+      "date": "2026-06-22",
+      "reliability": "primary management announcement",
+      "fact": "Amit Lalwani became CRO; company reported over 350 institutional clients, repeated ARR doubling and geographic expansion.",
+      "interpretation": "Direct source statement",
+      "supports": "growth mandate and commercial stakeholders"
+    },
+    {
+      "id": "S6",
+      "title": "MCP Terms",
+      "url": "https://www.9fin.com/terms/mcp/v1.0",
+      "date": "2026-09",
+      "reliability": "first-party published service terms",
+      "fact": "The MCP service covers subscribed or enabled clients and imposes limits on client-side use and retention of entitled data.",
+      "interpretation": "Direct source statement",
+      "supports": "revenue and distribution boundaries"
+    },
+    {
+      "id": "S7",
+      "title": "MCP Acceptable Use Policy",
+      "url": "https://beta.9fin.com/mcp-acceptable-use-policy",
+      "date": "2026-09-14",
+      "reliability": "first-party policy",
+      "fact": "Named-user sessions inherit entitlements with both institutional and user usage controls.",
+      "interpretation": "Direct source statement",
+      "supports": "incumbents and licensed external interfaces"
+    },
+    {
+      "id": "S8",
+      "title": "Security",
+      "url": "https://www.9fin.com/security",
+      "date": null,
+      "reliability": "primary company security statement",
+      "fact": "Most AI processing occurs in AWS Ireland; failover, model-provider retention terms, application access controls and chat retention are described separately.",
+      "interpretation": "Direct source statement",
+      "supports": "incumbents and privacy requirements"
+    },
+    {
+      "id": "S9",
+      "title": "Client credentials",
+      "url": "https://console.9fin.com/getting-started-consume-api",
+      "date": null,
+      "reliability": "primary developer instructions",
+      "fact": "Some APIs still accept static credentials while others exchange credentials for short-lived tokens.",
+      "interpretation": "Direct source statement",
+      "supports": "ongoing API transition"
+    },
+    {
+      "id": "S10",
+      "title": "Data model and specifications",
+      "url": "https://console.9fin.com/guides/data-model",
+      "date": null,
+      "reliability": "primary developer guide",
+      "fact": "9fin publishes OpenAPI documents describing API operations and filters.",
+      "interpretation": "Direct source statement",
+      "supports": "schema-based technical assessment"
+    },
+    {
+      "id": "S11",
+      "title": "AI Gateway logging",
+      "url": "https://developers.cloudflare.com/ai-gateway/observability/logging/",
+      "date": "2026-11-25",
+      "reliability": "official capability documentation",
+      "fact": "Payload capture can be disabled separately from request metadata. Overrides for stored logs do not change Logpush exports.",
+      "interpretation": "Direct source statement",
+      "supports": "candidate telemetry and pilot controls"
+    },
+    {
+      "id": "S12",
+      "title": "API Shield schema validation",
+      "url": "https://developers.cloudflare.com/api-shield/security/schema-validation/",
+      "date": null,
+      "reliability": "official capability documentation",
+      "fact": "Validation uses OpenAPI 3.0 semantics with enumerated constraints, including unsupported schema features.",
+      "interpretation": "Direct source statement",
+      "supports": "request-validation limits"
+    },
+    {
+      "id": "S13",
+      "title": "High-yield legal client case",
+      "url": "https://9fin.com/insights/customer-story-high-yield-lawyer",
+      "date": "2024-05-15",
+      "reliability": "vendor-curated anonymous customer interview",
+      "fact": "An associate describes searching across years of coverage and manually acquiring filings before switching to a consolidated research workflow.",
+      "interpretation": "Direct source statement",
+      "supports": "historic customer acquisition and workflow friction"
+    },
+    {
+      "id": "S14",
+      "title": "Private 9fin",
+      "url": "https://9fin.com/private9fin",
+      "date": null,
+      "reliability": "primary product page",
+      "fact": "Private documents, public research, AI summaries and user designations are combined; audit and compliance controls are part of the offer.",
+      "interpretation": "Direct source statement",
+      "supports": "confidential workflows and limits of third-party logging"
+    }
+  ],
+  "as_of": "2026-11-26",
+  "sections": {
+    "A. Executive account assessment": "A credit analyst comparing issuers usually needs evidence from filings, transcripts and specialist research before presenting a recommendation. Research Grid packages that work into a repeatable comparison with traceable answers. A saved comparison gives an analyst a reason to return as disclosures change. For 9fin, the commercial prize is to become part of that recurring decision process across an institution. Its intellectual property is credit data, analyst judgement and the workflow connecting them. A general-purpose infrastructure supplier has the best chance where it can take undifferentiated work off the teams that deliver that experience. [S1][S2]\n\nThe most timely opening is a shared AI platform whose advertised remit includes services for multiple teams. One description explicitly says a first version exists and strategic decisions remain open. This is stronger evidence for a conversation than the March fundraise. It also identifies the incumbent most likely to win by default: 9fin's own platform. Qualify a narrow request-management component with the engineering owner before proposing any enterprise agreement. [S3][S4]",
+    "B. Business model and commercial economics": "9fin sells access to intelligence and research workflows for institutions active in credit markets. It reports recurring revenue growth and has separate terms covering subscribed MCP access. A published rate card, per-seat economics, MCP attach rate and absolute recurring revenue were unavailable in the material reviewed. A bank subscribing to an analyst workflow and enabling entitled staff to consume platform data through another application can buy greater convenience without transferring ownership of the underlying data. The commercial opportunity is deeper adoption and renewal. The risk is that large-scale extraction weakens the value of the licence or erodes service availability for other users. [S1][S5][S6][S7]\n\nA historical lawyer interview describes spending time sifting press archives and seeking permission to access issuer documents. That provides a concrete mechanism for adoption; an anonymous account selected by the vendor gives no portfolio-wide ROI. [S13]\n\nIn June 9fin reported over 350 institutional customers, several years of doubling ARR and faster growth in the US than other markets. These are management figures dated to that release. The $170m Series C at $1.3bn is a financing fact, not revenue or an IT allocation. Content acquisition and curation, specialist analysts, product engineering, institutional sales, and the marginal cost of document analysis are plausible cost drivers inferred from the product and operating model. Their relative shares are unknown. A shared engineering component matters financially when it improves delivery or unit cost across several adopted products. [S1][S2][S5]",
+    "C. Market dynamics and competitive positioning": "Management's thesis is that private credit, leveraged finance and restructuring increasingly require a common view. An analyst can already combine existing data subscriptions, a spreadsheet and a general model. Winning demands faster comparisons the analyst can defend when challenged on a figure. Research Grid uses 9fin's source material and analysts' question library. Customers can retain their own comparison frameworks. Proprietary inputs, attribution and habitual use together create a stronger defence than the choice of foundation model alone. [S1][S2]\n\nThrough Bill Gross's lenses, the timing argument is converging credit workflows and new ways to interrogate documents. The differentiated idea is combining specialist evidence with repeatable analysis. Execution depends on credit practitioners and engineering teams shipping dependable tools together. The recurring institutional model rewards repeat use and extends distribution through licensed interfaces. Fresh capital can fund simultaneous bets, while data rights, answer fidelity and user trust constrain the pace. No comparative evidence here establishes outright market leadership. [S1][S2][S5][S6]",
+    "D. Customer priorities and their execution risks": "1. **Embed AI in daily credit work, company-stated.** AI Chat and Research Grid put research closer to the investment decision. Saved frameworks can increase reuse and the breadth of accounts served. For an analyst comparing disclosures, inconsistent answers or untraceable numbers could undo the time saving. Measure repeat use of a saved workflow and analyst acceptance of sourced answers. [S2][S5]\n2. **Make agent development reusable across teams, company-stated engineering remit.** A platform role describes an existing V1, shared services and a roadmap for longer-running agents. Engineering leverage depends on multiple product teams actually adopting those interfaces. A platform can become another bottleneck if the onboarding cost outweighs the custom code it displaces. [S3]\n3. **Sell a broader product across more markets, company-stated.** The CRO appointment unifies sales and customer success, with US growth and expansion into Latin America and Asia-Pacific. An international customer footprint alone says little about where AI processing must run. Consistent data coverage and a workable service for institutional buyers are more direct requirements. [S5][S8]\n4. **Bring data to the tools institutions already use, analyst inference.** API documentation, licensed MCP access and published entitlement rules make this more than a product idea. Adoption requires predictable integrations and respect for redistribution restrictions. Customer-side access and 9fin-owned service operations have different decision makers. [S6][S7][S9]",
+    "E. Execution initiatives and technical strategy": "The customer-facing Grid processes documents and proprietary analysis. Shared prompt tooling, agent execution, model serving, evaluations and cost monitoring appear in a hiring remit. Treat these as intended capabilities with a V1 ancestor. They establish neither an implementation of each named technology nor a purchasing decision. Security documentation directly establishes primarily AWS Ireland processing, possible routing to additional EU or US regions, contractual zero retention by model providers and separate application-layer controls for private data. 9fin's own default chat retention and model-provider obligations apply to different parties. [S2][S3][S8]\n\nPrivate 9fin now brings clients’ confidential deal documents and private earnings calls into permissioned research alongside public data. It explicitly makes compliance approval and audit part of the workflow. A logging design that inadvertently persisted client content would directly undermine the product promise. [S14][S8]\n\nOn the distribution side the developer portal describes a transition from static keys to short-lived access tokens for some APIs. The MCP policy binds a session to the user's existing permissions and states that usage limits already apply at user and organisation levels. OpenAPI documents exist for integration. These facts point to a managed distribution strategy, not a security vacuum. They provide a starting point to test how well teams maintain schema consistency as clients migrate. [S7][S9][S10]",
+    "F. Cloudflare commercial hypotheses": "**Primary · Build · shared request telemetry.** If several product teams currently implement separate usage attribution for compatible provider requests, 9fin could standardise that small part through AI Gateway while keeping its agent runtime, evaluation datasets, domain prompts and model contracts. Cloudflare documents controls for logging request metadata while suppressing payload storage. One consistent implementation could reduce time to onboard a second team and improve the proportion of model calls attributed to a product. Network hops, added failure modes, provider compatibility, export configuration, privacy review and existing AWS or internal telemetry could erase the benefit. Ask the AI platform lead which parts of V1 already work and which team would adopt a shared alternative this quarter. Confidence is high in the shared initiative and moderate in the product hypothesis. Procurement remains unverified. [S3][S8][S11]\n\n**Adjacent · Protect · contracted external APIs.** As clients move between authentication methods, a platform team may value independent observation of request/schema drift. API Shield can validate supported request structures against OpenAPI 3.0 semantics. Compare monitor-only results for one versioned API against the team's own validation. Distinct value would be useful signals before traffic reaches the implementation. Test coverage of known incompatible requests, false positives against valid client versions and engineering time to triage. Response correctness, user-specific permissions and enforcement of licensed uses remain with the application. Incompatible schemas, existing edge validation or low change volume could disqualify this. Ask the data-services owner which class of integration incident reaches support today. Confidence moderate in feasibility, low in incremental need. [S6][S7][S9][S10][S12]\n\n**Longer-term and speculative.** Extend an approved shared component to a second workflow after the first team demonstrates benefit. An edge adapter for partner endpoints is speculative without a specific release bottleneck and an owner. **Connect** has no verified performance or routing shortfall. **Poor fit** includes moving credit data stores or training models on confidential material, or treating Cloudflare as a substitute for 9fin's analyst-designed evaluations. Geography and mentions of agents supply no justification for these proposals. [S2][S3][S8]",
+    "G. AI opportunity analysis": "The revenue-facing application synthesises customer-relevant credit evidence. Retrieval, source entitlement, generation, evaluation and displaying attribution are different operations. The case for a model-request gateway applies to calls leaving an owned application for a compatible provider. It cannot, by itself, judge whether a covenant was interpreted correctly, grant an entitlement or run the entire agent. For external MCP use the client may choose the approved AI application and control model requests. Selling 9fin capacity for a client's calls would misidentify the buyer. The MCP terms restrict how clients retain data, including in logs or caches. Use synthetic content only in an exploratory trial, explicitly review all log and export destinations, and keep application quality testing with 9fin. [S2][S3][S6][S7][S8][S11]",
+    "H. Timing and buying readiness": "The funding and geographic expansion indicate business momentum. The job description supplies initiative timing and a reason to ask whether component choices remain open. Hiring copy can outlive the decision. The authentication transition and formal MCP rules indicate that external distribution already operates with controls. None of those sources identifies a Cloudflare evaluation, budget, dissatisfied buyer, procurement deadline or authorised sponsor. A qualified opportunity would require an unresolved decision, an internal owner and willingness to compare a measurable alternative. [S1][S3][S5][S7][S9]",
+    "I. Stakeholders": "Sean Löfgren, VP Engineering, can route an enquiry to the AI platform engineering lead, the best first technical contact. CTO and co-founder Huss El-Sheikh is relevant if the team needs to settle platform ownership or an exception to infrastructure standards. The security team would review processing and retention, and the product owner for Research Grid can identify adoption measures worth improving. CRO Amit Lalwani can connect contractual or adoption constraints to expansion if the API opportunity becomes real. The role titles of the last two functional owners describe discovery targets. Their names and budget authority are unknown. [S3][S4][S5][S8]",
+    "J. Engagement strategy": "Suggested opening to Sean: “Research Grid lets an analyst rerun a peer comparison they have already built. Your platform brief describes the equivalent engineering challenge across product teams. When a second team adds an agent, which parts of the provider integration do they still have to rebuild? I'd like to compare one of those steps against V1 using synthetic queries and your existing privacy requirements.”\n\n1. What takes longest between a team's first working agent and its first release to entitled clients?\n2. Which gateway responsibilities are already deliberate internal capabilities?\n3. Which providers, regions, payloads and exports may appear in the model-request path?\n4. Which integration issues consume the most engineering time during the API credential transition?\n5. Who can decide to stop the trial if a simpler AWS-native or in-house approach performs as well?\n\nBring an SE when a platform owner nominates a compatible route and security can set test boundaries. Baseline onboarding effort, attribution coverage, added p95 latency and failure behaviour. Compare exactly the same request set with and without the component. Agree stop criteria before the test. Expand to a second product only after its owner confirms adoption would change the team's release workflow.",
+    "K. Addressable workload and spend": "Total technology spend, Cloudflare usage, vendor budget and relevant production request volumes are unknown. Request telemetry could have strategic value and modest direct revenue. Distinguish provider inference fees from gateway features and log ingestion. For an API opportunity ask for eligible domains, endpoints, traffic, peak rates and the existing contract. A cost comparison needs allowed metadata bytes per request, retention and export charges, integration labour and the cost of maintaining the incumbent. No annual estimate is defensible from the funding figure. [S1][S8][S11][S12]"
+  }
+}
