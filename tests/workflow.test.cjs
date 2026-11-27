@@ -59,7 +59,21 @@ function setup(reviews,extra={}){
         const result=reviews.shift();return {response:result==='broken'?'bad json':JSON.stringify(result),usage:{prompt_tokens:30,completion_tokens:20}};
       }
       if(model.includes('8b-instruct'))return {response:JSON.stringify({queries:['partnerships']})};
-      analyses.push(JSON.parse(input.messages[1].content));
+      const system=input.messages[0].content;
+      const payload=JSON.parse(input.messages[1].content);
+      if(system.includes("Act as a business and strategy analyst.")){
+        assert.equal(payload.capabilities,undefined);
+        return {response:JSON.stringify({business_model:[{finding:"Subscriptions",source_ids:["S1"]}],execution_gaps:[],active_initiatives:[{initiative:"Customer API",source_ids:["S2"]}],unknowns:[]})};
+      }
+      if(system.includes("Decompose every material initiative")){
+        assert.ok(payload.prior_ledgers["Business and execution"]);
+        return {response:JSON.stringify({workloads:[{initiative:"Customer API",source_ids:["S2"]}],opportunity_candidates:[],rejected_candidates:[],unknowns:[]})};
+      }
+      if(system.includes("Act as a skeptical commercial strategist.")){
+        assert.ok(payload.prior_ledgers["Workload and commercial fit"]);
+        return {response:JSON.stringify({prioritized_opportunities:[],rejected_or_deferred:[{product:"CDN",reason:"No cacheable workload established",source_ids:["S2"]}],discovery_plan:[],corrections:[]})};
+      }
+      analyses.push(payload);
       return {choices:[{message:{content:JSON.stringify(draft(analyses.length))}}],usage:{prompt_tokens:50,completion_tokens:25}};
     }},...extra};
   const api=async(url,method='GET',body,auth=true)=>worker.fetch(new Request('https://worker.test/api/'+url,{
@@ -135,4 +149,19 @@ test('fresh run can supplement evidence once and regrade competing versions on t
   assert.equal(searches,hist.usage.search_calls+hist.usage.follow_up_calls);
   assert.ok(hist.versions[0].usage.initial_evaluation);
   assert.equal(hist.usage.follow_up_calls,1);
+});
+
+test('v5 reasoning skills are checkpointed before synthesis, with immutable evidence and zero search calls',async()=>{
+  const x=setup([grade(20)],{REASONING_PIPELINE:'v5',REVISION_LIMIT:'0'});
+  assert.equal((await x.api('research/fixture/reanalyze','POST')).status,202);
+  const row=await x.finish();
+  assert.equal(row.status,'complete');
+  assert.deepEqual(x.stages,['Load saved evidence','Reference retrieval','Business and execution','Workload and commercial fit','Commercial challenge','Strategic analysis','Independent evaluation','Report selection']);
+  assert.deepEqual(Object.keys(x.analyses[0].reasoning_ledgers),['Business and execution','Workload and commercial fit','Commercial challenge']);
+  const hist=(await (await x.api('research/fixture/versions')).json()).runs[0];
+  assert.equal(hist.usage.search_calls,0);
+  assert.equal(hist.usage.extract_calls,0);
+  assert.equal(Object.keys(hist.usage.reasoning_usage).length,3);
+  assert.deepEqual(x.analyses[0].dossier,x.seen[0].dossier);
+  assert.equal(hist.usage.reasoning_ledgers["Commercial challenge"].rejected_or_deferred[0].product,"CDN");
 });
