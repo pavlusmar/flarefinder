@@ -1007,7 +1007,25 @@ Include supported named stakeholders and leave the name empty for role-only hypo
 hypothesis. Separate workload economics, verified usage, budget and unknown volumes. Avoid converting funding into spend.
 Ask five discovery questions when warranted, including what would disqualify the opportunity. No chain of thought.`;
 
-async function modelOutput(env:Env, model:string, system:string, user:string, budget:number) {
+// Explicit Workers AI catalogue: no external billing routes or implicit paid fallback.
+// Actual zero-cost execution requires the Cloudflare account to remain on its Free plan.
+const BENCHMARK_MODELS = ["@cf/openai/gpt-oss-120b","@cf/meta/llama-3.3-70b-instruct-fp8-fast"] as const;
+function allowedAnalysts(env:Env):string[] {
+  return [...new Set([env.ANALYSIS_MODEL||DEFAULT_ANALYST,...(env.ANALYST_MODELS||"").split(",").map(x=>x.trim()),...BENCHMARK_MODELS])].filter(x=>x.startsWith("@cf/") && x!==(env.EVALUATION_MODEL||DEFAULT_EVALUATOR));
+}
+interface ResearchModelProvider {
+  complete(model:string,system:string,user:string,budget:number):Promise<{text:string;usage:Usage}>;
+}
+function researchModelProvider(env:Env):ResearchModelProvider {
+  return {complete:(model,system,user,budget)=> {
+    if(!model.startsWith("@cf/") || (!allowedAnalysts(env).includes(model) && model!==(env.EVALUATION_MODEL||DEFAULT_EVALUATOR))) throw new Error("Model not allowed: only configured Workers AI research models are enabled.");
+    return workersModelOutput(env,model,system,user,budget);
+  }};
+}
+async function modelOutput(env:Env,model:string,system:string,user:string,budget:number) {
+  return researchModelProvider(env).complete(model,system,user,budget);
+}
+async function workersModelOutput(env:Env, model:string, system:string, user:string, budget:number) {
   const start=Date.now();
   const response=await env.AI.run(model as Parameters<Ai["run"]>[0],{
     messages:[{role:"system",content:system},{role:"user",content:user}],
@@ -1078,6 +1096,7 @@ async function queueResearch(env:Env,id:string,options:{saved?:boolean;analyst?:
   if(!company) throw new Error("Company not found.");
   const run=crypto.randomUUID(), model=options.analyst || env.ANALYSIS_MODEL || DEFAULT_ANALYST;
   const evaluator=env.EVALUATION_MODEL || DEFAULT_EVALUATOR;
+  if(!allowedAnalysts(env).includes(model) || !evaluator.startsWith("@cf/")) throw new Error("Research model is not allowed.");
   if(model===evaluator) throw new Error("Analyst and evaluator must use different models.");
   const stage=options.saved?"Load saved evidence":"Research planning";
   const config:RunConfig={threshold:setting(env.QUALITY_THRESHOLD,85,100),revisions:setting(env.REVISION_LIMIT,2,5),
@@ -1278,7 +1297,7 @@ async function route(
       dbConfigured: !!env.DB,
       model: env.ANALYSIS_MODEL||DEFAULT_ANALYST,
       decisionModel: DECISION_MODEL,
-      researchRevision: "evidence-pipeline-v4", analystModel:env.ANALYSIS_MODEL||DEFAULT_ANALYST, evaluatorModel:env.EVALUATION_MODEL||DEFAULT_EVALUATOR
+      researchRevision: "evidence-pipeline-v4", analystModel:env.ANALYSIS_MODEL||DEFAULT_ANALYST, evaluatorModel:env.EVALUATION_MODEL||DEFAULT_EVALUATOR, analystModels:allowedAnalysts(env), modelProvider:"workers-ai", paidFallback:false, benchmarkRevision:"saved-dossier-v1"
     });
   }
 
@@ -1343,10 +1362,22 @@ async function route(
       if(!exists) return error("Saved dossier not found for this account.",404);
     } else if(!row?.sources || !cleanSources(JSON.parse(row.sources)).length) return error("No saved evidence for this account.",409);
     const model=payload.analyst_model;
-    const allowed=[env.ANALYSIS_MODEL||DEFAULT_ANALYST,...(env.ANALYST_MODELS||"").split(",").map(x=>x.trim())];
+    const allowed=allowedAnalysts(env);
     if(model!==undefined && (typeof model!=="string" || !allowed.includes(model))) return error("Analyst model is not configured.");
     const queued=await queueResearch(env,id,{saved:true,dossierRun:dossierRun as string|undefined,analyst:model as string|undefined,references:payload.use_references!==false});
     return json({ok:true,status:queued?"queued":"already_queued"},202);
+  }
+  // Read-only benchmark metadata; pin the same dossier_run_id for each comparison.
+  const benchmark=path.match(/^\/api\/research\/([^/]+)\/benchmark$/);
+  if(benchmark && request.method==="GET"){
+    const id=decodeURIComponent(benchmark[1]);
+    const result=await env.DB.prepare(`SELECT run_id,mode,stage,created_at,analyzed_at,analyst_model,evaluator_model,config,quality,usage,
+      CASE WHEN dossier IS NOT NULL THEN 1 ELSE 0 END AS has_dossier FROM analysis_runs WHERE company_id=? ORDER BY created_at DESC,rowid DESC LIMIT 20`).bind(id).all<Record<string,unknown>>();
+    return json({models:allowedAnalysts(env),evaluator:env.EVALUATION_MODEL||DEFAULT_EVALUATOR,runs:result.results.map(r=>{
+      const config=JSON.parse(String(r.config||"{}"));
+      const {config:_,...rest}=r;
+      return {...rest,dossier_run_id:config.dossier_run_id||r.run_id,use_references:config.use_references!==false,quality:JSON.parse(String(r.quality||"null")),usage:JSON.parse(String(r.usage||"null"))};
+    })});
   }
   const history=path.match(/^\/api\/research\/([^/]+)\/versions$/);
   if(history && request.method==="GET"){
