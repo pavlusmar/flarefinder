@@ -26,3 +26,6 @@
 #research-sources{margin-top:28px;padding-top:18px;border-top:1px solid #e9edf2}
 
 .brief-priorities{border-bottom:1px solid #e7ebf1;padding:3px 0 18px;margin-bottom:18px}.brief-priorities h3{font-size:15px;color:#243146;margin:18px 0 8px}.brief-priorities .brief-signal{background:#fafbfd}.mini-status{font-size:10px;color:#667085;background:#eef1f5;border-radius:12px;padding:4px 8px;white-space:nowrap}
+
+/* Keep long diagnostic strings inside the mobile account panel. */
+.panel{min-width:0;max-width:100%;overflow-x:hidden}.panel-body,.panel-body .info,.panel-body .meta,.panel-body .brief-details{min-width:0;max-width:100%;overflow-wrap:anywhere;word-break:break-word}
