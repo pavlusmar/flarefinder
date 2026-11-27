@@ -1,0 +1,31 @@
+name: Staging regression tests
+on:
+  push:
+    branches: ['research/strategic-rebuild']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    if: github.ref == 'refs/heads/research/strategic-rebuild'
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install development dependencies
+        run: |
+          if [ -f package-lock.json ]; then npm ci; else npm install --no-audit --no-fund; fi
+          npm install --no-save --package-lock=false --no-audit --no-fund esbuild
+      - name: TypeScript validation
+        run: npm run typecheck
+      - name: Browser JavaScript syntax
+        run: node --check public/app.js
+      - name: Offline regression suite
+        run: node --test tests/*.test.*
+      - name: Historical evidence replay
+        run: node tests/baseline-replay.mjs
