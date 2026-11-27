@@ -1,3 +1,4 @@
+import {commercialFacts, themeKey, verifiedPostingDate} from "./commercial-facts.js";
 
 const $ = id => document.getElementById(id);
 
@@ -93,36 +94,10 @@ function pursuitFor(c) {
   catch { return null; }
 }
 function engagementFor(c) {
-  const sources = list(c.sources);
-  const opportunities = list(c.cloudflare_opportunities).filter(o => /\[S\d+\]/.test(o.evidence || ""));
-  const text = sources.map(x => (x.title || "") + " " + (x.snippet || "")).join("\n");
-  const active = sources.some(x => /\b(engineer|engineering|jobs|careers)\b/i.test(x.title || "") && /\b(genai platform|ai platform engineer|developer portal|ci\/cd|model routing|shared ai platform)\b/i.test((x.title || "")+" "+(x.snippet || "")));
-  const timed = /\b(six months|6 months|currently hiring|open positions|we are looking for|we're looking for)\b/i.test(text);
-  const stakeholder = sources.some(x => /\b(cto|vp of engineering|vp engineering|engineering lead|head of ai)\b/i.test(x.title || ""));
-  const dimensions = [
-    {label:"Active technical initiative",weight:35,score:active?3:opportunities.length?1:0},
-    {label:"Relevant workload / solution hypothesis",weight:30,score:Math.min(3,new Set(opportunities.map(o=>o.pillar)).size+ (opportunities.length>1?1:0))},
-    {label:"Timing / engagement trigger",weight:25,score:active&&timed?3:active?2:0},
-    {label:"Identifiable stakeholder",weight:10,score:stakeholder?3:0}
-  ];
-  return {total:Math.round(dimensions.reduce((sum,d)=>sum+d.score*d.weight/4,0)),dimensions};
+  return pursuitFor(c)?.readiness || {total:null,dimensions:[]};
 }
 function attractivenessFor(c) {
-  const saved = pursuitFor(c)?.account;
-  if (!saved?.dimensions?.length) return saved;
-  const sources = list(c.sources);
-  const has = re => sources.some(x => re.test(String(x.snippet || "")));
-  const platform = c.digital_native === "yes" && has(/(?:AI-powered analytics platform|AI-native platform|software platform|cloud-native platform)/i);
-  const explicitGateway = has(/(?:create|build|develop|design) shared components[^.]{0,250}AI gateways/i);
-  const documentedEdge = has(/CloudFront and WAF give us|behind CloudFront\/WAF|we use CloudFront/i);
-  const dimensions = saved.dimensions.map(d => {
-    let score = d.score, reason = "";
-    if (d.key === "digital_native_fit" && platform && score < 4) { score = 4; reason = "Documented platform-first business."; }
-    if (d.key === "product_relevance" && (explicitGateway || documentedEdge) && score < 3) { score = 3; reason = "Explicit planned platform capability or documented incumbent edge workload; not buying intent."; }
-    if (d.key === "product_relevance" && explicitGateway && documentedEdge && score < 4) { score = 4; reason = "Distinct planned AI gateway and documented production CDN/WAF architecture."; }
-    return {...d, score, reason};
-  });
-  return {...saved, dimensions, total:Math.round(dimensions.reduce((sum,d)=>sum+d.score*d.weight/4,0))};
+  return pursuitFor(c)?.account;
 }
 function igniteQuadrant(potential,readiness) {
   if (potential == null || readiness == null) return "Unassessed";
@@ -260,40 +235,8 @@ function tasIndustryBaseline(sector) {
 function tasRevenueScenario(c) {
   // Prefer an explicitly labelled, company-specific annual revenue figure in
   // retrieved sources. Never mistake funding, valuation or transaction volume for revenue.
-  const sources = list(c.sources);
-  const candidates = [];
-  for (let i=0;i<sources.length;i++) {
-    const source = sources[i];
-    const snippet = String(source.snippet || "");
-    const title = String(source.title || "");
-    // Company-profile feeds sometimes express USD revenue as "Annual revenue: 76.00M USD".
-    // Only trust that syntax on a page clearly about the account itself; syndicated
-    // news pages frequently include unrelated companies' financial figures.
-    const accountName = String(c.name || "").toLowerCase().trim();
-    if (accountName && title.toLowerCase().includes(accountName) &&
-        !/\b(?:news|jobs|careers|competitors|partnership)\b/i.test(title)) {
-      const profileRevenue = snippet.match(/\bannual revenue\s*:\s*(?:USD\s*)?\$?\s*([\d,.]+)\s*(billion|million|bn|m)\s*(?:USD|US dollars?)\b/i);
-      if (profileRevenue) {
-        const amount = Number(profileRevenue[1].replace(/,/g,"")) * (/billion|bn/i.test(profileRevenue[2])?1000:1);
-        if (amount>0 && amount<100000) candidates.push({millions:amount,ref:"[S"+(i+1)+"]",title,url:source.url||""});
-      }
-    }
-    const lines = (title+" "+snippet).split(/(?<=[.!?])\s+|\n/);
-    for (const line of lines) {
-      const matches = [...line.matchAll(/(?:annual revenue|annual turnover|revenue (?:was|of|reached|is)|turnover (?:was|of|reached|is))[^$£€\d]{0,35}([$£€])\s*([\d,.]+)\s*(billion|million|bn|m)\b/gi)];
-      for (const match of matches) {
-        const amount = Number(match[2].replace(/,/g,"")) * (/billion|bn/i.test(match[3])?1000:1);
-        if (!(amount>0 && amount<100000)) continue;
-        const currency = match[1];
-        if (currency !== "$") continue; // no silent FX assumptions
-        candidates.push({millions:amount,ref:"[S"+(i+1)+"]",title,url:source.url||""});
-      }
-    }
-  }
-  if (candidates.length) {
-    const x = candidates[0];
-    return {millions:x.millions,note:"Source-reported annual revenue "+x.ref+" ("+x.title+"). Verify original financial statements and reporting period before using for forecasts.",kind:"Source-reported revenue (unverified)"};
-  }
+  const observations = commercialFacts(c,list(c.sources)).revenue;
+  if (observations.length) return {millions:null, kind:"Revenue observations",note:"Select a reporting period and currency before entering a USD scenario. Source excerpts below preserve estimates, historical revenue and ARR separately."};
   // Explicit low-confidence planning proxy, not reported revenue or actual IT spend.
   const raw = String(c.employees || "").replace(/,/g,"").trim();
   const match = raw.match(/^(\d+)(?:\s*[-–—]\s*(\d+))?\s*\+?$/);
@@ -450,7 +393,7 @@ async function detail(id, silent = false) {
     const pursuit = pursuitFor(c);
     const priorities = Array.isArray(perspective.priorities) ? perspective.priorities : [];
     const opportunities = list(c.cloudflare_opportunities);
-    const aiSignals = list(c.ai_signals);
+    const aiSignals = list(c.ai_signals).filter((s,i,all)=>all.findIndex(x=>themeKey(x.theme)===themeKey(s.theme))===i);
     const hiring = sources.flatMap(source => Array.isArray(source.hiring_signals) ? source.hiring_signals : [])
       .filter((h, i, all) => all.findIndex(x => x.role === h.role && x.evidence === h.evidence) === i);
     const priority = priorityFor(c);
@@ -474,8 +417,7 @@ async function detail(id, silent = false) {
     const mainOpportunity = opportunities.find(o => o.confidence !== "low" && /\[S\d+\]/.test(o.evidence || ""));
     const reason = ([businessHighlights[0]?.priority ? businessHighlights[0].priority + " " + businessHighlights[0].evidence : "", mainOpportunity?.signal || "", mainOpportunity?.pillar ? mainOpportunity.pillar + " discovery hypothesis — not a verified requirement" : ""].filter(Boolean).join(" · ") || priority.reason);
     const scoredAt = sources[0]?.scored_at || c.researched_at;
-    const revisedBrief = !!c.brief_recomputed;
-    const scoreCaveat = revisedBrief ? "Account potential uses the saved Clef attractiveness score; illustrative TAS is excluded from ranking; engagement readiness is recalculated from saved evidence without API calls." : "Clef score reflects the research run; it is not verified buying intent.";
+    const scoreCaveat = "Attractiveness and readiness use the saved Clef assessments. TAS is illustrative.";
     const relatedPriority = priorities.find(p => p.id && p.id === mainOpportunity?.priority_id);
     const commercialNarrative = mainOpportunity ? [
       {label:"Business priority", value:relatedPriority ? relatedPriority.priority + " — " + relatedPriority.why_it_matters + " " + relatedPriority.evidence : "Priority linkage requires verification"},
@@ -488,24 +430,10 @@ async function detail(id, silent = false) {
 
     // Keep imported Crunchbase fields unchanged. Display clearly labelled
     // sourced research facts when the import lacks headcount/funding.
-    const sourceFacts = sources.map((source, index) => ({
-      text: (source.title || "") + " " + (source.snippet || ""),
-      ref: "[S" + (index + 1) + "]",
-      url: source.url || ""
-    }));
-    const headcountFact = sourceFacts.find(x => /\b(?:employees|total employees|headcount)\b/i.test(x.text) &&
-      /\b(?:employees|total employees|headcount)\b/i.test(x.text) && /\b\d{2,5}\s+(?:total\s+)?employees\b/i.test(x.text));
-    const headcountMatch = headcountFact?.text.match(/\b(\d{2,5})\s+(?:total\s+)?employees\b/i);
-    const fundingCandidates = sourceFacts.filter(x => /\b(?:series [a-f]|funding round)\b/i.test(x.text) &&
-      /\$\s?(\d+(?:\.\d+)?)\s?(?:million|m)\b/i.test(x.text));
-    const fundingFact = fundingCandidates[0];
-    const fundingMatch = fundingFact?.text.match(/(?:raised|raise|funding|round)[^$]{0,90}\$\s?(\d+(?:\.\d+)?)\s?(?:million|m)\b/i) ||
-      fundingFact?.text.match(/\$\s?(\d+(?:\.\d+)?)\s?(?:million|m)\b/i);
-    const headcountDisplay = c.employees ? esc(c.employees) : headcountMatch
-      ? esc(headcountMatch[1]) + " (reported " + cite(headcountFact.ref) + ")" : "Unknown size";
-    const fundingDisplay = c.funding_usd != null ? money(c.funding_usd) : fundingMatch
-      ? "$" + esc(fundingMatch[1]) + "M round (reported " + cite(fundingFact.ref) + ")" : "—";
-
+    const facts = commercialFacts(c,sources);
+    const observed = values => values.map(x=>esc(x.value)+" "+cite(x.ref)).join(" · ");
+    const headcountDisplay = c.employees ? esc(c.employees) : observed(facts.headcount) || "Unknown";
+    const fundingDisplay = c.funding_usd != null ? money(c.funding_usd) : observed(facts.funding) || "Unknown";
     const statusMessage =
       c.status === "running"
         ? "Research is running in the background."
@@ -514,7 +442,7 @@ async function detail(id, silent = false) {
           : c.status === "failed"
             ? "Research failed. You can retry it."
             : c.status === "complete"
-              ? "Research completed successfully."
+              ? "Saved report available."
               : "Research has not yet been completed.";
 
     $("detailContent").innerHTML = `
@@ -572,8 +500,9 @@ async function detail(id, silent = false) {
         <p><strong>Why this account:</strong> ${cite(reason)}</p>\n        <p class="meta">${esc(scoreCaveat)}</p>
         <p class="meta">Territory rank: ${rankedTerritory().find(x => x.id === c.id)?.rank ?? "Unranked"} · ${esc(priority.quality)} · Absolute score determines priority; rank compares researched accounts.</p>
       </div>
-      <div class="brief-stats"><span>Research: <strong>${esc(c.confidence || "unknown")} confidence</strong></span><span>Readiness: <strong>${esc(priority.engagement.total)}/100</strong></span></div>
-      <section class="brief-priorities">
+      <div class="brief-stats"><span>Research: <strong>${esc(c.confidence || "unknown")} confidence</strong></span><span>Readiness: <strong>${esc(priority.engagement.total ?? "—")}/100</strong></span></div>
+      ${mainOpportunity ? '<section class="brief-signal"><h3>Strongest opportunity</h3><p>'+cite(mainOpportunity.hypothesis)+'</p><p>'+cite(mainOpportunity.evidence)+'</p><p><strong>What could rule it out</strong> '+cite(mainOpportunity.limitations)+'</p><p><strong>First conversation</strong> '+cite(list(c.questions)[0] || mainOpportunity.discovery_question)+'</p></section>' : '<p>No qualified opportunity identified.</p>'}
+      <details><summary>Company priorities and other hypotheses</summary><section class="brief-priorities">
         <h3>Company priorities &amp; strategic direction</h3>
         <p class="meta">Company-stated priorities are distinguished from inferred ones. These are outside-in findings, not confirmed customer conversations.</p>
         ${perspective.mission ? '<p><strong>What they are working toward:</strong> ' + cite(perspective.mission) + '</p>' : ''}
@@ -598,11 +527,11 @@ async function detail(id, silent = false) {
       }).join("")}
       <h3>AI opportunity signals</h3>
       <p class="meta">AI economics and multi-model signals are exploratory and not separately scored.</p>
-      ${[...aiSignals,...standardThemes.filter(theme=>!aiSignals.some(s=>s.theme===theme)).map(theme=>({theme,signal:"insufficient"}))].map(signal =>
+      ${[...aiSignals,...standardThemes.filter(theme=>!aiSignals.some(s=>themeKey(s.theme)===themeKey(theme))).map(theme=>({theme,signal:"insufficient"}))].map(signal =>
         '<div class="brief-ai-row"><div class="signal-head"><strong>' + esc(signal.theme) + '</strong>' + pill(signal.signal) + '</div><p class="meta">' +
         cite(signal.hypothesis || aiSourceExcerpt(signal.evidence) || "Insufficient public evidence.") + ' ' + cite(signal.evidence) + '</p></div>'
       ).join("")}
-      <h3>Recommended stakeholders</h3>
+      </details><h3>Recommended stakeholders</h3>
       ${(sources[0]?.recommended_stakeholders || []).map(h => '<div class="brief-signal"><strong>' + esc(h.name ? h.name + ' — ' + h.role : h.role + ' (name not verified)') + '</strong>' + (h.signals || []).map(signal => '<p>' + cite(signal) + '</p>').join('') + '</div>').join('') || '<p class="meta">No verified stakeholder recommendations saved. Refresh this account to discover relevant people and roles.</p>'}
       <details class="brief-details"><summary>Discovery questions</summary>
       ${listHtml(c.questions)}
@@ -611,7 +540,7 @@ async function detail(id, silent = false) {
       ${commercialNarrative.map(step => '<div class="brief-signal"><strong>' + esc(step.label) + '</strong><p>' + cite(step.value) + '</p></div>').join("")}
       </details>
       <details class="brief-details"><summary>IGNITE scoring and saved Clef assessment</summary>
-      <h3>Account attractiveness · IGNITE (evidence-adjusted Clef)</h3>
+      <h3>Account attractiveness · IGNITE (saved Clef)</h3>
       ${pursuit?.status === 'scored' && pursuit.account ? `
         <p><strong>${esc(pursuit.account.total)}/100 base · ${esc(priority.score)}/100 account potential</strong></p>
         <p class="meta">Is this company worth pursuing? Not a confirmed Cloudflare opportunity.</p>
@@ -619,10 +548,10 @@ async function detail(id, silent = false) {
           <div class="opportunity"><strong>${esc(d.label)}: ${esc(Math.round(d.score / 4 * d.weight))}/${esc(d.weight)} points</strong>
           <div class="meta">Rubric: ${esc(d.score)}/4 · ${esc(d.reason || "Saved assessment")}</div></div>`).join('')}
         <h3>Engagement readiness · IGNITE</h3>
-        <p><strong>${esc(priority.engagement.total)}/100 · ${esc(priority.tier)}</strong></p>
+        <p><strong>${esc(priority.engagement.total ?? "—")}/100 · ${esc(priority.tier)}</strong></p>
         ${priority.engagement.dimensions.map(d=>`<p>${esc(d.label)}: ${Math.round(d.score*d.weight/4)}/${d.weight}</p>`).join("")}
         <p class="meta">70/100 threshold on both axes. Engagement readiness is not verified buying intent.</p>
-        <h3>Historical Clef buying-readiness assessment (not used for IGNITE)</h3>
+        <h3>Saved readiness assessment</h3>
         <p><strong>${esc(pursuit.readiness?.total ?? '—')}/100 · ${esc(pursuit.readiness?.tier || 'Unknown')}</strong></p>
         <p class="meta">How much of the technical need, timing and access is actually evidenced?</p>
         ${(pursuit.readiness?.dimensions || []).map(d => `
@@ -660,7 +589,7 @@ async function detail(id, silent = false) {
       ${hiring.length ? hiring.map(h => `
         <div class="opportunity">
           <strong>${esc(h.role)}</strong>
-          <p class="meta">Posted: ${esc(h.posted_date || 'Not verified')} · Source confidence: ${esc(h.confidence)}</p>
+          <p class="meta">Posted: ${esc(verifiedPostingDate(h.posted_date,h.evidence,sources) || 'Not verified')} · Source confidence: ${esc(h.confidence)}</p>
           <p>Technologies mentioned: ${esc((h.technologies || []).join(', ') || 'None specified')}</p>
           <p class="meta">Evidence: ${esc(h.evidence)}</p>
           <p>Discovery angle: ${esc(h.relevance || 'Qualify the purpose of this hiring initiative.')}</p>
@@ -687,7 +616,7 @@ async function detail(id, silent = false) {
             '<div class="meta">Evidence: ' + cite(o.evidence) + ' · ' + esc(o.confidence || "unknown") + ' confidence</div>'
           ).join("") : '<p class="meta">No specific evidenced opportunity.</p>') + '</div>';
       }).join("")}
-      ${tasSection(c)}
+      <details><summary>Commercial sizing assumptions and revenue evidence</summary>${facts.revenue.map(x=>'<p>'+cite(x.ref)+' '+esc(x.value)+' · '+esc(x.basis)+' · '+esc(x.source)+' · '+esc(x.reliability)+'</p>').join("")}${tasSection(c)}</details>
       </details>
       <details class="brief-details" id="research-sources"><summary>Sources and excerpts (${sources.length})</summary>
       <p class="meta">Numbered citations link to the corresponding source excerpt. Open the original page to verify context.</p>
@@ -787,7 +716,7 @@ async function detail(id, silent = false) {
         models.innerHTML='<option value="">Configured default</option>'+data.models.map(m=>'<option value="'+esc(m)+'">'+esc(m)+'</option>').join("");
         const snapshots=data.runs.filter(r=>r.has_dossier);
         dossiers.innerHTML='<option value="">Latest saved evidence</option>'+snapshots.map(r=>'<option value="'+esc(r.run_id)+'">'+esc(r.analyzed_at||r.created_at)+' · '+esc(r.analyst_model)+'</option>').join("");
-        output.innerHTML='<p>Choose the same evidence snapshot for each comparison. No new searches.</p>'+data.runs.map(r=>'<details><summary>'+esc(r.analyst_model)+' · '+esc(r.stage)+' · Quality '+esc(r.quality?.score??"unscored")+'</summary><p>Snapshot '+esc(r.dossier_run_id)+' · References '+(r.use_references?"on":"off")+'</p><pre style="white-space:pre-wrap">'+esc(JSON.stringify(r.usage,null,2))+'</pre></details>').join("");
+        output.innerHTML='<p>Choose the same evidence snapshot for each comparison. No new searches.</p>'+data.runs.map(r=>'<details><summary>'+esc(r.analyst_model)+' · '+esc(r.stage)+' · Quality '+esc(r.quality?.score??"unscored")+'</summary><p>Snapshot '+esc(r.dossier_run_id)+' · References '+(r.use_references?"on":"off")+'</p><pre style="white-space:pre-wrap">'+esc(JSON.stringify({method:r.method,evaluator:r.evaluator_model,stages:r.usage?.reasoning_usage,versions:r.version_usage,findings:r.usage?.reasoning_ledgers},null,2))+'</pre></details>').join("");
       } catch(e) { output.textContent=e.message; }
     };
     if (button && !button.disabled) {
@@ -835,6 +764,12 @@ async function detail(id, silent = false) {
               button.textContent="↻ Retry research";
               return;
             }
+            if (latest.status === "complete" && latest.error) {
+              activeResearchRequests.delete(id);
+              await detail(id,true);
+              notice(latest.error);
+              return;
+            }
             if (latest.status === "complete" && (sawActive || latest.researched_at !== c.researched_at)) {
               feedback("Updated research is ready.");
               activeResearchRequests.delete(id);
@@ -870,7 +805,7 @@ async function detail(id, silent = false) {
         if (currentCompanyId !== id) return;
         output.innerHTML = data.runs.map(run => `<details><summary>${esc(run.analyzed_at || run.run_id)} · ${esc(run.mode)} · ${esc(run.analyst_model)}</summary>
           ${run.versions.map(v => `<details><summary>Version ${esc(v.version)} · ${esc(v.evaluation?.score ?? "Unevaluated")}</summary>
-            <pre style="white-space:pre-wrap">${esc(JSON.stringify({report:v.report,evaluation:v.evaluation},null,2))}</pre></details>`).join("")}</details>`).join("") || "No saved analysis versions.";
+            <pre style="white-space:pre-wrap">${esc(JSON.stringify({report:v.report,evaluation:v.evaluation,inference:v.usage},null,2))}</pre></details>`).join("")}</details>`).join("") || "No saved analysis versions.";
       } catch (error) { output.textContent = error.message; }
     };
     if (!silent && c.status === "failed" && c.error) {

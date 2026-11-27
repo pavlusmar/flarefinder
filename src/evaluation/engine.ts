@@ -77,8 +77,9 @@ export async function evaluateReport(input: EvaluationInput): Promise<Evaluation
   let raw: string;
   try {
     raw = await invoke(evaluatorModel, instructions, JSON.stringify(evidence));
-  } catch {
-    return unavailable(evaluatorModel, "Evaluator request failed.", input.validationIssues);
+  } catch (err) {
+    const category=err instanceof Error && /^inference-(quota|token-limit|request-schema|rate-limit|upstream|provider-error)$/.test(err.message) ? " ("+err.message.slice(10)+")" : "";
+    return unavailable(evaluatorModel, "Evaluator request failed"+category+".", input.validationIssues);
   }
   try {
     const result: unknown = JSON.parse(raw.trim().replace(/^\x60\x60\x60(?:json)?\s*/i, "").replace(/\s*\x60\x60\x60$/, ""));

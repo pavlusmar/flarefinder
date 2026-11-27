@@ -96,17 +96,17 @@ function setup(reviews,extra={}){
   return {db,messages,seen,analyses,stages,env,api,deliver,finish};
 }
 test('saved evidence is immutable across revisions and different analyst models; best version wins',async()=>{
-  const x=setup([grade(15),grade(18),grade(13)],{QUALITY_THRESHOLD:'90',ANALYST_MODELS:'@cf/mock/alternate'});
+  const x=setup([grade(15),grade(18),grade(13)],{QUALITY_THRESHOLD:'90',ANALYST_MODELS:'@cf/openai/gpt-oss-20b'});
   assert.equal((await x.api('research/fixture/reanalyze','POST',{},false)).status,401);
   assert.equal((await x.api('research/fixture/versions','GET',undefined,false)).status,401);
   assert.equal((await x.api('research/fixture/reanalyze','POST',{analyst_model:'unconfigured'})).status,400);
-  assert.equal((await x.api('research/fixture/reanalyze','POST',{analyst_model:'@cf/mock/alternate'})).status,202);
+  assert.equal((await x.api('research/fixture/reanalyze','POST',{analyst_model:'@cf/openai/gpt-oss-20b'})).status,202);
   assert.equal((await (await x.api('research/fixture/reanalyze','POST')).json()).status,'already_queued');
   const row=await x.finish();
   assert.deepEqual(x.stages,['Load saved evidence','Reference retrieval','Strategic analysis','Independent evaluation','Revision','Independent evaluation','Revision','Independent evaluation','Report selection']);
   assert.equal(row.researched_at,'2025-05-01');
   assert.ok(row.analyzed_at);assert.equal(row.summary,'Draft 2 [S1]');
-  assert.equal(row.quality.analyst_model,'@cf/mock/alternate');assert.equal(row.quality.selected_version,2);
+  assert.equal(row.quality.analyst_model,'@cf/openai/gpt-oss-20b');assert.equal(row.quality.selected_version,2);
   assert.equal(row.quality.status,'warning');assert.equal(row.quality.score,78);
   assert.deepEqual(x.seen.map(s=>s.dossier),[x.seen[0].dossier,x.seen[0].dossier,x.seen[0].dossier]);
   assert.equal(x.seen[0].report.technical_signals[0],'Customer API [S2]');
@@ -164,4 +164,18 @@ test('v5 reasoning skills are checkpointed before synthesis, with immutable evid
   assert.equal(Object.keys(hist.usage.reasoning_usage).length,3);
   assert.deepEqual(x.analyses[0].dossier,x.seen[0].dossier);
   assert.equal(hist.usage.reasoning_ledgers["Commercial challenge"].rejected_or_deferred[0].product,"CDN");
+});
+
+test('V6 saved replay retains the published brief and checkpoints the failed evaluation',async()=>{
+  const x=setup(['broken'],{REASONING_PIPELINE:'v6',REVISION_LIMIT:'0'});
+  await x.api('research/fixture/reanalyze','POST');
+  const row=await x.finish();
+  assert.equal(row.summary,'Prior report');
+  assert.equal(row.status,'complete');
+  const run=(await (await x.api('research/fixture/versions')).json()).runs[0];
+  assert.equal(run.stage,'Failed');
+  assert.equal(run.quality.score,null);
+  assert.equal(run.versions.length,1);
+  assert.equal(run.usage.search_calls,0);
+  assert.deepEqual(Object.keys(x.analyses[0].references[0]).sort(),['methodology','name','why']);
 });

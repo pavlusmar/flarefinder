@@ -9,7 +9,7 @@ const path = require('node:path');
 const base = path.join(__dirname,'../src');
 const src = fs.readFileSync(path.join(base,'index.ts'),'utf8');
 const compiled = buildSync({
-  stdin:{contents:src+'\nexport {validateOpportunityEvidence,evidenceGrounded,citedSourceText,scorePursuitWithClef,recoverEvidenceBackedOpportunities,finalizeEvidenceReport,normalizeReport,searchWeb,route};',resolveDir:base,loader:'ts'},
+  stdin:{contents:src+'\nexport {applyCommercialReview,validateSkillOutput,allowedAnalysts,validateOpportunityEvidence,evidenceGrounded,citedSourceText,scorePursuitWithClef,recoverEvidenceBackedOpportunities,finalizeEvidenceReport,normalizeReport,searchWeb,route};',resolveDir:base,loader:'ts'},
   bundle:true,write:false,format:'cjs',platform:'node'
 });
 const sandbox = {module:{exports:{}}, console, URL, Response, Request, Headers, TextEncoder, TextDecoder, AbortSignal};
@@ -306,4 +306,28 @@ test('runtime retrieval uses other companies and passes evidence, full passages 
     assert.ok(ref.evidence.every(e=>e.id.startsWith('REF-')));
     assert.doesNotMatch(JSON.stringify(ref.sections),/\[S\d+\]/);
   }
+});
+
+test('V6 enforces challenger exclusions, null-fit outcomes, qualification, and role hypotheses',()=>{
+  const {applyCommercialReview}=sandbox.module.exports;
+  const make=(product)=>({...opportunity('Build',product),product,initiative:"shared platform",timing:"Q1 2025 pilot",success_metric:"30% improvement"});
+  const r=report([make("CDN"),make("AI Gateway")]);
+  r.questions=["What is the volume?","Which architectural decisions remain open?"];
+  r.recommended_stakeholders=[{name:"Unverified Name",role:"Platform lead",signals:["[S1]"]}];
+  const sources=[sourceItem("Platform team is designing an inference gateway.")];
+  applyCommercialReview(r,sources,{prioritized_opportunities:[{product:"AI Gateway"}],rejected_or_deferred:[{product:"Cloudflare CDN"}],corrections:[{correction:"Existing deployment unknown",source_ids:["S1"]}]});
+  assert.equal(r.cloudflare_opportunities.length,1);assert.equal(r.cloudflare_opportunities[0].product,"AI Gateway");
+  assert.doesNotMatch(r.cloudflare_opportunities[0].success_metric,/30/);assert.doesNotMatch(r.cloudflare_opportunities[0].timing,/2025/);
+  assert.equal(r.recommended_stakeholders[0].name,"");assert.match(r.questions[0],/architecture|architectural/);
+  assert.ok(r.challenger_corrections[0].includes("[S1]"));
+  applyCommercialReview(r,sources,{prioritized_opportunities:[],rejected_or_deferred:[]});
+  assert.equal(r.cloudflare_opportunities.length,0);
+});
+
+test('V6 hiring criteria do not establish deployed infrastructure',()=>{
+  const {validateSkillOutput,allowedAnalysts}=sandbox.module.exports;
+  const quote="Experience with SageMaker is desirable";
+  const ledger=validateSkillOutput("Workload and commercial fit",{workloads:[{incumbent:"SageMaker",incumbent_quote:quote,source_ids:["S1"]}],opportunity_candidates:[],rejected_candidates:[],unknowns:[]},1,[sourceItem(quote)]);
+  assert.equal(ledger.workloads[0].incumbent,"Deployment unverified");
+  assert.ok(!allowedAnalysts({ANALYST_MODELS:"@cf/zai-org/glm-5.3"}).includes("@cf/zai-org/glm-5.3"));
 });
