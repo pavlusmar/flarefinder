@@ -19,6 +19,7 @@ interface Env {
   QUALITY_THRESHOLD?: string;
   REVISION_LIMIT?: string;
   ANALYST_MODELS?: string;
+  AI_GATEWAY_ID?: string;
 }
 
 type Company = {
@@ -1025,6 +1026,7 @@ function researchModelProvider(env:Env):ResearchModelProvider {
 async function modelOutput(env:Env,model:string,system:string,user:string,budget:number) {
   return researchModelProvider(env).complete(model,system,user,budget);
 }
+// Optional staging gateway. Only native Workers AI IDs reach this path.
 async function workersModelOutput(env:Env, model:string, system:string, user:string, budget:number) {
   const start=Date.now();
   const response=await env.AI.run(model as Parameters<Ai["run"]>[0],{
@@ -1032,7 +1034,9 @@ async function workersModelOutput(env:Env, model:string, system:string, user:str
     ...(model.includes("qwen3.8") ? {max_completion_tokens:budget,response_format:{type:"json_object"}} : {max_tokens:budget}),
     ...(model.includes("gpt-oss") ? {reasoning_effort:"high"} : model.includes("qwen3.8") ? {reasoning_effort:"low"} : {}),
     temperature:0.1
-  } as never) as unknown;
+  } as never, env.AI_GATEWAY_ID?.trim() ? {
+    gateway:{id:env.AI_GATEWAY_ID.trim(),skipCache:true,collectLog:true}
+  } : undefined) as unknown;
   const result=record(response), choice=record(Array.isArray(result.choices)?result.choices[0]:null);
   if(result.error) { const e=record(result.error); throw new Error("Model "+model+" returned an error: "+safeResearchError(e.message||result.error,env)); }
   const msg=record(choice.message);
@@ -1297,7 +1301,7 @@ async function route(
       dbConfigured: !!env.DB,
       model: env.ANALYSIS_MODEL||DEFAULT_ANALYST,
       decisionModel: DECISION_MODEL,
-      researchRevision: "evidence-pipeline-v4", analystModel:env.ANALYSIS_MODEL||DEFAULT_ANALYST, evaluatorModel:env.EVALUATION_MODEL||DEFAULT_EVALUATOR, analystModels:allowedAnalysts(env), modelProvider:"workers-ai", paidFallback:false, benchmarkRevision:"saved-dossier-v1"
+      researchRevision: "evidence-pipeline-v4", analystModel:env.ANALYSIS_MODEL||DEFAULT_ANALYST, evaluatorModel:env.EVALUATION_MODEL||DEFAULT_EVALUATOR, analystModels:allowedAnalysts(env), modelProvider:"workers-ai", aiGatewayConfigured:!!env.AI_GATEWAY_ID?.trim(), aiGatewayId:env.AI_GATEWAY_ID?.trim()||null, paidFallback:false, benchmarkRevision:"saved-dossier-v1"
     });
   }
 
