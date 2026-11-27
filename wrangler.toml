@@ -27,6 +27,7 @@ EVALUATION_MODEL = "@cf/qwen/qwen3.8-27b"
 PLANNER_MODEL = "@cf/meta/llama-3.1-8b-instruct-fp8-fast"
 QUALITY_THRESHOLD = "85"
 REVISION_LIMIT = "2"
+REASONING_PIPELINE = "v5"
 ANALYST_MODELS = "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
 
 # Set secrets securely using:
