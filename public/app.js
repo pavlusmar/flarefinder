@@ -557,7 +557,10 @@ async function detail(id, silent = false) {
       </button>
       ${sources.length ? `<details class="brief-details"><summary>Reanalyze saved evidence</summary>
         <p class="meta">Use the saved sources for another analysis and independent review. This makes model calls and uses zero search calls.</p>
-        <label>Analyst model <input id="analysisModel" placeholder="Configured default"></label>
+        <label>Analyst model <select id="analysisModel"><option value="">Configured default</option></select></label>
+        <label>Evidence snapshot <select id="analysisDossier"><option value="">Latest saved evidence</option></select></label>
+        <button type="button" id="loadBenchmark">Load model choices and comparison history</button>
+        <div id="benchmarkResults" class="meta" aria-live="polite"></div>
         <label><input type="checkbox" id="analysisReferences" checked> Use reference reports</label>
         <button type="button" id="reanalyze" ${["running","queued"].includes(c.status) ? "disabled" : ""}>Run analysis</button>
       </details>` : ""}
@@ -774,6 +777,19 @@ async function detail(id, silent = false) {
     const button = $("researchOne");
     const feedback = message => { const el = $("researchFeedback"); if (el) el.textContent = message; };
 
+    const benchmarkButton = $("loadBenchmark");
+    if (benchmarkButton) benchmarkButton.onclick = async () => {
+      const output = $("benchmarkResults");
+      try {
+        const data = await api("/api/research/"+encodeURIComponent(id)+"/benchmark");
+        if(currentCompanyId!==id || !output.isConnected) return;
+        const models=$("analysisModel"), dossiers=$("analysisDossier");
+        models.innerHTML='<option value="">Configured default</option>'+data.models.map(m=>'<option value="'+esc(m)+'">'+esc(m)+'</option>').join("");
+        const snapshots=data.runs.filter(r=>r.has_dossier);
+        dossiers.innerHTML='<option value="">Latest saved evidence</option>'+snapshots.map(r=>'<option value="'+esc(r.run_id)+'">'+esc(r.analyzed_at||r.created_at)+' · '+esc(r.analyst_model)+'</option>').join("");
+        output.innerHTML='<p>Choose the same evidence snapshot for each comparison. No new searches.</p>'+data.runs.map(r=>'<details><summary>'+esc(r.analyst_model)+' · '+esc(r.stage)+' · Quality '+esc(r.quality?.score??"unscored")+'</summary><p>Snapshot '+esc(r.dossier_run_id)+' · References '+(r.use_references?"on":"off")+'</p><pre style="white-space:pre-wrap">'+esc(JSON.stringify(r.usage,null,2))+'</pre></details>').join("");
+      } catch(e) { output.textContent=e.message; }
+    };
     if (button && !button.disabled) {
       const submitResearch = async (replay) => {
         if (activeResearchRequests.has(id)) return;
@@ -787,7 +803,8 @@ async function detail(id, silent = false) {
           const opts = {method:"POST"};
           if (replay) {
             const model = $("analysisModel").value.trim();
-            opts.body = JSON.stringify({...(model ? {analyst_model:model} : {}), use_references:$("analysisReferences").checked});
+            const dossier = $("analysisDossier").value;
+            opts.body = JSON.stringify({...(model ? {analyst_model:model} : {}), ...(dossier ? {dossier_run_id:dossier} : {}), use_references:$("analysisReferences").checked});
           }
           const result = await api("/api/research/" + encodeURIComponent(id) + (replay ? "/reanalyze" : ""), opts);
           const already = result.status === "already_queued";
